@@ -18,12 +18,22 @@ Analysis of the deflector galaxy in the AGEL J020613-011417 strong gravitational
 - Noise/sky region: `cube[:,28:40,45:70]` (12x25 spaxels)
 - Photometry uses AB magnitude system throughout
 
+## Notebook Organization
+
+There are two versions of each analysis notebook:
+
+- **Original exploratory notebooks** (`01_IFU_spectra_extraction_and_ppxf.ipynb`, `02_Bagpipes_SED_fitting.ipynb`): Full history of the analysis with iterative attempts. Kept for reference.
+- **Streamlined notebooks** (`01_streamlined_IFU_ppxf.ipynb`, `02_streamlined_Bagpipes_SED.ipynb`): Clean versions with redundant cells removed. Use these for running the analysis.
+
+The streamlined IFU notebook uses veldis (degree=[4,30]) for the integrated spectrum and raw ppxf for per-spaxel and power-binned fitting. The `ppxf_per_spaxel()` function appends `best_fit` twice per degree iteration — account for this when indexing results (`best_fit_idx = deg_idx * 2`).
+
 ## Running the Code
 
-- Notebooks are in `notebooks/` and assume data files are in the repository root (parent of notebooks/)
+- Use the **ISMGas** conda environment: `conda activate ISMGas`
+- Notebooks are in `notebooks/` and assume data files are in the repository root
 - The photometry scripts are standalone interactive tools: `python scripts/photometry_masking_HST.py`
 - Bagpipes caches results in `pipes/posterior/` as HDF5 files; delete the `.h5` file to re-run a fit
-- The IFU notebook is exploratory with repeated sections — later sections supersede earlier ones
+- For local development, symlink data files from the original directory (see Data Files section)
 
 ## Dependencies
 
