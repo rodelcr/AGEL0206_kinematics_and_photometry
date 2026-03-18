@@ -1,0 +1,14 @@
+# Large data files (obtain separately, see README)
+*.fits
+*.npz
+*.npy
+*.h5
+
+# Generated directories
+TEXT/
+pipes/
+__pycache__/
+.ipynb_checkpoints/
+
+# OS
+.DS_Store

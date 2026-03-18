@@ -1,0 +1,11 @@
+numpy
+matplotlib
+astropy
+photutils
+reproject
+ppxf
+veldis
+bagpipes
+powerbin
+pandas
+specutils

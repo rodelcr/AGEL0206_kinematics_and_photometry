@@ -1,0 +1,19 @@
+{
+    "target_ra": 31.556160000000002,
+    "target_dec": -1.2381199999999999,
+    "geometry": {
+        "semimajor_axis_arcsec": 1.1915064102564101,
+        "ellipticity": 0.196875,
+        "theta_deg": 181.7307692307692,
+        "annulus_gap_arcsec": 6.884615384615386,
+        "annulus_width_arcsec": 1.1735576923076922
+    },
+    "pixel_geometry": {
+        "a": 23.830128205127544,
+        "b": 19.13857171474306,
+        "theta_rad": 3.171800275258925,
+        "annulus_a_in": 161.52243589743145,
+        "annulus_a_out": 184.99358974358464
+    },
+    "masks_pixel_coords": []
+}
