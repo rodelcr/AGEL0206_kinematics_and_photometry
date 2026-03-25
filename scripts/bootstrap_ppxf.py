@@ -327,18 +327,21 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
     Returns
     -------
     dict with keys:
-        'V_bootstrap'      : array, shape (n_degrees, n_bootstrap)
-        'sigma_bootstrap'   : array, shape (n_degrees, n_bootstrap)
-        'chi2_bootstrap'    : array, shape (n_degrees, n_bootstrap)
-        'V_boot_err'        : array, shape (n_degrees,)
-        'sigma_boot_err'    : array, shape (n_degrees,)
-        'V_original'        : array, shape (n_degrees,)
-        'sigma_original'    : array, shape (n_degrees,)
-        'chi2_original'     : array, shape (n_degrees,)
-        'degrees'           : array
-        'sps_name'          : str
-        'n_bootstrap'       : int
-        'n_failed'          : array, shape (n_degrees,)
+        'sigma_bootstrap'    : array, shape (n_degrees, n_bootstrap) — full distribution
+        'V_bootstrap'        : array, shape (n_degrees, n_bootstrap) — full distribution
+        'chi2_bootstrap'     : array, shape (n_degrees, n_bootstrap)
+        'sigma_boot_err_lo'  : array, shape (n_degrees,) — median - 16th percentile
+        'sigma_boot_err_hi'  : array, shape (n_degrees,) — 84th percentile - median
+        'sigma_p16/p50/p84'  : arrays, shape (n_degrees,) — percentiles
+        'V_boot_err_lo/hi'   : arrays, shape (n_degrees,) — asymmetric V errors
+        'V_p16/p50/p84'      : arrays, shape (n_degrees,)
+        'sigma_original'     : array, shape (n_degrees,) — original fit values
+        'V_original'         : array, shape (n_degrees,)
+        'chi2_original'      : array, shape (n_degrees,)
+        'degrees'            : array
+        'sps_name'           : str
+        'n_bootstrap'        : int
+        'n_failed'           : array, shape (n_degrees,)
     """
     # Setup ppxf inputs
     ppxf_inputs = setup_ppxf_inputs(ifu_file, sps_name)
@@ -394,9 +397,18 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
     elapsed = clock() - t0
     print(f"\nCompleted in {elapsed:.1f}s ({elapsed/60:.1f} min)")
 
-    # Compute bootstrap errors (std of valid samples)
-    V_boot_err = np.nanstd(V_bootstrap, axis=1)
-    sigma_boot_err = np.nanstd(sigma_bootstrap, axis=1)
+    # Compute bootstrap errors from 16th/84th percentiles (asymmetric)
+    sigma_p16 = np.nanpercentile(sigma_bootstrap, 16, axis=1)
+    sigma_p50 = np.nanpercentile(sigma_bootstrap, 50, axis=1)
+    sigma_p84 = np.nanpercentile(sigma_bootstrap, 84, axis=1)
+    sigma_boot_err_lo = sigma_p50 - sigma_p16   # lower 1-sigma
+    sigma_boot_err_hi = sigma_p84 - sigma_p50   # upper 1-sigma
+
+    V_p16 = np.nanpercentile(V_bootstrap, 16, axis=1)
+    V_p50 = np.nanpercentile(V_bootstrap, 50, axis=1)
+    V_p84 = np.nanpercentile(V_bootstrap, 84, axis=1)
+    V_boot_err_lo = V_p50 - V_p16
+    V_boot_err_hi = V_p84 - V_p50
 
     # Original values at the selected degrees
     V_original = all_mean_vel[degree_indices]
@@ -405,23 +417,35 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
 
     # Report
     print(f"\nResults for {sps_name}:")
-    print(f"{'Degree':>6} {'sigma':>8} {'boot_err':>8} {'formal_err':>10} {'V':>8} {'V_err':>8} {'failed':>6}")
-    print("-" * 60)
+    print(f"{'Degree':>6} {'sigma':>8} {'err_lo':>7} {'err_hi':>7} {'formal':>7} {'V':>8} {'V_lo':>7} {'V_hi':>7} {'fail':>5}")
+    print("-" * 70)
     formal_err = saved['error_vdis'][degree_indices]
     for j, deg in enumerate(degrees):
-        print(f"{deg:6d} {sigma_original[j]:8.1f} {sigma_boot_err[j]:8.1f} "
-              f"{formal_err[j]:10.1f} {V_original[j]:8.1f} {V_boot_err[j]:8.1f} "
-              f"{n_failed[j]:6d}")
+        print(f"{deg:6d} {sigma_original[j]:8.1f} {sigma_boot_err_lo[j]:7.1f} "
+              f"{sigma_boot_err_hi[j]:7.1f} {formal_err[j]:7.1f} "
+              f"{V_original[j]:8.1f} {V_boot_err_lo[j]:7.1f} {V_boot_err_hi[j]:7.1f} "
+              f"{n_failed[j]:5d}")
 
     if np.any(n_failed > 0):
         print(f"\nWARNING: {np.sum(n_failed)} total failed fits across all degrees")
 
     output = {
-        'V_bootstrap': V_bootstrap,
-        'sigma_bootstrap': sigma_bootstrap,
-        'chi2_bootstrap': chi2_bootstrap,
-        'V_boot_err': V_boot_err,
-        'sigma_boot_err': sigma_boot_err,
+        # Full bootstrap distributions
+        'V_bootstrap': V_bootstrap,           # (n_deg, n_bootstrap)
+        'sigma_bootstrap': sigma_bootstrap,   # (n_deg, n_bootstrap)
+        'chi2_bootstrap': chi2_bootstrap,     # (n_deg, n_bootstrap)
+        # Percentile-based errors (asymmetric)
+        'sigma_boot_err_lo': sigma_boot_err_lo,  # median - 16th
+        'sigma_boot_err_hi': sigma_boot_err_hi,  # 84th - median
+        'sigma_p16': sigma_p16,
+        'sigma_p50': sigma_p50,
+        'sigma_p84': sigma_p84,
+        'V_boot_err_lo': V_boot_err_lo,
+        'V_boot_err_hi': V_boot_err_hi,
+        'V_p16': V_p16,
+        'V_p50': V_p50,
+        'V_p84': V_p84,
+        # Original fit values
         'V_original': V_original,
         'sigma_original': sigma_original,
         'chi2_original': chi2_original,
