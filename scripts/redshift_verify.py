@@ -542,3 +542,122 @@ def plot_spectrum_with_lines(wavelength, flux, z, line_dict=None,
     ax.grid(alpha=0.3)
     plt.tight_layout()
     return fig
+
+
+# =============================================================================
+# Bootstrap redshift error estimation
+# =============================================================================
+
+def bootstrap_redshift(wavelength, flux, noise, z_guess,
+                       line_dict=None, emission=False,
+                       window_angstrom=30.0, n_bootstrap=500,
+                       window_local=75, seed=42):
+    """
+    Bootstrap error estimation for the weighted-average redshift.
+
+    Uses the same hybrid wild bootstrap as bootstrap_ppxf.py:
+    local residual scaling × Rademacher sign-flip.
+
+    For each iteration:
+    1. Perturb the spectrum using noise-scaled random perturbations
+    2. Re-fit all lines via verify_redshift()
+    3. Record the weighted-average z and per-line z values
+
+    Parameters
+    ----------
+    wavelength : array
+        Observed wavelength (Angstroms).
+    flux : array
+        Flux array.
+    noise : array
+        Noise spectrum (per-pixel 1-sigma).
+    z_guess : float
+        Initial redshift guess.
+    line_dict : dict or None
+        Line dictionary to fit. If None, uses defaults based on emission flag.
+    emission : bool
+        Whether to fit emission or absorption lines.
+    window_angstrom : float
+        Half-width of fitting window per line.
+    n_bootstrap : int
+        Number of bootstrap iterations.
+    window_local : int
+        Rolling window for local noise scaling (pixels). Set to 0 for uniform noise.
+    seed : int
+        RNG seed.
+
+    Returns
+    -------
+    dict with keys:
+        'z_samples'       : array, shape (n_bootstrap,) — weighted-average z per iteration
+        'z_p16'           : float — 16th percentile
+        'z_p50'           : float — median
+        'z_p84'           : float — 84th percentile
+        'z_err_lo'        : float — median - 16th
+        'z_err_hi'        : float — 84th - median
+        'per_line_samples': dict of {line_name: array(n_bootstrap)} — per-line z distributions
+        'n_failed'        : int — iterations where no lines were fit
+        'z_original'      : float — z from the unperturbed spectrum
+    """
+    from scipy.ndimage import uniform_filter1d
+
+    rng = np.random.default_rng(seed)
+
+    # First, fit the unperturbed spectrum
+    orig = verify_redshift(wavelength, flux, z_guess, noise=noise,
+                           line_dict=line_dict, emission=emission,
+                           window_angstrom=window_angstrom)
+    z_original = orig['z_weighted']
+
+    # Compute local noise scaling
+    if window_local > 0 and noise is not None:
+        local_mean = uniform_filter1d(noise, size=window_local, mode='reflect')
+        global_mean = np.mean(noise)
+        noise_scale = local_mean / global_mean if global_mean > 0 else np.ones_like(noise)
+        noise_scale = np.clip(noise_scale, 0.2, 5.0)
+    else:
+        noise_scale = np.ones_like(flux)
+
+    # Bootstrap loop
+    z_samples = np.full(n_bootstrap, np.nan)
+    per_line_names = [name for name, r in orig['per_line'].items() if r.get('success', False)]
+    per_line_samples = {name: np.full(n_bootstrap, np.nan) for name in per_line_names}
+    n_failed = 0
+
+    for i in range(n_bootstrap):
+        # Hybrid wild bootstrap: noise-scaled Rademacher perturbation
+        signs = rng.choice([-1, 1], size=len(flux))
+        perturbation = noise * noise_scale * signs
+        flux_boot = flux + perturbation
+
+        result = verify_redshift(wavelength, flux_boot, z_guess, noise=noise,
+                                 line_dict=line_dict, emission=emission,
+                                 window_angstrom=window_angstrom)
+
+        if result['n_lines_fit'] > 0 and np.isfinite(result['z_weighted']):
+            z_samples[i] = result['z_weighted']
+            for name in per_line_names:
+                if name in result['per_line'] and result['per_line'][name].get('success', False):
+                    per_line_samples[name][i] = result['per_line'][name]['z_fit']
+        else:
+            n_failed += 1
+
+    # Compute percentiles
+    valid = z_samples[np.isfinite(z_samples)]
+    if len(valid) > 0:
+        z_p16, z_p50, z_p84 = np.percentile(valid, [16, 50, 84])
+    else:
+        z_p16 = z_p50 = z_p84 = np.nan
+
+    return {
+        'z_samples': z_samples,
+        'z_p16': z_p16,
+        'z_p50': z_p50,
+        'z_p84': z_p84,
+        'z_err_lo': z_p50 - z_p16,
+        'z_err_hi': z_p84 - z_p50,
+        'per_line_samples': per_line_samples,
+        'n_failed': n_failed,
+        'n_bootstrap': n_bootstrap,
+        'z_original': z_original,
+    }
