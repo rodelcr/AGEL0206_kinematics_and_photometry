@@ -242,6 +242,88 @@ def fit_cahk_doublet(wavelength, flux, z_guess, window_angstrom=60.0, noise=None
                 'message': str(e)}
 
 
+def fit_oii_doublet(wavelength, flux, z_guess, window_angstrom=40.0, noise=None):
+    """
+    Fit the [OII] 3726/3729 emission doublet with shared redshift and width.
+
+    Uses the oii_doublet() model: two Gaussians with tied z and sigma,
+    and a flux ratio parameter (following Keerthi Vasan's myfunctions.py).
+
+    Parameters
+    ----------
+    wavelength : array
+        Observed wavelength (Angstroms).
+    flux : array
+        Flux array.
+    z_guess : float
+        Initial redshift guess for the source.
+    window_angstrom : float
+        Half-width of fitting window around expected doublet center.
+    noise : array or None
+        Noise spectrum for weighting.
+
+    Returns
+    -------
+    dict with fit results including per-component redshifts.
+    """
+    oii_center = 3727.4 * (1 + z_guess)  # midpoint of doublet
+
+    mask = (wavelength > oii_center - window_angstrom) & \
+           (wavelength < oii_center + window_angstrom)
+    if np.sum(mask) < 10:
+        return {'success': False, 'z_fit': np.nan, 'z_err': np.nan,
+                'message': 'Too few pixels in window'}
+
+    wl = wavelength[mask]
+    fl = flux[mask]
+    sigma_weights = noise[mask] if noise is not None else None
+
+    cont_guess = np.median(fl)
+    amp_guess = abs(np.max(fl) - cont_guess) * 0.5
+    sigma_guess = 3.0  # Angstroms in observed frame
+    ratio_guess = 1.0  # flux ratio 3726/3729
+
+    # Parameters: amp1, ratio, z, sigma, cont
+    p0 = [amp_guess, ratio_guess, z_guess, sigma_guess, cont_guess]
+    bounds_lo = [0, 0.3, z_guess - 0.01, 0.5, -np.inf]
+    bounds_hi = [np.inf, 3.0, z_guess + 0.01, 30.0, np.inf]
+
+    try:
+        popt, pcov = curve_fit(oii_doublet, wl, fl, p0=p0,
+                                bounds=(bounds_lo, bounds_hi),
+                                sigma=sigma_weights, absolute_sigma=True,
+                                maxfev=5000)
+        perr = np.sqrt(np.diag(pcov))
+
+        z_fit = popt[2]
+        z_err = perr[2]
+        model = oii_doublet(wl, *popt)
+
+        # Individual line centers
+        z1 = 1 + z_fit
+        center_3726 = z1 * 3726.03
+        center_3729 = z1 * 3728.82
+
+        return {
+            'z_fit': z_fit,
+            'z_err': z_err,
+            'center_3726': center_3726,
+            'center_3729': center_3729,
+            'amp': popt[0],
+            'ratio': popt[1],
+            'sigma': popt[3],
+            'cont': popt[4],
+            'popt': popt, 'pcov': pcov,
+            'success': True,
+            'wl_window': wl, 'flux_window': fl, 'model': model,
+            'rest_lambda': 3727.4,
+            'label': '[OII] doublet',
+        }
+    except (RuntimeError, ValueError) as e:
+        return {'success': False, 'z_fit': np.nan, 'z_err': np.nan,
+                'message': str(e)}
+
+
 # =============================================================================
 # Main verification function
 # =============================================================================
@@ -299,7 +381,7 @@ def verify_redshift(wavelength, flux, z_guess, noise=None,
         result['label'] = info['label']
         results[name] = result
 
-    # Also try Ca H+K doublet if both are in range
+    # Also try Ca H+K doublet if both are in range (absorption mode)
     if not emission:
         obs_cak = 3933.66 * (1 + z_guess)
         obs_cah = 3968.47 * (1 + z_guess)
@@ -309,6 +391,14 @@ def verify_redshift(wavelength, flux, z_guess, noise=None,
             cahk['rest_lambda'] = 3933.66
             cahk['label'] = 'Ca H+K doublet'
             results['Ca H+K doublet'] = cahk
+
+    # Also try [OII] 3726/3729 doublet (emission mode)
+    if emission:
+        obs_oii = 3727.4 * (1 + z_guess)
+        if obs_oii > wl_range[0] and obs_oii < wl_range[1]:
+            oii = fit_oii_doublet(wavelength, flux, z_guess,
+                                   window_angstrom=40.0, noise=noise)
+            results['[OII] doublet'] = oii
 
     # Compute weighted average
     z_vals = []
