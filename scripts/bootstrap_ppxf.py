@@ -309,7 +309,7 @@ def run_bootstrap_single_degree(ppxf_inputs, degree, best_fit_spectrum,
 
 def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
                   degrees=None, n_bootstrap=500, window=75, seed=42,
-                  save=True):
+                  save=True, z=None, save_suffix=None):
     """
     Full bootstrap pipeline for all degrees and one template library.
 
@@ -331,6 +331,11 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
         Base RNG seed (each degree gets seed + degree_index).
     save : bool
         Whether to save results to .npz.
+    z : float or None
+        Deflector redshift. None = use default (0.67511).
+    save_suffix : str or None
+        Extra suffix for output filename, e.g. 'z067564'.
+        Output: ppxf_bootstrap_errors_{sps_name}_{save_suffix}.npz
 
     Returns
     -------
@@ -352,7 +357,10 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
         'n_failed'           : array, shape (n_degrees,)
     """
     # Setup ppxf inputs
-    ppxf_inputs = setup_ppxf_inputs(ifu_file, sps_name)
+    setup_kwargs = {'ifu_file': ifu_file, 'sps_name': sps_name}
+    if z is not None:
+        setup_kwargs['z'] = z
+    ppxf_inputs = setup_ppxf_inputs(**setup_kwargs)
 
     # Load saved best-fit results
     # Try template-specific file first, then generic
@@ -373,6 +381,7 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
 
     print(f"\n{'=' * 60}")
     print(f"Bootstrap error estimation: {sps_name}")
+    print(f"  Redshift: {ppxf_inputs['z']:.5f}")
     print(f"  Degrees: {degrees}")
     print(f"  N_bootstrap: {n_bootstrap}")
     print(f"  Window: {window} pixels")
@@ -475,10 +484,12 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
         'n_failed': n_failed,
         'window': window,
         'seed': seed,
+        'z_input': ppxf_inputs['z'],
     }
 
     if save:
-        out_path = os.path.join(results_dir, f'ppxf_bootstrap_errors_{sps_name}.npz')
+        suffix = f'_{save_suffix}' if save_suffix else ''
+        out_path = os.path.join(results_dir, f'ppxf_bootstrap_errors_{sps_name}{suffix}.npz')
         np.savez(out_path, **output)
         print(f"\nSaved: {out_path}")
 
