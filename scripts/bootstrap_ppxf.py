@@ -182,6 +182,7 @@ def setup_ppxf_inputs(ifu_file, sps_name='fsps', z=DEFAULT_Z,
         'sps': sps,
         'lam_temp': sps.lam_temp,
         'sps_name': sps_name,
+        'z': z,
     }
 
 
@@ -268,10 +269,14 @@ def run_bootstrap_single_degree(ppxf_inputs, degree, best_fit_spectrum,
     scale_factor = compute_local_residual_scaling(residuals, window=window)
     scaled_residuals = residuals * scale_factor
 
+    # Input redshift for converting V back to z
+    z0 = ppxf_inputs.get('z', DEFAULT_Z)
+
     # Initialize storage
     V_samples = np.full(n_bootstrap, np.nan)
     sigma_samples = np.full(n_bootstrap, np.nan)
     chi2_samples = np.full(n_bootstrap, np.nan)
+    z_samples = np.full(n_bootstrap, np.nan)
     n_failed = 0
 
     rng = np.random.default_rng(seed)
@@ -288,6 +293,8 @@ def run_bootstrap_single_degree(ppxf_inputs, degree, best_fit_spectrum,
             V_samples[i] = pp.sol[0]
             sigma_samples[i] = pp.sol[1]
             chi2_samples[i] = pp.chi2
+            # Convert fitted velocity to redshift (eq. 5c, Cappellari 2023)
+            z_samples[i] = (1 + z0) * np.exp(pp.sol[0] / C_KMS) - 1
         except Exception:
             n_failed += 1
 
@@ -295,6 +302,7 @@ def run_bootstrap_single_degree(ppxf_inputs, degree, best_fit_spectrum,
         'V_samples': V_samples,
         'sigma_samples': sigma_samples,
         'chi2_samples': chi2_samples,
+        'z_samples': z_samples,
         'n_failed': n_failed,
     }
 
@@ -375,6 +383,7 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
     V_bootstrap = np.full((n_deg, n_bootstrap), np.nan)
     sigma_bootstrap = np.full((n_deg, n_bootstrap), np.nan)
     chi2_bootstrap = np.full((n_deg, n_bootstrap), np.nan)
+    z_bootstrap = np.full((n_deg, n_bootstrap), np.nan)
     n_failed = np.zeros(n_deg, dtype=int)
 
     t0 = clock()
@@ -392,6 +401,7 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
         V_bootstrap[j] = result['V_samples']
         sigma_bootstrap[j] = result['sigma_samples']
         chi2_bootstrap[j] = result['chi2_samples']
+        z_bootstrap[j] = result['z_samples']
         n_failed[j] = result['n_failed']
 
     elapsed = clock() - t0
@@ -410,6 +420,10 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
     V_boot_err_lo = V_p50 - V_p16
     V_boot_err_hi = V_p84 - V_p50
 
+    z_p16 = np.nanpercentile(z_bootstrap, 16, axis=1)
+    z_p50 = np.nanpercentile(z_bootstrap, 50, axis=1)
+    z_p84 = np.nanpercentile(z_bootstrap, 84, axis=1)
+
     # Original values at the selected degrees
     V_original = all_mean_vel[degree_indices]
     sigma_original = all_vel_dis[degree_indices]
@@ -417,13 +431,14 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
 
     # Report
     print(f"\nResults for {sps_name}:")
-    print(f"{'Degree':>6} {'sigma':>8} {'err_lo':>7} {'err_hi':>7} {'formal':>7} {'V':>8} {'V_lo':>7} {'V_hi':>7} {'fail':>5}")
-    print("-" * 70)
+    print(f"{'Deg':>4} {'sigma':>7} {'-err':>6} {'+err':>6} {'V':>7} {'-err':>6} {'+err':>6} {'z_med':>8} {'-dz':>7} {'+dz':>7} {'fail':>5}")
+    print("-" * 80)
     formal_err = saved['error_vdis'][degree_indices]
     for j, deg in enumerate(degrees):
-        print(f"{deg:6d} {sigma_original[j]:8.1f} {sigma_boot_err_lo[j]:7.1f} "
-              f"{sigma_boot_err_hi[j]:7.1f} {formal_err[j]:7.1f} "
-              f"{V_original[j]:8.1f} {V_boot_err_lo[j]:7.1f} {V_boot_err_hi[j]:7.1f} "
+        print(f"{deg:4d} {sigma_original[j]:7.1f} {sigma_boot_err_lo[j]:6.1f} "
+              f"{sigma_boot_err_hi[j]:6.1f} "
+              f"{V_original[j]:7.1f} {V_boot_err_lo[j]:6.1f} {V_boot_err_hi[j]:6.1f} "
+              f"{z_p50[j]:8.5f} {z_p50[j]-z_p16[j]:7.5f} {z_p84[j]-z_p50[j]:7.5f} "
               f"{n_failed[j]:5d}")
 
     if np.any(n_failed > 0):
@@ -434,6 +449,7 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
         'V_bootstrap': V_bootstrap,           # (n_deg, n_bootstrap)
         'sigma_bootstrap': sigma_bootstrap,   # (n_deg, n_bootstrap)
         'chi2_bootstrap': chi2_bootstrap,     # (n_deg, n_bootstrap)
+        'z_bootstrap': z_bootstrap,           # (n_deg, n_bootstrap)
         # Percentile-based errors (asymmetric)
         'sigma_boot_err_lo': sigma_boot_err_lo,  # median - 16th
         'sigma_boot_err_hi': sigma_boot_err_hi,  # 84th - median
@@ -445,6 +461,10 @@ def run_bootstrap(ifu_file, sps_name='fsps', results_dir='results',
         'V_p16': V_p16,
         'V_p50': V_p50,
         'V_p84': V_p84,
+        'z_bootstrap': z_bootstrap,
+        'z_p16': z_p16,
+        'z_p50': z_p50,
+        'z_p84': z_p84,
         # Original fit values
         'V_original': V_original,
         'sigma_original': sigma_original,
