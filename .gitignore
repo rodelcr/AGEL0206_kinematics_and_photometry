@@ -3,12 +3,15 @@
 *.npz
 *.npy
 *.h5
+*.zip
 
 # Generated directories
 TEXT/
 pipes/
 __pycache__/
 .ipynb_checkpoints/
+results/
+notebooks/tutorials/
 
 # OS
 .DS_Store

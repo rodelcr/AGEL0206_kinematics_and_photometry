@@ -59,61 +59,34 @@ NOISE_SLICE = (slice(28, 40), slice(45, 70))       # cube[:, 28:40, 45:70]
 # Setup functions
 # =============================================================================
 
-def setup_ppxf_inputs(ifu_file, sps_name='fsps', z=DEFAULT_Z,
-                      lam_obs_range=DEFAULT_LAM_OBS_RANGE,
-                      lam_range_temp=DEFAULT_LAM_RANGE_TEMP):
+def _prep_spectrum_for_ppxf(flux_native, noise_native, hdr, sps_name, z,
+                            lam_obs_range, lam_range_temp, verbose=True):
+    """Shared internals for setup_ppxf_inputs{,_from_spectrum}.
+
+    Given a 1-D flux and noise on the KCWI cube's native (vacuum, observed)
+    wavelength grid plus the cube header, produce the full ppxf_inputs dict.
+
+    Both public setup_* functions just differ in how they produce the input
+    spectrum (cube slice vs user-supplied); the downstream prep is identical.
     """
-    Recreate all ppxf inputs from the raw IFU cube.
-
-    Mirrors the setup in 01_streamlined_IFU_ppxf.ipynb (cells 8e8bae4a, a30f240b).
-
-    Parameters
-    ----------
-    ifu_file : str
-        Path to the KCWI FITS cube.
-    sps_name : str
-        Template library: 'fsps', 'emiles', or 'xsl'.
-    z : float
-        Deflector redshift.
-    lam_obs_range : tuple
-        Observed wavelength range to fit (Angstroms).
-    lam_range_temp : tuple
-        Rest-frame wavelength range for template loading.
-
-    Returns
-    -------
-    dict with keys:
-        'galaxy'       : normalized galaxy spectrum (1001 pixels)
-        'noise'        : normalized noise spectrum (1001 pixels)
-        'velscale'     : velocity scale in km/s per pixel
-        'start'        : starting guess [V, sigma] in km/s
-        'goodpixels'   : indices of pixels included in fit
-        'lam_gal_rest' : rest-frame wavelength array
-        'sps'          : sps_lib object with templates
-        'lam_temp'     : template wavelength array
-        'sps_name'     : template library name
-    """
-    print(f"Setting up ppxf inputs for {sps_name}...")
-
-    # Load cube and header
-    with fits.open(ifu_file) as hdul:
-        hdr = hdul[0].header
-        cube = np.asarray(hdul[0].data, dtype=float)
-
-    # Build wavelength array from WCS
+    # Build native wavelength array from WCS (vacuum, observed frame)
     crval = hdr['CRVAL3']
     cdelt = hdr['CD3_3']
     npix = hdr['NAXIS3']
     crpix = hdr.get('CRPIX3', 1.0)
     pix = np.arange(npix)
-    lam = crval + cdelt * (pix + 1 - crpix)
-
-    # Extract integrated deflector and noise spectra
-    flux_int = np.average(cube[:, DEFLECTOR_SLICE[0], DEFLECTOR_SLICE[1]], axis=(1, 2))
-    noise_int = np.std(cube[:, NOISE_SLICE[0], NOISE_SLICE[1]], axis=(1, 2))
-
-    # Rebuild wavelength and trim to fitting range
     lam_int = crval + cdelt * (pix + 1 - crpix)
+
+    if flux_native.shape[0] != npix or noise_native.shape[0] != npix:
+        raise ValueError(
+            f"flux/noise must be length NAXIS3={npix}; got "
+            f"flux={flux_native.shape}, noise={noise_native.shape}"
+        )
+
+    flux_int = np.asarray(flux_native, dtype=float).copy()
+    noise_int = np.asarray(noise_native, dtype=float).copy()
+
+    # Trim to observed wavelength range
     mask_wl = (lam_int >= lam_obs_range[0]) & (lam_int <= lam_obs_range[1])
     lam_int = lam_int[mask_wl]
     flux_int = flux_int[mask_wl]
@@ -133,12 +106,12 @@ def setup_ppxf_inputs(ifu_file, sps_name='fsps', z=DEFAULT_Z,
     flux_int = flux_int[mask_fit]
     noise_int = noise_int[mask_fit]
 
-    # Normalize spectrum
+    # Normalize
     median_flux = np.median(flux_int)
     galaxy = flux_int / median_flux
     noise_norm = np.sqrt(noise_int**2) / median_flux
 
-    # Convert vacuum to air wavelengths
+    # Vacuum → air
     lam_gal = np.copy(lam_int)
     lam_gal *= np.median(util.vac_to_air(lam_gal) / lam_gal)
 
@@ -146,7 +119,16 @@ def setup_ppxf_inputs(ifu_file, sps_name='fsps', z=DEFAULT_Z,
     d_ln_lam_gal = (np.log(lam_gal)[-1] - np.log(lam_gal)[0]) / (np.log(lam_gal).size - 1)
     velscale = C_KMS * d_ln_lam_gal
 
-    # Load SPS templates
+    # Instrumental resolution from FITS header
+    dlam_gal = np.gradient(lam_gal)
+    wdisp = hdr['DISPSCAL']
+    fwhm_gal = 2.355 * wdisp * dlam_gal
+
+    # Rest frame
+    lam_gal_rest = lam_gal / (1 + z)
+    fwhm_gal_rest = fwhm_gal / (1 + z)
+
+    # Load SPS templates (downloading if missing)
     ppxf_dir = resources.files('ppxf')
     basename = f"spectra_{sps_name}_9.0.npz"
     filename = ppxf_dir / 'sps_models' / basename
@@ -154,23 +136,14 @@ def setup_ppxf_inputs(ifu_file, sps_name='fsps', z=DEFAULT_Z,
         url = "https://raw.githubusercontent.com/micappe/ppxf_data/main/" + basename
         request.urlretrieve(url, filename)
 
-    # Instrumental resolution from FITS header
-    dlam_gal = np.gradient(lam_gal)
-    wdisp = hdr['DISPSCAL']
-    fwhm_gal = 2.355 * wdisp * dlam_gal
-
-    # Convert to rest frame
-    lam_gal_rest = lam_gal / (1 + z)
-    fwhm_gal_rest = fwhm_gal / (1 + z)
-
-    # Load templates
     fwhm_gal_dict = {"lam": lam_gal_rest, "fwhm": fwhm_gal_rest}
     sps = lib.sps_lib(filename, velscale, fwhm_gal_dict, lam_range=list(lam_range_temp))
     goodpixels = util.determine_goodpixels(np.log(lam_gal_rest), list(lam_range_temp))
 
-    print(f"  Templates: {sps_name} ({len(sps.templates.T)} templates)")
-    print(f"  Galaxy: {len(galaxy)} pixels, Good pixels: {len(goodpixels)}")
-    print(f"  Velscale: {velscale:.2f} km/s/pix")
+    if verbose:
+        print(f"  Templates: {sps_name} ({len(sps.templates.T)} templates)")
+        print(f"  Galaxy: {len(galaxy)} pixels, Good pixels: {len(goodpixels)}")
+        print(f"  Velscale: {velscale:.2f} km/s/pix")
 
     return {
         'galaxy': galaxy,
@@ -184,6 +157,94 @@ def setup_ppxf_inputs(ifu_file, sps_name='fsps', z=DEFAULT_Z,
         'sps_name': sps_name,
         'z': z,
     }
+
+
+def setup_ppxf_inputs(ifu_file, sps_name='fsps', z=DEFAULT_Z,
+                      lam_obs_range=DEFAULT_LAM_OBS_RANGE,
+                      lam_range_temp=DEFAULT_LAM_RANGE_TEMP):
+    """
+    Recreate all ppxf inputs from the raw IFU cube using the default
+    190-spaxel deflector region (cube[:, 45:64, 45:55]) for the integrated
+    spectrum and cube[:, 28:40, 45:70] for the noise estimate.
+
+    Mirrors the setup in 01_streamlined_IFU_ppxf.ipynb (cells 8e8bae4a, a30f240b).
+
+    For custom apertures (e.g. circular apertures at R < Re/2), use
+    setup_ppxf_inputs_from_spectrum() instead.
+
+    Parameters
+    ----------
+    ifu_file : str
+        Path to the KCWI FITS cube.
+    sps_name : str
+        Template library: 'fsps', 'emiles', or 'xsl'.
+    z : float
+        Deflector redshift.
+    lam_obs_range : tuple
+        Observed wavelength range to fit (Angstroms).
+    lam_range_temp : tuple
+        Rest-frame wavelength range for template loading.
+
+    Returns
+    -------
+    dict
+        See _prep_spectrum_for_ppxf() for keys.
+    """
+    print(f"Setting up ppxf inputs for {sps_name}...")
+
+    with fits.open(ifu_file) as hdul:
+        hdr = hdul[0].header
+        cube = np.asarray(hdul[0].data, dtype=float)
+
+    flux_native = np.average(cube[:, DEFLECTOR_SLICE[0], DEFLECTOR_SLICE[1]], axis=(1, 2))
+    noise_native = np.std(cube[:, NOISE_SLICE[0], NOISE_SLICE[1]], axis=(1, 2))
+
+    return _prep_spectrum_for_ppxf(flux_native, noise_native, hdr, sps_name, z,
+                                   lam_obs_range, lam_range_temp)
+
+
+def setup_ppxf_inputs_from_spectrum(flux, noise, hdr, sps_name='fsps', z=DEFAULT_Z,
+                                    lam_obs_range=DEFAULT_LAM_OBS_RANGE,
+                                    lam_range_temp=DEFAULT_LAM_RANGE_TEMP,
+                                    verbose=True):
+    """
+    Build a ppxf_inputs dict from a pre-extracted 1-D spectrum.
+
+    Use this for custom aperture spectra (e.g. circular apertures at R < Re/2,
+    R < Re/8) that don't correspond to the hardcoded 190-spaxel deflector box.
+
+    The caller is responsible for extracting `flux` and `noise` from the cube
+    at the desired aperture; this function handles everything downstream
+    (wavelength trim, log-rebin, normalize, vac→air, template loading).
+
+    Parameters
+    ----------
+    flux : array, shape (NAXIS3,)
+        Integrated flux spectrum on the cube's native wavelength grid (vacuum,
+        observed frame). Typically `np.average(cube[:, mask], axis=1)` for some
+        spatial mask, or a weighted average for contamination correction.
+    noise : array, shape (NAXIS3,)
+        Noise spectrum on the same grid. Typically
+        `np.std(cube[:, NOISE_SLICE[0], NOISE_SLICE[1]], axis=(1, 2))`.
+    hdr : astropy FITS header
+        Cube header; used for wavelength solution (CRVAL3, CD3_3, NAXIS3,
+        CRPIX3) and instrumental resolution (DISPSCAL).
+    sps_name, z, lam_obs_range, lam_range_temp
+        Same meaning as in setup_ppxf_inputs().
+    verbose : bool
+        Print template/pixel counts.
+
+    Returns
+    -------
+    dict
+        Same shape as setup_ppxf_inputs(): 'galaxy', 'noise', 'velscale',
+        'start', 'goodpixels', 'lam_gal_rest', 'sps', 'lam_temp', 'sps_name',
+        'z'.
+    """
+    if verbose:
+        print(f"Setting up ppxf inputs for {sps_name} from user-supplied spectrum...")
+    return _prep_spectrum_for_ppxf(flux, noise, hdr, sps_name, z,
+                                   lam_obs_range, lam_range_temp, verbose=verbose)
 
 
 # =============================================================================
