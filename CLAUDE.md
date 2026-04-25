@@ -35,15 +35,29 @@ There are two versions of the base analysis notebooks (01, 02), plus a sequence 
 
 The streamlined IFU notebook uses veldis (degree=[4,30]) for the integrated spectrum and raw ppxf for per-spaxel and power-binned fitting. The `ppxf_per_spaxel()` function appends `best_fit` twice per degree iteration — account for this when indexing results (`best_fit_idx = deg_idx * 2`). This bug is **only** in notebook 01_streamlined; `scripts/bootstrap_ppxf.py` (which notebooks 03/03b/03c/06 build on) does not have it.
 
-## Key Results
+## Key Results (Gültekin σ_e pipeline, N=500 production)
 
-- **σ(<Re/8)**: *populated by notebook 06*
-- **σ(<Re/2)**: *populated by notebook 06*
-- **σ(<Re) = σ_e**: *populated by notebook 06* — **this is the primary number** for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5).
-- σ on the 190-spaxel integrated region `cube[:,45:64,45:55]`: ~301 ± 30 km/s — **do NOT cite this in the paper**; it conflates the inner stellar kinematics with the lensed-arc contamination.
-- Systemic redshift: z = 0.67564 (notebook 04); older results use z = 0.67511.
-- Effective radius (IFU white-light, proper masking): Re = 2.61" = 18.4 kpc. Re/2 ≈ 1.30", Re/8 ≈ 0.33".
-- log(M★/M☉) = 11.33 +0.07/−0.09 (notebook 02 Bagpipes).
+**Primary paper number** — σ_e(<Re) via cumulative I-weighted ppxf (notebook 07c §6cum):
+
+- **σ_e(<Re) = 267 ± 24 km/s** — for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5)
+- σ_e(<Re_safe = 3Re/4 = 1.72") = 239 ± 20 km/s — arc-free cumulative aperture
+- σ_e(<Re/2 ≈ 1.15") ≈ 226 ± 18 km/s
+- σ_e(<Re/8 ≈ 0.29") ≈ 209 ± 20 km/s
+
+Cross-checks (all consistent at <1σ, notebook 07c):
+- §7 discrete Gültekin annular sum (arc-filtered to R < Re_safe): **255 −24/+28 km/s**
+- §7b flat-σ extrapolation into outer annulus: **271 −33/+35 km/s**
+- nb07e arc-spectrum subtraction: matches §6cum/§7 within 1 km/s — arc dilution is NOT a significant systematic
+- **Do NOT include ann5 in §7 (unfiltered gives 386 km/s, unphysical)** — single α_arc template insufficient; use §6cum or §7b instead
+
+Historical / superseded:
+- σ on 190-spaxel integrated region `cube[:,45:64,45:55]`: ~301 ± 30 km/s — **do NOT cite**; arc-contaminated
+- Notebook 06 aperture posteriors at R<Re/8, Re/2, Re (the earlier pre-Gültekin path) are still in `results/final_sigma_Re_apertures.npz` but superseded by the Gültekin numbers above
+
+Other headlines:
+- Systemic redshift: z = 0.67564 (notebook 04); older results use z = 0.67511
+- Effective radius (F140W + F200LP masked CoG mean): **Re = 2.305" = 16.23 kpc** (paper headline — supersedes older Re = 2.61" IFU-only value)
+- log(M★/M☉) = 11.33 +0.07/−0.09 (notebook 02 Bagpipes)
 
 ## Scripts
 
