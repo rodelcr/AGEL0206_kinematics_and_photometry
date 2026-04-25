@@ -39,16 +39,28 @@ The streamlined IFU notebook uses veldis (degree=[4,30]) for the integrated spec
 
 **Primary paper number** — σ_e(<Re) via cumulative I-weighted ppxf (notebook 07c §6cum):
 
-- **σ_e(<Re) = 267 ± 24 km/s** — for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5)
-- σ_e(<Re_safe = 3Re/4 = 1.72") = 239 ± 20 km/s — arc-free cumulative aperture
-- σ_e(<Re/2 ≈ 1.15") ≈ 226 ± 18 km/s
-- σ_e(<Re/8 ≈ 0.29") ≈ 209 ± 20 km/s
+- **σ_e(<Re) = 267.32 ± 24 km/s** — for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5)
+- σ_e(<Re_safe = 3Re/4 = 1.72") = 238.78 ± 20 km/s — arc-free cumulative aperture
+- σ_e(<Re/2 ≈ 1.10") ≈ 225.78 ± 18 km/s
+- σ_e(<Re/8 ≈ 0.76") ≈ 209.18 ± 20 km/s
 
 Cross-checks (all consistent at <1σ, notebook 07c):
-- §7 discrete Gültekin annular sum (arc-filtered to R < Re_safe): **255 −24/+28 km/s**
+- §7 discrete Gültekin annular sum (arc-filtered to R < Re_safe): **254.99 −24.2/+28.4 km/s**
 - §7b flat-σ extrapolation into outer annulus: **271 −33/+35 km/s**
-- nb07e arc-spectrum subtraction: matches §6cum/§7 within 1 km/s — arc dilution is NOT a significant systematic
+- nb07e arc-spectrum subtraction: matches §6cum bit-identically (same code path), §7 within 0.1 km/s — arc dilution is NOT a detectable systematic at N=500
 - **Do NOT include ann5 in §7 (unfiltered gives 386 km/s, unphysical)** — single α_arc template insufficient; use §6cum or §7b instead
+
+### Method choice — cumulative vs annular
+
+§6cum (cumulative I-weighted ppxf) is the headline because:
+- Direct discretization of Gültekin Eq. 1 (luminosity-weighting + LOSVD averaging in same ppxf fit)
+- Bright-center I-weighting auto-suppresses arc contamination
+- This is what KH13 / Greene+20 actually compute for the M•–σ relation
+
+§7 discrete annular sum is used for:
+- The σ(R) profile (radial physics, elliptical-bulge check)
+- Per-annulus systematics inspection (S/N, EW, σ posterior)
+- Independent cross-check on the cumulative number
 
 Historical / superseded:
 - σ on 190-spaxel integrated region `cube[:,45:64,45:55]`: ~301 ± 30 km/s — **do NOT cite**; arc-contaminated
