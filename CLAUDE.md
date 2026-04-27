@@ -47,20 +47,26 @@ The streamlined IFU notebook uses veldis (degree=[4,30]) for the integrated spec
 Cross-checks (all consistent at <1σ, notebook 07c):
 - §7 discrete Gültekin annular sum (arc-filtered to R < Re_safe): **254.99 −24.2/+28.4 km/s**
 - §7b flat-σ extrapolation into outer annulus: **271 −33/+35 km/s**
-- nb07e arc-spectrum subtraction: matches §6cum bit-identically (same code path), §7 within 0.1 km/s — arc dilution is NOT a detectable systematic at N=500
+- nb07e arc-spectrum subtraction (residual arc through F200 mask): matches §6cum bit-identically, §7 within 0.1 km/s — *residual* arc dilution sub-dominant at N=500
+- **F200LP mask sensitivity test (§6cum-nomask, N=500, executed 2026-04-27)**: disabling the F200 mask gives σ_e(<R_e) = **250.96 ± 23 km/s** (Δ = −16.36 km/s vs headline). The F200 mask itself is at the ~half-SPS-budget level — quote as sensitivity, not negligible. Cache: `results/annular_bootstrap_07c_nomask/`.
 - **Do NOT include ann5 in §7 (unfiltered gives 386 km/s, unphysical)** — single α_arc template insufficient; use §6cum or §7b instead
 
-### Method choice — cumulative vs annular
+### Method choice — cumulative vs annular (and binning)
 
-§6cum (cumulative I-weighted ppxf) is the headline because:
-- Direct discretization of Gültekin Eq. 1 (luminosity-weighting + LOSVD averaging in same ppxf fit)
-- Bright-center I-weighting auto-suppresses arc contamination
-- This is what KH13 / Greene+20 actually compute for the M•–σ relation
+§6cum (cumulative I-weighted aperture ppxf) is the headline. See `~/.claude/.../memory/reference_cumulative_vs_annular_sigma_e.md` for the full case. Short version of why:
+- Single ppxf fit on the I-weighted aperture spectrum at R<R_max — matches what KH13 / Greene+20 / SAURON / ATLAS3D / MaNGA actually compute (Cappellari+2006 eq. 1)
+- No binning to defend (no equal-r vs equal-N debate)
+- Single LOSVD fit preserves line-shape information that §7's moment-pooling discards
+- Bright-center I-weighting auto-suppresses arc contamination (verified by nb07e: < 0.1 km/s shift)
+- No per-SPS V_sys anchoring choice (§7 needs one; can shift σ_e by 5–15 km/s)
+- Robust to non-axisymmetry and asymmetric arc-mask gaps
 
-§7 discrete annular sum is used for:
+§7 discrete annular sum is for:
 - The σ(R) profile (radial physics, elliptical-bulge check)
 - Per-annulus systematics inspection (S/N, EW, σ posterior)
-- Independent cross-check on the cumulative number
+- Cross-check on the cumulative number — never quote §7 as the headline
+
+Annular binning (only relevant for §7 / σ(R)): **equal-N inside R_safe = 3R_e/4 + 1 outer flagged bin** (nb07c) is the right choice — balanced bootstrap variance per bin, narrow outer bin cleanly diagnoses arc contamination. Equal-width annuli (nb07) are kept as a sensitivity test only; the 257 (equal-width) vs 267 (equal-N) shift is at the SPS-systematic level (±24).
 
 Historical / superseded:
 - σ on 190-spaxel integrated region `cube[:,45:64,45:55]`: ~301 ± 30 km/s — **do NOT cite**; arc-contaminated

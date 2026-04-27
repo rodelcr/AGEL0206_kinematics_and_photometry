@@ -26,23 +26,25 @@ Per-SPS spread at R_e: FSPS 253 / EMILES 268 / XSL 280 (spread 27 km/s, captured
 
 ---
 
-## 2. ⚠️ CRITICAL DATA-PROVENANCE ISSUE — must address before paper submission
+## 2. Cube provenance — header metadata is mislabeled (NOT a data issue)
 
-**The σ_e numbers above were computed on the WRONG cube** — a single 300s frame from UT 2025-11-17 (`Nov17_2025_DESJ0206_RL_combined_icubes_wcs.fits`, 253 MB, shape 3317×100×100, single Nov17 frame from program U002 PI Jones).
+**The cube we used IS the final, most-reduced data product** — `Nov17_2025_DESJ0206_RL_combined_icubes_wcs.fits` (253 MB, shape 3317×100×100, symlinked from `../velocity_dispersion_from_IFU/`). The σ_e numbers above are correct and do NOT need re-running.
 
-**The CORRECT paper cube is** the multi-night combined product `DESJ0206-red_medium_combined.fits` (469 MB, shape 4269×120×120, 5384–9652 Å) — combines frames from at least 4 nights:
+**However, the FITS header metadata is mislabeled.** The headers say `DATE-OBS=2025-11-17`, `PROGNAME=U002`, `PROGPI=Jones`, suggesting a single Nov 17 frame, but the actual data combines multiple nights — at minimum:
 
 - **Aug 29 2025 HST = Aug 30 2025 UTC** (Program K409, frames `kr250830_00091`–`00100+` at PAs 0°/45°/90°) — the canonical observing night per user
 - Sept 29 2025 (Program K409)
 - Dec 29 2024 (frames `kr241229_00092`–`00095`)
-- Nov 17 2025 (Program U002, the frame that mistakenly became the headline)
+- Nov 17 2025 (Program U002 — only the most recent stacking pass, hence the header date)
 
-Both cubes (red + blue) and provenance files (shifts.list, .py reduction scripts, observing logs) have been copied locally to:
+**For the paper, do NOT cite Nov 17 / U002 / Jones from the header** — that's a stacking-pass artifact, not the observation provenance. Cite the multi-night combine including Aug 29 K409 as the canonical night.
+
+A separate, larger combine (`DESJ0206-red_medium_combined.fits`, 469 MB, shape 4269×120×120, 5384–9652 Å) was discovered in the shared Google Drive and copied locally to `raw_KCWI/`. This may be a more recent reduction with wider FoV/wavelength coverage, but **we did not re-run on it** because the cube we have is already the validated final product. The local copy + provenance files are kept as a reference:
 
 ```
 raw_KCWI/
-├── red/DESJ0206-red_medium_combined.fits     (469 MB — paper headline)
-├── blue/DESJ0206_medium_combined.fits        (285 MB — Mg b/Hβ region in BLUE arm)
+├── red/DESJ0206-red_medium_combined.fits     (469 MB — alternate reduction, NOT used)
+├── blue/DESJ0206_medium_combined.fits        (285 MB — alternate blue, NOT used)
 └── provenance/
     ├── DESJ0206-red_medium_shifts.list
     ├── DESJ0206_medium_shifts.list
@@ -53,23 +55,15 @@ raw_KCWI/
     └── K409_2025-09-29_UTC.html
 ```
 
-The actual `.fits` raw frames (`kr250830_*.fits`, `kb250830_*.fits`) are **NOT** in the Google Drive — only the night log is shared. They presumably live on a collaborator's local machine (e.g., Yuguang Chen's `~/obs/2025aug29/`). For paper writing, the combined cube is enough; for re-reduction, get raw frames from PI/reducer.
-
-### What changes if we re-run on the multi-night cube
-
-The σ_e pipeline (notebooks 06, 07, 07a–07e) reads the cube via the symlink at the repo root → `Nov17_2025_DESJ0206_RL_combined_icubes_wcs.fits`. To switch:
-
-1. Re-point the symlink (or change `IFU_FILE` config) to `raw_KCWI/red/DESJ0206-red_medium_combined.fits`
-2. Re-extract integrated/aperture/annular spectra (cube has different shape and wavelength range)
-3. Re-run N=500 bootstrap fits in nb07c + nb07e → ~2h sequential
-4. The headline σ_e value will likely shift slightly (more frames = higher S/N, possibly tighter ±) but the three-method agreement should hold
+The raw `.fits` frames (`kr250830_*.fits`, `kb250830_*.fits`) are NOT in the shared Drive — only night logs. They presumably live on a collaborator's local machine. For paper writing this doesn't matter; the reduced cube is what we cite.
 
 ### Open paper-writing questions
 
-1. **PI of K409** (NOT Jones — that was U002). Look up Keck program archive.
-2. **Total on-source exposure** — enumerate from each night's log: ≥ 10 frames × 300 s on Aug 29 alone.
+1. **PI of K409** (NOT Jones — that was U002 on Nov 17 only). Look up Keck program archive.
+2. **Total on-source exposure** — enumerate from each night's log: ≥ 10 frames × 300 s on Aug 29 alone, plus Sept 29 + Dec 29 + Nov 17.
 3. **Aug 29 night seeing** — extract from `provenance/K409_2025-08-30_UTC.html` header.
 4. **Whether to also use the BLUE arm** — Mg b 5170 Å falls at observed λ ≈ 8660 Å (rest 5170 × 1.6756 = 8666 Å). BLUE cube ends at 5872 Å so Mg b is NOT in BLUE for z=0.676 — it's in RED. So BLUE is mostly redundant for σ; might still be useful for [O II] check on z.
+5. **Should we re-run on the 469 MB alternate reduction** for sanity? Quick check (re-point symlink, re-run nb07c at N=500, ~1h) — but optional, not blocking.
 
 ---
 
@@ -132,11 +126,11 @@ e3937c2 Build σ_e Gültekin pipeline (nb06, nb07/a/b/c/d, nb07e-skeleton)
 
 ## 6. Suggested next steps (priority order)
 
-1. **Re-point pipeline to multi-night combined cube** in `raw_KCWI/red/DESJ0206-red_medium_combined.fits` and re-run nb07c at N=500 (~1h). Compare headline σ_e shift.
-2. **Get K409 PI + total exposure** from Keck program archive or PI contact. Update CLAUDE.md and memory boilerplate.
-3. **Extract per-night seeing** from K409 logs (Aug 29 + Sept 29) and Nov 17 + Dec 29 frame headers.
-4. **Decide on cube symlink convention** — should the canonical cube live at the repo root (rename current symlink target) or stay in `raw_KCWI/`?
-5. **Paper draft** — use updated boilerplate from `reference_kcwi_data_properties.md` once questions above are resolved.
+1. **Get K409 PI + total exposure** from Keck program archive or PI contact. Update CLAUDE.md and memory boilerplate so the paper cites the multi-night provenance, not the mislabeled Nov 17 / U002 / Jones header.
+2. **Extract per-night seeing** from K409 logs (Aug 29 + Sept 29) and Nov 17 + Dec 29 frame headers.
+3. **Paper draft** — use updated boilerplate from `reference_kcwi_data_properties.md` once §1 questions are resolved. Headline σ_e numbers stand.
+4. (Optional) Re-run nb07c at N=500 on the 469 MB alternate reduction `raw_KCWI/red/DESJ0206-red_medium_combined.fits` as a sanity check. Re-point symlink + re-extract spectra (~1h). Not blocking — only do if the alternate reduction is judged to be the canonical paper product.
+5. **Decide cube symlink convention** — keep current `Nov17_2025_*` filename (misleading but stable) or rename to `DESJ0206_RL_combined.fits`.
 
 ---
 
