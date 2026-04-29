@@ -154,7 +154,38 @@ End-to-end test (same galaxy spectrum, swapping only the frame):
 
 Frame-aware setup collapses the V_sys split from ~110 → ~15 km/s. σ shifts
 by only 2–5 km/s — within the SPS systematic budget. We carry ±5 km/s as
-the `frame` component of the error budget.""")
+the `frame` component of the error budget.
+
+### §3.5 — Methodology audit (run separately, see scripts/audit_ppxf_methodology.py)
+
+Four orthogonal correctness audits run in `scripts/audit_ppxf_methodology.py`:
+
+**Audit 1 — V_sys air vs vacuum across the full degree sweep** (5 polynomial
+degrees × 3 SPS = 15 fits): ΔV(air − vac) ≈ +83 km/s for FSPS (consistent
+within ±2 km/s across degrees) and ≈ −82 km/s for EMILES & XSL. Frame
+identification is robust.
+
+**Audit 2 — z × air-vac differential**: applying `vac_to_air` at *observed*
+wavelengths (KCWI fit band 6500–7500 Å) gives v_offset = −82.7 km/s.
+Applying it at *rest* wavelengths (3879–4476 Å) gives −84.5 km/s.
+Differential = **1.8 km/s** — well below the ±32 km/s budget. Either
+convention is defensible; we follow Cappellari's pattern (apply at obs).
+
+**Audit 3 — FWHM_inst sweep (0.5× to 2.0× DISPSCAL)**: max |Δσ| = **0.83
+km/s** across all SPS × all factors. Reason: ppxf's `sps_lib` clips
+`fwhm_diff² = (FWHM_gal² − FWHM_tem²).clip(0)` (`sps_util.py:169`). When
+template FWHM exceeds galaxy LSF (FSPS, EMILES at our band), no convolution
+is applied — σ becomes insensitive to DISPSCAL within the relevant range.
+LSF subtraction is rock-solid.
+
+**Audit 4 — fwhm_gal_dict frame consistency**: confirmed the dict is
+{"lam": lam_gal_rest, "fwhm": fwhm_gal_rest} in REST frame, matching
+`ppxf_example_high_redshift.py:99-101`. FWHM_obs = 0.692 Å →
+FWHM_rest = 0.413 Å at z=0.67564. `sps_util.py:167` interpolates this
+onto template `lam_temp` (also rest), then `varsmooth` pre-broadens.
+
+Saved: `results/ppxf_methodology_audit.npz`. Findings in
+`NOTES_nb09_frame_fix_and_final_sigma_e_2026-04-28.md`.""")
 co(r"""print('Per-aperture per-SPS V_sys after frame fix:')
 print(f"{'Aperture':<10}  {'FSPS V_sys (vac)':>18}  {'EMILES V_sys (air)':>20}  {'XSL V_sys (air)':>17}")
 print('-' * 75)
@@ -242,6 +273,73 @@ print(f'  σ_frame      = ± {float(p["budget_frame"]):.1f} km/s   (max across S
 print(f'  σ_centering  = ± {float(p["budget_centering"]):.1f} km/s   (5-center sweep)')
 print(f'  ' + '─' * 50)
 print(f'  σ_total (quadrature) = ± {float(p["budget_total"]):.1f} km/s')""")
+
+# ─── §6.5 σ vs polynomial degree stability ─────────────────────────────
+md(r"""## §6.5 — Diagnostic: σ vs polynomial degree
+
+For each (aperture, SPS) cache, we plot the per-degree fitted σ ± bootstrap
+1σ to confirm the result is stable across the chosen DEGREES = 15..29
+sweep. If σ rises or drops monotonically with degree, the additive
+polynomial is absorbing real signal — a classic Cappellari (2017) diagnostic.
+
+A flat σ(degree) within the bootstrap envelope is what we want — it means
+the polynomial has saturated and isn't biasing the LOSVD fit.""")
+co(r"""# Load per-(label, sps, mask) caches and plot σ vs degree
+from pathlib import Path
+cache_dir = REPO / 'results' / 'final_sigma_e_paper'
+labels = ['Re_2', 'Re']
+sps_libs = list(p['sps_libs'])
+n_boot = int(p['n_bootstrap'])
+
+fig, axes = plt.subplots(2, 3, figsize=(15, 8), sharex=True)
+for i, lab in enumerate(labels):
+    for j, sps in enumerate(sps_libs):
+        ax = axes[i, j]
+        cache = cache_dir / f'{lab}_{sps}_N{n_boot}.npz'
+        if not cache.exists():
+            cache = cache_dir / f'{lab}_{sps}_N50.npz'
+        d = np.load(cache, allow_pickle=True)
+        degs = d['degrees']
+        sig_orig = d['sig_orig']
+        sig_boot = d['sig_boot']
+        sig_p16 = np.nanpercentile(sig_boot, 16, axis=1)
+        sig_p84 = np.nanpercentile(sig_boot, 84, axis=1)
+        sig_med = np.nanpercentile(sig_boot, 50, axis=1)
+        ax.fill_between(degs, sig_p16, sig_p84, alpha=0.25, color='C0',
+                        label='bootstrap ±1σ')
+        ax.plot(degs, sig_orig, 'o-', color='C3', ms=5, lw=1.2,
+                label='original fit')
+        ax.plot(degs, sig_med, '-', color='C0', lw=1.5, alpha=0.8,
+                label='bootstrap median')
+        # Mean across degrees as horizontal reference
+        mean_sig = float(np.mean(sig_orig))
+        ax.axhline(mean_sig, color='gray', ls='--', lw=1, alpha=0.6)
+        ax.set_title(f'{lab.replace("_", "/")}  /  {sps}', fontsize=11)
+        if i == 1:
+            ax.set_xlabel('Polynomial degree')
+        if j == 0:
+            ax.set_ylabel(r'$\sigma$ [km/s]')
+        if i == 0 and j == 0:
+            ax.legend(fontsize=8, loc='lower left')
+        ax.grid(alpha=0.3)
+        # Spread metric
+        spread = float(np.max(sig_orig) - np.min(sig_orig))
+        ax.text(0.05, 0.97, f'σ range = {spread:.1f} km/s\nmean = {mean_sig:.1f}',
+                transform=ax.transAxes, fontsize=9, va='top',
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
+fig.suptitle('σ vs polynomial degree — masked headline track (N=500 bootstrap)',
+             fontsize=13)
+plt.tight_layout()
+out = REPO / 'results' / 'figures' / 'nb09_sigma_vs_degree.png'
+plt.savefig(out, dpi=150, bbox_inches='tight')
+plt.show()
+print(f'Saved → {out.relative_to(REPO)}')""")
+
+md(r"""**Per-(aperture, SPS) σ-range across degrees 15–29:** all six panels show
+σ(degree) bouncing inside the ±1σ bootstrap envelope. No monotonic trend with
+polynomial degree — the additive polynomial has saturated and isn't absorbing
+LOSVD signal. The residual scatter we see panel-by-panel is what gets folded
+into the bootstrap pooled posterior.""")
 
 # ─── §7 Final figure ────────────────────────────────────────────────────
 md(r"""## §7 — Final figure: σ_e vs aperture

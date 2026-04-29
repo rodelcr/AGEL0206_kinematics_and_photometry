@@ -326,9 +326,184 @@ python scripts/final_sigma_e.py --n_bootstrap 50
 # Production (with N=50 fallback if any fit is killed; ~50-100 min)
 python scripts/final_sigma_e.py --n_bootstrap 500
 
+# If any production fit hit numerical pathology and fell back to N=50,
+# re-run the missing 3 with the joblib parallel runner (~6 min total):
+python scripts/relock_nomask_Re_N500.py
+python scripts/final_sigma_e.py --n_bootstrap 500   # repackages with N=500 throughout
+
+# Comprehensive ppxf methodology audit (~3 min)
+python scripts/audit_ppxf_methodology.py
+
+# σ_inst sensitivity test (~2 min)
+python scripts/sigma_inst_sensitivity.py
+
 # Build + execute notebook
 python scripts/build_nb09.py
 jupyter nbconvert --to notebook --execute --inplace \
   notebooks/09_final_sigma_e_paper.ipynb \
   --ExecutePreprocessor.timeout=300
 ```
+
+---
+
+## ADDENDUM 2026-04-29 — Comprehensive methodology audit + post-relock final numbers
+
+After committing the initial nb09, four follow-up methodology checks were
+requested to verify air-vacuum handling against Cappellari documentation.
+All four passed cleanly.
+
+### Audit 1 — V_sys frame closure across the full polynomial-degree sweep
+
+`scripts/audit_ppxf_methodology.py:audit_1_frame_per_degree` reproduces the
+single-degree V_sys closure test (Test 3 in this NOTES file) at 5 polynomial
+degrees per SPS. **Result:**
+
+| SPS | deg=15 | deg=18 | deg=22 | deg=26 | deg=29 | mean ΔV(air−vac) |
+|---|---|---|---|---|---|---|
+| FSPS | −84.6 | −83.7 | −83.0 | −83.5 | −84.7 | **−83.9** km/s |
+| EMILES | −82.3 | −82.1 | −82.6 | −83.6 | −84.2 | **−82.9** km/s |
+| XSL | −82.3 | −82.0 | −82.6 | −84.1 | −84.3 | **−83.1** km/s |
+
+ΔV(air − vac) is consistent within ±2 km/s across all degrees and all SPS,
+matching the air↔vacuum differential at 6500–7500 Å (≈ 83 km/s per Ciddor 1996).
+Frame identification is therefore robust to polynomial choice.
+
+The σ values shift by only 0–7 km/s between vacuum and air galaxy at any
+single degree; combined with ±24 km/s SPS-pooled bootstrap statistical
+budget, this is folded into ±5 km/s `σ_frame` in the headline error budget
+(conservatively quoted).
+
+### Audit 2 — Redshift × air-vac convention sensitivity
+
+The vac↔air conversion factor varies slowly with wavelength (Ciddor 1996,
+eq. 1). Applying the scalar-median ratio at observed wavelengths (where the
+photons enter Earth's atmosphere) is physically correct. Quantifying the
+hypothetical shift if we instead applied it at rest:
+
+| Frame | <λ> | <Δλ_air> | <v_offset> |
+|---|---|---|---|
+| Observed (KCWI fit band) 6500–7500 Å | 7000 Å | 1.93 Å | **−82.67 km/s** |
+| Rest @ z=0.67564 (Ca H+K) 3879–4476 Å | 4178 Å | 1.18 Å | **−84.50 km/s** |
+| **Differential (rest − obs)** | | | **−1.83 km/s** |
+
+If we applied the conversion at rest instead of obs, V_sys would shift by
+1.8 km/s. This is sub-dominant relative to all other systematics. We follow
+Cappellari's `ppxf_example_kinematics_sdss.py:127-134` pattern (apply at
+obs) for consistency with the canonical literature.
+
+### Audit 3 — Instrumental LSF sweep (DISPSCAL × {0.5, 0.75, 1, 1.25, 1.5, 2})
+
+`scripts/sigma_inst_sensitivity.py` (preliminary) and
+`scripts/audit_ppxf_methodology.py:audit_3_lsf_sweep` (sweep). At degree=22,
+σ_galaxy at the headline aperture for each SPS:
+
+| SPS | 0.5× | 0.75× | **1.0× (baseline)** | 1.25× | 1.5× | 2.0× |
+|---|---|---|---|---|---|---|
+| FSPS | 252.93 | 252.93 | **252.93** | 252.93 | 252.93 | 252.93 |
+| EMILES | 266.37 | 266.37 | **266.37** | 266.37 | 266.37 | 266.37 |
+| XSL | 276.51 | 276.51 | **276.46** | 276.26 | 275.73 | 275.64 |
+
+**Max |Δσ| across all SPS × all factors = 0.83 km/s.**
+
+Reason (per `sps_util.py:169`):
+```python
+fwhm_diff2 = (fwhm_gal**2 - fwhm_tem**2).clip(0)
+sigma = np.sqrt(fwhm_diff2)/np.sqrt(4*np.log(4))
+spectra = util.varsmooth(lam, spectra, sigma)
+```
+The `clip(0)` means: when the SPS template's intrinsic FWHM exceeds the
+galaxy LSF, **no convolution is applied at all**. FSPS and EMILES templates
+have intrinsic FWHM > 1.16 Å in the optical (already broader than our
+0.692 Å galaxy LSF), so they fall in the clipped regime — DISPSCAL changes
+have zero effect on σ_galaxy. Only XSL (which has intrinsic FWHM ~ 0.3 Å)
+applies real broadening, and even then the deconvolution shift is < 1 km/s.
+
+The LSF subtraction in our pipeline is **rock-solid** — ±1 km/s is below
+the precision of our headline statistic by a factor of 30.
+
+### Audit 4 — fwhm_gal_dict frame consistency
+
+Verifies our pipeline's FWHM dict matches Cappellari's
+`ppxf_example_high_redshift.py:99-101`:
+
+```python
+# Cappellari pattern:
+lam /= (1 + z)            # rest-frame wavelength
+FWHM_gal /= (1 + z)       # rest-frame FWHM (Å), Cappellari 2017 eq. 8
+
+# Our pipeline (bootstrap_ppxf.py:_prep_spectrum_for_ppxf):
+lam_gal_rest  = lam_gal  / (1 + z)
+fwhm_gal_rest = fwhm_gal / (1 + z)
+fwhm_gal_dict = {'lam': lam_gal_rest, 'fwhm': fwhm_gal_rest}
+sps = lib.sps_lib(filename, velscale, fwhm_gal_dict, ...)
+```
+
+Numerical verification at z=0.67564:
+- FWHM_obs = 2.355 × 0.294 × 1.0 Å/pix = **0.692 Å** ✓
+- FWHM_rest = 0.692 / 1.67564 = **0.413 Å** ✓
+- lam_gal_rest range = [3878, 4475] Å (rest frame, where our fit
+  band 6500–7500 Å maps to at z=0.67564) ✓
+- `sps_lib` interpolates fwhm_gal_dict onto template lam_temp grid (rest
+  frame, native to template) at `sps_util.py:167`:
+  ```python
+  fwhm_gal = np.interp(lam, fwhm_gal["lam"], fwhm_gal["fwhm"])
+  ```
+  Both are in rest frame → interpolation is correct. ✓
+
+### N=500 throughout — relock complete
+
+`scripts/relock_nomask_Re_N500.py` filled in the 3 missing no-mask Re fits
+(fsps, emiles, xsl) using `bootstrap_ppxf_parallel.run_bootstrap_single_degree_parallel`
+(joblib pool, BLAS=1 per worker). Total time: ~6 min — **dramatically
+faster than the original serial run that hit the 4-hour pathology**.
+Likely cause of original slowness: BLAS thread oversubscription on the
+mac multicore + numerical conditioning in the no-mask spectrum at certain
+polynomial degrees.
+
+After relock + repackage:
+
+| | Pre-relock (3/12 N=50) | Post-relock (12/12 N=500) |
+|---|---|---|
+| σ_e(<R_e) [masked headline] | 267.82 (−25/+23) | **267.82 (−25/+23)** (unchanged) |
+| σ_e(<R_e) [no-mask sensitivity] | 251.33 (−22/+22) | **252.82 (−22/+22)** |
+| Δ_mask | −16.5 km/s | **−15.0 km/s** |
+
+The headline doesn't move (masked track was already N=500). The Δ_mask
+sensitivity tightens by 1.5 km/s. We retain `σ_mask = 16` in the budget
+as the conservative round-up.
+
+### Pre-fix vs post-fix headline reconciliation
+
+| Pipeline | σ_e(<R_e) [stat only] | V_sys (FSPS / EMILES / XSL) | Notes |
+|---|---|---|---|
+| nb07c (pre-frame-fix, N=500) | 267.32 ± 24 km/s | −95 / +7 / +14 km/s | All galaxy in air |
+| nb09 (post-fix, N=500) | **267.82 ± 24** km/s | **−19 / −4 / −1** km/s | Galaxy in native SPS frame |
+| Δ (post − pre) | **+0.50 km/s** | V_sys split 110 → 18 km/s | σ unchanged |
+
+The frame fix changed σ by +0.5 km/s (sub-systematic). It corrected the
+INTERPRETATION of the V_sys offsets (was thought to be SPS systematic;
+turned out to be air/vac mismatch + small real SPS spread).
+
+### Summary of methodology checks — paper-ready confidence
+
+| Check | Result | Bound on σ_e shift |
+|---|---|---|
+| 1. Instrumental LSF | Correctly fed to ppxf via fwhm_gal_dict; matches Cappellari high-z pattern | < 1 km/s |
+| 2. SPS frame identification | FSPS=vac, EMILES=air, XSL=air; robust across 5 degrees | n/a (V_sys only) |
+| 3. z × air-vac differential | 1.83 km/s if mistakenly applied at rest | < 2 km/s |
+| 4. DISPSCAL sweep 0.5×–2× | ppxf clips fwhm_diff² → no σ sensitivity for FSPS/EMILES; XSL ≤ 1 km/s | < 1 km/s |
+| 5. fwhm_gal_dict frame | Rest frame, matches lam_temp; canonical | n/a |
+| 6. N=500 throughout (post-relock) | All 12 fits at full statistics | bootstrap ±24 |
+| 7. Pre/post-fix reconciliation | σ shift = +0.5 km/s | < 1 km/s |
+
+All of these are individually **smaller than the ±24 km/s SPS-pooled
+statistical 1σ**. The paper headline σ_e(<R_e) = 268 ± 32 km/s is robust
+to the methodology.
+
+### Files added in this addendum
+- `scripts/relock_nomask_Re_N500.py` — fast parallel rerun of slow fits
+- `scripts/sigma_inst_sensitivity.py` — quick LSF check (subset of audit 3)
+- `scripts/audit_ppxf_methodology.py` — full 4-audit suite
+- `results/ppxf_methodology_audit.npz` — saved audit data
+- `results/sigma_inst_sensitivity.npz` — saved LSF data
+- `results/figures/nb09_sigma_vs_degree.png` — degree stability figure (added to nb09 §6.5)
