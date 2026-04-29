@@ -507,6 +507,83 @@ plt.savefig(out, dpi=150, bbox_inches='tight')
 plt.show()
 print(f'Saved → {out.relative_to(REPO)}')""")
 
+# ─── §7b R_e source systematic ──────────────────────────────────────────
+md(r"""## §7b — R_e source systematic
+
+The headline σ_e integrates the I-weighted aperture spectrum inside the
+**mean** of F140W and F200LP masked curve-of-growth R_e (= 2.305″).
+Three alternative R_e definitions test how sensitive σ_e is to that
+choice:
+
+1. **F140W only** — rest-frame ≈8400 Å light (mature stellar continuum;
+   broader than the optical disk so often slightly larger R_e).
+2. **F200LP only** — rest-frame ≈3000 Å light (UV-leaning; biased by the
+   lensed arc toward larger apparent R_e in this filter).
+3. **Ca H+K + G-band absorption depth** — per-spaxel total absorption
+   depth in the three strongest deflector lines (rest 3925-3942,
+   3960-3976, 4297-4313 Å) summed into a stellar-only I-map. Suppresses
+   the smooth-continuum contribution from the arc.
+
+Each variant re-runs §6cum (cumulative I-weighted ppxf, masked track,
+N=500) at R<R_e_alt and reports its pooled σ_e.""")
+co(r"""r_e_paper = float(p['R_E'])
+sig_paper = float(p['sigma_p50'][-1])
+
+re_sys_labels = [str(s) for s in p['re_sys_labels']]
+re_sys_r_max = [float(x) for x in p['re_sys_r_max']]
+re_sys_p16 = [float(x) for x in p['re_sys_sigma_p16']]
+re_sys_p50 = [float(x) for x in p['re_sys_sigma_p50']]
+re_sys_p84 = [float(x) for x in p['re_sys_sigma_p84']]
+
+print(f'  R_e source comparison (Track A, masked, headline pipeline):')
+print(f'    {"source":<14} {"R_e [\"]":>9} {"σ_e [km/s]":>14} {"Δσ_e":>9} {"ΔR_e":>9}')
+print(f'    {"mean (paper)":<14} {r_e_paper:>9.3f} {sig_paper:>14.2f} {"—":>9} {"—":>9}')
+for lab, r, p16, p50, p84 in zip(re_sys_labels, re_sys_r_max,
+                                  re_sys_p16, re_sys_p50, re_sys_p84):
+    err_lo = p50 - p16; err_hi = p84 - p50
+    delta_sig = p50 - sig_paper
+    delta_r = r - r_e_paper
+    print(f'    {lab:<14} {r:>9.3f} '
+          f'{p50:>7.2f} -{err_lo:.1f}/+{err_hi:.1f}'
+          f' {delta_sig:>+9.2f} {delta_r:>+9.3f}')
+
+# Spread across the four R_e choices (including the headline mean):
+all_sigmas = [sig_paper] + re_sys_p50
+spread = max(all_sigmas) - min(all_sigmas)
+print(f'\n  R_e-source spread in σ_e: {spread:.2f} km/s '
+      f'(max−min across 4 choices)')
+print(f'  vs current ±{float(p["budget_total"]):.0f} km/s total budget — '
+      f'{"sub-budget" if spread < float(p["budget_total"]) else "ABOVE budget!"}')""")
+co(r"""# Bar chart: σ_e per R_e source
+fig, ax = plt.subplots(figsize=(8, 5))
+labels = ['mean\n(paper)'] + [s.replace('Re_', '') for s in re_sys_labels]
+sigmas = [sig_paper] + re_sys_p50
+los = [float(p['sigma_p50'][-1]) - float(p['sigma_p16'][-1])] + \
+      [p50 - p16 for p50, p16 in zip(re_sys_p50, re_sys_p16)]
+his = [float(p['sigma_p84'][-1]) - float(p['sigma_p50'][-1])] + \
+      [p84 - p50 for p50, p84 in zip(re_sys_p50, re_sys_p84)]
+r_es = [r_e_paper] + re_sys_r_max
+
+colors = ['C0', 'C1', 'C2', 'C3']
+ax.bar(labels, sigmas, yerr=[los, his], capsize=6, color=colors, alpha=0.75,
+       edgecolor='k', linewidth=0.7)
+for i, (s, r) in enumerate(zip(sigmas, r_es)):
+    ax.text(i, s + max(his) + 4, f'{s:.0f}\nR_e={r:.2f}″',
+            ha='center', va='bottom', fontsize=9)
+
+ax.axhline(sig_paper, color='C0', ls=':', alpha=0.6,
+           label=f'paper headline ({sig_paper:.0f} km/s)')
+ax.set_ylabel(r'$\sigma_e(<R_e)$ [km/s]', fontsize=12)
+ax.set_title('R_e source systematic — σ_e at each R_e definition '
+             '(masked track, N=500)', fontsize=12)
+ax.legend(loc='lower right', fontsize=10)
+ax.grid(alpha=0.3, axis='y')
+plt.tight_layout()
+out = REPO / 'results' / 'figures' / 'nb09_re_source_systematic.png'
+plt.savefig(out, dpi=150, bbox_inches='tight')
+plt.show()
+print(f'Saved → {out.relative_to(REPO)}')""")
+
 # ─── §8 Headline ────────────────────────────────────────────────────────
 md(r"""## §8 — Paper-ready headline
 

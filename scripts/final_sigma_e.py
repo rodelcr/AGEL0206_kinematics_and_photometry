@@ -93,6 +93,45 @@ def find_center(img, mask, wcs, ra0, dec0, box_arcsec=3.0, pix_scale=None):
     return float(x1 + cx_rel), float(y1 + cy_rel)
 
 
+def cahk_g_line_depth_map(cube, lam_obs, z):
+    """Per-spaxel total Ca H/K + G-band absorption *flux* deficit (stellar I-map).
+
+    For each absorption feature the continuum is estimated as the median of
+    two side windows; the metric is
+        sum_pix (continuum - flux)   over the line window
+    summed across all three lines and clipped at zero. Units are flux ×
+    pixels — i.e., the "missing flux" filled in by the absorption. Unlike
+    a normalised line depth (cont-flux)/cont, this metric scales with
+    continuum brightness and so falls to ~0 at large radii where the
+    deflector does not contribute, giving a stable curve-of-growth.
+
+    Rest-frame line / continuum windows (Å):
+        Ca K   line 3925-3942   cont 3895-3915, 3955-3975
+        Ca H   line 3960-3976   cont 3940-3955, 3985-4005
+        G-band line 4297-4313   cont 4275-4290, 4320-4340
+    """
+    lam_rest = lam_obs / (1.0 + z)
+    bands = (
+        {"line": (3925, 3942), "cont": [(3895, 3915), (3955, 3975)]},
+        {"line": (3960, 3976), "cont": [(3940, 3955), (3985, 4005)]},
+        {"line": (4297, 4313), "cont": [(4275, 4290), (4320, 4340)]},
+    )
+    n_lam, ny, nx = cube.shape
+    out = np.zeros((ny, nx), dtype=float)
+    for w in bands:
+        line_mask = (lam_rest >= w["line"][0]) & (lam_rest <= w["line"][1])
+        cont_mask = np.zeros_like(line_mask)
+        for c0, c1 in w["cont"]:
+            cont_mask |= (lam_rest >= c0) & (lam_rest <= c1)
+        if line_mask.sum() == 0 or cont_mask.sum() == 0:
+            continue
+        cont = np.median(cube[cont_mask], axis=0)
+        line_mean = np.mean(cube[line_mask], axis=0)
+        # integrated absorption flux deficit, in flux × pixel-equivalent units
+        out += np.nan_to_num(cont - line_mean) * float(line_mask.sum())
+    return np.clip(out, 0.0, None)
+
+
 def curve_of_growth(image, center, pix_scale, mask=None, r_max=6.0, r_step=0.08):
     xc, yc = center
     ny_, nx_ = image.shape
@@ -174,6 +213,13 @@ def load_setup():
     print(f"  R_e(F200LP masked) = {Re_200:.3f}\"")
     print(f"  R_e (headline mean) = {R_E:.3f}\"  = {R_E*KPC_PER_ARCSEC:.2f} kpc")
 
+    # R_e from a Ca H+K + G-band absorption-depth I-map (stellar-only). Built on
+    # the IFU cube directly, so the centre is the IFU sub-pixel HST-mean point.
+    cahk_map = cahk_g_line_depth_map(cube, lam, Z_SYSTEMIC)
+    Re_cahk = curve_of_growth(cahk_map, (cx_ifu, cy_ifu), pix_scale_ifu)
+    print(f"  R_e(CaHK + G-band depth) = {Re_cahk:.3f}\"  "
+          f"({(Re_cahk - R_E):+.3f}\" vs headline mean)")
+
     print("\n§4  r_spax map + reprojected F200LP arc mask")
     yy_, xx_ = np.mgrid[:ny, :nx]
     ra_s, dec_s = wcs_ifu.pixel_to_world_values(xx_.ravel(), yy_.ravel())
@@ -195,6 +241,7 @@ def load_setup():
         cx_ifu=cx_ifu, cy_ifu=cy_ifu,
         ra_center=ra_c, dec_center=dec_c, d_centroid=float(d_centroid),
         Re_140=Re_140, Re_200=Re_200, R_E=R_E,
+        Re_cahk=float(Re_cahk), cahk_map=cahk_map,
         r_spax=r_spax, arc_spax_mask=arc_spax_mask,
     )
 
@@ -291,10 +338,16 @@ def run_aperture_sps(state, label, r_max, sps_name, n_bootstrap, force,
         )
         V_orig[i], sig_orig[i], chi2_orig[i] = pp.sol[0], pp.sol[1], pp.chi2
         bf_arr[i] = pp.bestfit
+        try:
+            label_idx = APERTURE_LABELS.index(label)
+        except ValueError:
+            # Ad-hoc labels (e.g. R_e systematic variants) get a stable
+            # offset above the APERTURE_LABELS range.
+            label_idx = 100 + (abs(hash(label)) % 1000)
         rb = run_bootstrap_single_degree(
             inputs, degree=int(deg), best_fit_spectrum=pp.bestfit,
             n_bootstrap=n_bootstrap, window=WINDOW,
-            seed=BOOT_SEED + 1000 * APERTURE_LABELS.index(label) + i,
+            seed=BOOT_SEED + 1000 * label_idx + i,
         )
         V_boot[i] = rb["V_samples"]
         sig_boot[i] = rb["sigma_samples"]
@@ -460,6 +513,41 @@ def main(n_bootstrap, force):
     print(f"\n  HEADLINE: σ_e(<R_e) = {pool_Re_masked['sigma_p50']:.0f} ± {budget['total']:.0f} km/s")
     apertures = tracks["masked"]  # downstream save uses the headline track
 
+    # ── §7  R_e source systematic (single track: masked, w=0.0) ─────────────
+    # Re-run §6cum at three alternative R_e definitions so we can quote the
+    # σ_e sensitivity to the choice of R_e itself. Always uses the headline
+    # mask.
+    print(f"\n§7  R_e systematic — 3 alternative R_e definitions (masked track)")
+    print("─" * 70)
+    Re_variants = (
+        ("Re_F140W",  state["Re_140"]),
+        ("Re_F200LP", state["Re_200"]),
+        ("Re_CaHK",   state["Re_cahk"]),
+    )
+    re_sys = {}
+    for var_label, r_max in Re_variants:
+        print(f"  {var_label}:  R_max = {r_max:.3f}\"  "
+              f"({(r_max - state['R_E'])*100/state['R_E']:+.1f}% vs headline mean)")
+        per_sps = {}
+        for sps in SPS_LIBS:
+            per_sps[sps] = run_aperture_sps(
+                state, var_label, float(r_max), sps,
+                n_bootstrap=n_bootstrap, force=force,
+                mask_weight=0.0,
+                fallback_n=50,
+            )
+        re_sys[var_label] = dict(
+            r_max=float(r_max), per_sps=per_sps, pool=pool_sps(per_sps),
+        )
+
+    print(f"\n  Comparison vs headline mean R_e (Track A, masked):")
+    print(f"    {'source':<14} {'R_e [\"]':>9} {'σ_e [km/s]':>12} {'Δσ_e':>8}")
+    hl_sigma = pool_Re_masked["sigma_p50"]
+    print(f"    {'mean (paper)':<14} {state['R_E']:>9.3f} {hl_sigma:>12.2f} {0.0:>+8.2f}")
+    for var_label, d in re_sys.items():
+        s = d["pool"]["sigma_p50"]
+        print(f"    {var_label:<14} {d['r_max']:>9.3f} {s:>12.2f} {s - hl_sigma:>+8.2f}")
+
     # Pack everything into a single npz for the notebook to load
     # Per-(label, sps, track) record of which N each fit was loaded at.
     # Important for the paper: the masked headline is N=500 throughout, but
@@ -478,6 +566,7 @@ def main(n_bootstrap, force):
         d_centroid_arcsec=state["d_centroid"],
         cx_ifu=state["cx_ifu"], cy_ifu=state["cy_ifu"],
         Re_140=state["Re_140"], Re_200=state["Re_200"], R_E=state["R_E"],
+        Re_cahk=state["Re_cahk"],
         kpc_per_arcsec=KPC_PER_ARCSEC,
         n_bootstrap=int(n_bootstrap),
         n_bootstrap_used=np.array(list(n_used.values())),
@@ -537,6 +626,16 @@ def main(n_bootstrap, force):
         budget_stat=budget["stat"], budget_I_shape=budget["I_shape"],
         budget_mask=budget["mask"], budget_frame=budget["frame"],
         budget_centering=budget["centering"], budget_total=budget["total"],
+        # §7 R_e systematic: σ_e at each of three alt R_e definitions
+        re_sys_labels=np.array([k for k, _ in Re_variants]),
+        re_sys_r_max=np.array([re_sys[k]["r_max"] for k, _ in Re_variants]),
+        re_sys_sigma_p16=np.array([re_sys[k]["pool"]["sigma_p16"] for k, _ in Re_variants]),
+        re_sys_sigma_p50=np.array([re_sys[k]["pool"]["sigma_p50"] for k, _ in Re_variants]),
+        re_sys_sigma_p84=np.array([re_sys[k]["pool"]["sigma_p84"] for k, _ in Re_variants]),
+        re_sys_per_sps_sigma=np.array(
+            [[re_sys[k]["pool"]["per_sps"][s]["sigma_p50"] for s in SPS_LIBS]
+             for k, _ in Re_variants]
+        ),
     )
     np.savez(RESULTS_NPZ, **save)
     print(f"\nSaved → {RESULTS_NPZ.relative_to(REPO)}")

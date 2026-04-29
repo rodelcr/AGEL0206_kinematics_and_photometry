@@ -39,6 +39,7 @@ script/notebook that runs it and the result file or note it produced.
 | D4 | I(r) shape sweep refresh post-frame-fix at N=500 | NOTES addendum (d), 2026-04-29 | Frame fix has <0.5 km/s impact; ±13 budget validated | ✅ |
 | D5 | Aperture choice: R<R_e/8, R<R_e/2, R<R_e | `scripts/final_sigma_e.py:APERTURE_FRACS` | R<R_e/8 dropped (inside seeing FWHM/2 = 0.64") | ✅ |
 | D6 | Equal-N vs equal-width annular binning | `notebooks/07b` (5-bin), `notebooks/07c` (equal-N) | Equal-N inside R_safe=3R_e/4 chosen | ✅ |
+| D7 | R_e source systematic (mean vs F140W vs F200LP vs CaHK+G) | `scripts/final_sigma_e.py` §7, `notebooks/09 §7b` | Spread = 16.9 km/s (mean=268, F140W=265, F200LP=276, CaHK=282); sub-budget | ✅ |
 | **E. Mask treatment** | | | | |
 | E1 | F200LP arc mask reprojected to IFU grid | `scripts/final_sigma_e.py:load_setup` | 0.7% of all spaxels flagged (~38 inside R<R_e) | ✅ |
 | E2 | Hard mask (w=0.0) headline | `scripts/final_sigma_e.py`, track A | σ_e = 267.82 ± 24 km/s | ✅ |

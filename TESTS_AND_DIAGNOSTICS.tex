@@ -1,0 +1,615 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames*,x11names*}{xcolor}
+%
+\documentclass[
+  10pt,
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+  \setmainfont[]{STIX Two Text}
+  \setmonofont[Scale=0.78]{Menlo}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={blue},
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=0.55in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\newenvironment{Shaded}{}{}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\author{}
+\date{}
+
+
+% --- patch added by scripts/build_tests_pdf.py ---
+\usepackage{newunicodechar}
+\usepackage[htt]{hyphenat}    % allow hyphenation inside \texttt{}
+\usepackage{pifont}           % \ding{51} = check mark
+\providecommand{\cmark}{{\color{green!55!black}\ding{51}}}
+\newunicodechar{✅}{\cmark}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{⊕}{\ensuremath{\oplus}}
+\newunicodechar{∈}{\ensuremath{\in}}
+\newunicodechar{≤}{\ensuremath{\leq}}
+\newunicodechar{≥}{\ensuremath{\geq}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{²}{\ensuremath{{}^{2}}}
+\newunicodechar{Σ}{\ensuremath{\Sigma}}
+\newunicodechar{σ}{\ensuremath{\sigma}}
+\newunicodechar{α}{\ensuremath{\alpha}}
+\newunicodechar{β}{\ensuremath{\beta}}
+\newunicodechar{Δ}{\ensuremath{\Delta}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{±}{\ensuremath{\pm}}
+\newunicodechar{−}{\ensuremath{-}}    % unicode minus
+\newunicodechar{★}{\ensuremath{\star}}
+\newunicodechar{☉}{\ensuremath{\odot}}
+\newunicodechar{”}{\textquotedblright}
+\newunicodechar{“}{\textquotedblleft}
+% Make tabular cells more forgiving of long monospace strings.
+\renewcommand{\arraystretch}{1.05}
+% --- end patch ---
+
+\begin{document}
+\sloppy
+
+\hypertarget{tests-diagnostics-agel0206-ux3c3_e-apjl-paper}{%
+\section{Tests \& Diagnostics --- AGEL0206 σ\_e ApJL paper}\label{tests-diagnostics-agel0206-ux3c3_e-apjl-paper}}
+
+\textbf{Last updated:} 2026-04-29 \textbf{Headline:} σ\_e(\textless R\_e) = \textbf{268 ± 32 km/s} (stat ±24 ⊕ I-shape ±13 ⊕ mask ±16 ⊕ frame ±5 ⊕ centering ±4) \textbf{Method:} §6cum cumulative
+I-weighted ppxf at R\textless R\_e=2.305" inside the F200LP-masked, frame-aware, SPS-pooled (FSPS+EMILES+XSL) bootstrap × polynomial-degree posterior
+
+This document is the canonical index of every test, sweep, audit, and sensitivity check run for the σ\_e measurement. Each row points to the script/notebook that runs it and the result file or note it
+produced.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{quick-reference-test-matrix}{%
+\subsection{0. Quick-reference test matrix}\label{quick-reference-test-matrix}}
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.20}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.20}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.20}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.20}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.20}}@{}}
+\toprule
+\# & Test & Where & Result & Status \\
+\midrule
+\endhead
+\textbf{A. Foundational} & & & & \\
+A1 & KCWI cube provenance & \texttt{NOTES\_methodology\_2026-04-27.md} & Multi-night Aug/Sept/Dec 2025; header mislabel only & ✅ \\
+A2 & Systemic redshift via line fitting & \texttt{notebooks/04\_redshift\_verification.ipynb}, \texttt{scripts/redshift\_verify.py} & z = 0.67564 (vs DR2 0.67511) & ✅ \\
+A3 & R\_e from masked curve-of-growth (F140W+F200LP) & \texttt{scripts/measure\_Re.py}, \texttt{scripts/final\_sigma\_e.py:curve\_of\_growth} & R\_e = 2.305" = 16.23 kpc & ✅ \\
+A4 & HST-mean center via centroid\_2dg & \texttt{scripts/final\_sigma\_e.py:find\_center} & F140W \& F200LP agree to 0.36" & ✅ \\
+A5 & Bagpipes SED fitting (M★) & \texttt{notebooks/02\_streamlined\_Bagpipes\_SED.ipynb}, \texttt{08\_sersic\_total\_photometry.ipynb} & log M★ = 11.33 +0.07/−0.09 & ✅ \\
+\textbf{B. Pipeline correctness audits} & & & & \\
+B1 & Instrumental LSF audit (DISPSCAL=0.294) & \texttt{scripts/ifu\_spectral\_resolution.py} & FWHM=0.692 Å; σ\_v\_inst≈12-14 km/s & ✅ \\
+B2 & σ\_inst sensitivity (×0.5 to ×2.0 LSF) & \texttt{scripts/sigma\_inst\_sensitivity.py}, audit 3 & max \textbar Δσ\textbar{} = 0.83 km/s & ✅ \\
+B3 & SPS template wavelength frames & \texttt{scripts/audit\_ppxf\_methodology.py}, NOTES Test 2 & FSPS=vacuum, EMILES=air, XSL=air (Ca K minimum + V\_sys) & ✅ \\
+B4 & V\_sys air vs vacuum × 5 polynomial degrees & \texttt{scripts/audit\_ppxf\_methodology.py} audit 1 & ΔV consistent within ±2 km/s across degrees & ✅ \\
+B5 & z × air-vac differential (obs vs rest application) & \texttt{scripts/audit\_ppxf\_methodology.py} audit 2 & 1.83 km/s differential --- sub-budget & ✅ \\
+B6 & fwhm\_gal\_dict frame consistency check & \texttt{scripts/audit\_ppxf\_methodology.py} audit 4 & dict in REST frame, matches Cappellari pattern & ✅ \\
+\textbf{C. SPS templates \& frame-fix} & & & & \\
+C1 & Frame-aware ppxf: per-SPS native frame & \texttt{scripts/bootstrap\_ppxf.py:SPS\_NATIVE\_FRAME} + \texttt{frame\_galaxy=\textquotesingle{}auto\textquotesingle{}} & V\_sys split collapsed from
+\textasciitilde110 to \textasciitilde15 km/s & ✅ \\
+C2 & End-to-end V\_sys closure (frame swap) & NOTES Test 3, addendum 2026-04-29 & Frame fix matches diagnosis & ✅ \\
+C3 & σ shift from frame fix & NOTES addendum, \texttt{error\_budget()} & ≤5 km/s across SPS → carried as ±5 km/s budget & ✅ \\
+C4 & 3-SPS pooled posterior & \texttt{scripts/final\_sigma\_e.py:pool\_sps} & Per-SPS V\_sys subtracted before pooling & ✅ \\
+\textbf{D. Aperture \& I(r)} & & & & \\
+D1 & §6cum cumulative I-weighted ppxf & \texttt{scripts/final\_sigma\_e.py:run\_aperture\_sps} & σ\_e(\textless R\_e) = 267.82 km/s headline & ✅ \\
+D2 & §6cum vs §7 (annular) cross-check & \texttt{notebooks/07c}, \texttt{\textasciitilde{}/.claude/.../reference\_cumulative\_vs\_annular\_sigma\_e.md} & §7=255, §7b=271 --- all \textless1σ from §6cum
+& ✅ \\
+D3 & I(r) shape sweep (10 shapes, fixed mask) & \texttt{scripts/run\_isource\_shape\_sweep.py}, \texttt{scripts/analyze\_isource\_shape\_sweep.py} & Range = 12.9 km/s (excluding F200LP\_Sersic2D
+outlier) → ±13 budget & ✅ \\
+D4 & I(r) shape sweep refresh post-frame-fix at N=500 & NOTES addendum (d), 2026-04-29 & Frame fix has \textless0.5 km/s impact; ±13 budget validated & ✅ \\
+D5 & Aperture choice: R\textless R\_e/8, R\textless R\_e/2, R\textless R\_e & \texttt{scripts/final\_sigma\_e.py:APERTURE\_FRACS} & R\textless R\_e/8 dropped (inside seeing FWHM/2 = 0.64") & ✅ \\
+D6 & Equal-N vs equal-width annular binning & \texttt{notebooks/07b} (5-bin), \texttt{notebooks/07c} (equal-N) & Equal-N inside R\_safe=3R\_e/4 chosen & ✅ \\
+D7 & R\_e source systematic (mean vs F140W vs F200LP vs CaHK+G) & \texttt{scripts/final\_sigma\_e.py} §7, \texttt{notebooks/09\ §7b} & Spread = 16.9 km/s (mean=268, F140W=265, F200LP=276, CaHK=282);
+sub-budget & ✅ \\
+\textbf{E. Mask treatment} & & & & \\
+E1 & F200LP arc mask reprojected to IFU grid & \texttt{scripts/final\_sigma\_e.py:load\_setup} & 0.7\% of all spaxels flagged (\textasciitilde38 inside R\textless R\_e) & ✅ \\
+E2 & Hard mask (w=0.0) headline & \texttt{scripts/final\_sigma\_e.py}, track A & σ\_e = 267.82 ± 24 km/s & ✅ \\
+E3 & No-mask sensitivity (w=1.0) & track B & σ\_e = 252.82, Δ = −15.0 km/s & ✅ \\
+E4 & Soft-mask single-point (w=0.5) & \texttt{scripts/soft\_mask\_track.py}, track C, NOTES addendum (b) & σ\_e = 258.54, Δ = −9.29; super-linear & ✅ \\
+E5 & 5-point mask-weight sweep w∈\{0,0.25,0.5,0.75,1\} & \texttt{scripts/soft\_mask\_track.py\ -\/-weight\ ...}, \texttt{scripts/analyze\_mask\_weight\_sweep.py}, NOTES addendum (c) & Per-step drops
+5.0→4.3→3.5→2.2; quadratic c=+7.3 (concave-up); threshold-dominated & ✅ \\
+E6 & Mask dilation (over-masking diagnostic) & \texttt{notebooks/07d\_sigma\_e\_forceful\_mask.ipynb}, \texttt{\textasciitilde{}/.claude/.../project\_nb07d\_overmasking\_finding.md} & Dilation
+inflates σ via noise; do NOT dilate (negative finding) & ✅ \\
+E7 & Arc-spectrum subtraction sibling & \texttt{notebooks/07e\_sigma\_e\_arc\_subtract.ipynb} & Matches §6cum within 0.1 km/s --- residual arc dilution sub-dominant & ✅ \\
+\textbf{F. Centering} & & & & \\
+F1 & 5-center sweep (±0.4" perturbations) & \texttt{NOTES\_centering\_investigation\_2026-04-27.md}, \texttt{scripts/regen\_s6cum\_nomask\_diagnostic.py} & σ\_e spread = 3.7 km/s → ±4 km/s budget &
+✅ \\
+F2 & HST F140W vs F200LP centroid offset & \texttt{scripts/final\_sigma\_e.py:find\_center} & 0.36" --- driven by F200LP arc; HST-mean robust & ✅ \\
+\textbf{G. Bootstrap \& polynomial degree} & & & & \\
+G1 & Wild bootstrap (Rademacher × local residual) & \texttt{scripts/bootstrap\_ppxf.py:run\_bootstrap\_single\_degree} & 75-pix rolling window for σ\_loc & ✅ \\
+G2 & Parallel bootstrap (joblib, BLAS=1 per worker) & \texttt{scripts/bootstrap\_ppxf\_parallel.py} & \textasciitilde6 min for 6 fits at N=500 & ✅ \\
+G3 & Polynomial degree sweep (deg 15-29) & \texttt{notebooks/03c}, \texttt{scripts/build\_nb09.py:§6.5} & σ flat within bootstrap envelope; polynomial saturated & ✅ \\
+G4 & N=50 smoke vs N=500 production agreement & \texttt{scripts/final\_sigma\_e.py\ -\/-n\_bootstrap} & Within 1 km/s & ✅ \\
+H & \textbf{Cross-checks (independent estimators)} & & & \\
+H1 & §7 discrete Gültekin annular sum & \texttt{notebooks/07c\ §7} & 254.99 −24.2/+28.4 km/s (arc-filtered) & ✅ \\
+H2 & §7b flat-σ extrapolation into outer annulus & \texttt{notebooks/07c\ §7b} & 271 −33/+35 km/s & ✅ \\
+H3 & F200 mask sensitivity at N=500 & \texttt{results/annular\_bootstrap\_07c\_nomask/} & Δ\_mask = −16.4 km/s → ±16 budget & ✅ \\
+\textbf{I. Earlier sigma-discrepancy work (Tests 1-21)} & & & & \\
+I1 & NB01 vs NB05 σ reproduction & \texttt{notebooks/05x} Tests 1-4 & Confirmed σ depends on aperture & ✅ \\
+I2 & Source mask + PSF-aware masking & \texttt{notebooks/05x} Tests 7-10 & F140W mask flags deflector core; F200LP mask is the right arc mask & ✅ \\
+I3 & Threshold sweep + contamination weighting & \texttt{notebooks/05x} Tests 11-13 & Pre-Gültekin masking strategy work & ✅ \\
+I4 & V\_rms profile + bootstrap & \texttt{notebooks/05x} Tests 14-16 & Pre-Gültekin radial work & ✅ \\
+I5 & Redshift sensitivity (z=0.67511 vs 0.67564) & \texttt{notebooks/05x} Test 17 & \textless1 km/s effect on σ & ✅ \\
+I6 & Voronoi binning attempt & \texttt{notebooks/05x} Test 18 & Failed --- abandoned & ✅ \\
+I7 & PowerBin spatial binning & \texttt{notebooks/05x} Test 19, \texttt{scripts/run\_powerbin\_test19.py} & Rejected as binning scheme --- outer-bin σ\textgreater800 km/s & ✅ \\
+I8 & R\_e four-way comparison & \texttt{notebooks/05x} Test 20, \texttt{scripts/measure\_Re.py} & F140W+F200LP masked CoG mean = 2.305" headline & ✅ \\
+I9 & Per-spaxel vs PowerBin rotation map & \texttt{notebooks/05x} Test 21 & No rotation on Re-scale; σ-dominated & ✅ \\
+\bottomrule
+\end{longtable}\endgroup
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{headline-numbers}{%
+\subsection{1. Headline numbers}\label{headline-numbers}}
+
+\hypertarget{ux3c3_e-at-three-apertures-cumulative-i-weighted-ppxf-frame-aware-masked}{%
+\subsubsection{σ\_e at three apertures (cumulative I-weighted ppxf, frame-aware, masked)}\label{ux3c3_e-at-three-apertures-cumulative-i-weighted-ppxf-frame-aware-masked}}
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}lll@{}}
+\toprule
+Aperture & σ\_e {[}km/s{]} & Notes \\
+\midrule
+\endhead
+R\textless R\_e (=2.305") & \textbf{268 ± 32} (stat ±24) & \textbf{paper headline} --- KH13/Greene+20 σ\_e \\
+R\textless R\_e/2 (=1.152") & 224 ± 18 & gradient diagnostic \\
+R\textless R\_e/8 (=0.288") & dropped & inside seeing FWHM/2 = 0.64" \\
+\bottomrule
+\end{longtable}\endgroup
+
+\hypertarget{error-budget-composition-rr_e}{%
+\subsubsection{Error-budget composition (R\textless R\_e)}\label{error-budget-composition-rr_e}}
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}lll@{}}
+\toprule
+Component & Value & Source \\
+\midrule
+\endhead
+Statistical (bootstrap pooled 1σ) & ±24 & nb09, this paper \\
+I-shape spread (10 shapes excluding outlier) & ±13 & nb07c sweep, refreshed N=500 post-frame-fix \\
+Mask on/off Δ & ±16 & nb07c, nb09 §5 \\
+Frame fix (max σ shift across SPS) & ±5 & NOTES addendum + audit 1 \\
+Centering (5-center sweep, ±0.4") & ±4 & \texttt{NOTES\_centering\_investigation\_2026-04-27.md} \\
+\textbf{Quadrature total} & \textbf{±32} & \texttt{scripts/final\_sigma\_e.py:error\_budget} \\
+\bottomrule
+\end{longtable}\endgroup
+
+\hypertarget{sensitivity-values-for-paper-text}{%
+\subsubsection{Sensitivity values (for paper text)}\label{sensitivity-values-for-paper-text}}
+
+\begin{itemize}
+\tightlist
+\item
+  Soft-mask (w=0.5) at R\textless R\_e: 258.5 km/s --- Δ from headline = −9.3 km/s
+\item
+  No-mask (w=1.0) at R\textless R\_e: 252.8 km/s --- Δ from headline = −15.0 km/s
+\item
+  σ\_e(w) is essentially linear with weak super-linearity (quadratic c=+7.3)
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{detailed-test-catalog}{%
+\subsection{2. Detailed test catalog}\label{detailed-test-catalog}}
+
+This expands each row of the matrix above. Subsections reference scripts, notebooks, and result files --- open the linked file for the detailed code and the inline plots/output.
+
+\hypertarget{a.-foundational-data-and-geometry}{%
+\subsubsection{A. Foundational data and geometry}\label{a.-foundational-data-and-geometry}}
+
+\textbf{A1 KCWI cube provenance} --- The cube \texttt{Nov17\_2025\_DESJ0206\_RL\_combined\_icubes\_wcs.fits} is the final multi-night reduction (Aug 29 K409 + Sept 29 K409 + Dec 29 + Nov 17 2025). The
+header is mislabeled (DATE-OBS/PROGNAME/PROGPI describe only the last stacking pass). Settled in \texttt{NOTES\_methodology\_2026-04-27.md}. \textbf{Cite the multi-night provenance, not the header}.
+
+\textbf{A2 Systemic redshift} --- Independent line-by-line Gaussian fitting of Ca H+K, {[}OII{]}, G-band, etc. gives z\_systemic = 0.67564 (NIST air wavelengths). DR2 catalog z=0.67511 (used by older
+notebooks 03/03b) is offset by \textasciitilde95 km/s from the line-fit value; nb09 uses 0.67564 throughout. Notebook: \texttt{notebooks/04\_redshift\_verification.ipynb} Module:
+\texttt{scripts/redshift\_verify.py} (provides ABSORPTION\_LINES / EMISSION\_LINES dicts, \texttt{gaussian\_fit}, \texttt{multi\_line\_fit}, \texttt{oii\_doublet\_fit})
+
+**A3 Effective radius R\_e = 2.305``** --- Mean of F140W and F200LP masked curve-of-growth values (2.168 and 2.441''). The masked CoG zeros mask-flagged HST pixels before the radial integral so the
+arc/companion contributions don't bias the bright-end half-light point. Computed in \texttt{scripts/measure\_Re.py} and re-derived in \texttt{scripts/final\_sigma\_e.py:curve\_of\_growth} for the nb09
+pipeline. Cross-check: IFU white-light proper-masked CoG gave 2.61" earlier --- the HST-based 2.305" is now the headline.
+
+\textbf{A4 HST-mean center} --- \texttt{photutils.centroid\_2dg} on F140W and F200LP cutouts (with their own \texttt{\_mask.fits} as the mask) gives sub-pixel centroids in each HST WCS. We average in
+world coordinates, then propagate to IFU sub-pixel: \texttt{scripts/final\_sigma\_e.py:find\_center}. F140W vs F200LP centroid offset = 0.36" --- flags the F200LP arc-affected detection but the
+HST-mean is robust (verified by the 5-center sweep, F1).
+
+\textbf{A5 Stellar mass} --- Bagpipes SED fitting on HST + JWST aperture photometry → log M★/M☉ = 11.33 +0.07/−0.09 (notebook 02). Cross-checked at the Sersic-total level in
+\texttt{notebooks/08\_sersic\_total\_photometry.ipynb}.
+
+\hypertarget{b.-pipeline-correctness-audits-scriptsaudit_ppxf_methodology.py}{%
+\subsubsection{\texorpdfstring{B. Pipeline correctness audits
+(\texttt{scripts/audit\_ppxf\_methodology.py})}{B. Pipeline correctness audits (scripts/audit\_ppxf\_methodology.py)}}\label{b.-pipeline-correctness-audits-scriptsaudit_ppxf_methodology.py}}
+
+Four orthogonal correctness audits run end-to-end on the headline aperture spectrum to verify ppxf usage matches Cappellari (2017, 2023). Saved in \texttt{results/ppxf\_methodology\_audit.npz}.
+Documented in \texttt{NOTES\_nb09\_frame\_fix\_and\_final\_sigma\_e\_2026-04-28.md} ADDENDUM 2026-04-29.
+
+\textbf{B1 Instrumental LSF} --- KCWI header DISPSCAL = 0.294 (instrumental σ in pixels) × CD3\_3 = 1.000 Å/pix → FWHM\_inst = 2.355 × 0.294 = 0.692 Å (constant in observed Å). At the rest-frame fit
+window (3879--4476 Å), σ\_v\_inst ≈ 12--14 km/s. Galaxy σ ≈ 270 km/s is resolved by \textasciitilde20×. Diagnosed in \texttt{scripts/ifu\_spectral\_resolution.py}.
+
+\textbf{B2 σ\_inst sensitivity} --- Sweep DISPSCAL × \{0.5, 0.75, 1.0, 1.25, 1.5, 2.0\}. Max \textbar Δσ\textbar{} = 0.83 km/s across all SPS. Reason: ppxf's \texttt{sps\_lib} clips fwhm\_diff² =
+(FWHM\_gal² − FWHM\_tem²).clip(0) (sps\_util.py:169). When templates are intrinsically broader (FSPS, EMILES at our band), no convolution is applied --- σ becomes insensitive to DISPSCAL. LSF is
+rock-solid. Script: \texttt{scripts/sigma\_inst\_sensitivity.py}
+
+\textbf{B3 SPS template frames} --- Located the Ca K minimum in each shipped template: - FSPS spectra\_fsps\_9.0.npz: Ca K at 3934.86 Å → +1.20 Å vs air rest = vacuum - EMILES
+spectra\_emiles\_9.0.npz: 3933.82 Å → +0.16 Å = air - XSL spectra\_xsl\_9.0.npz: V\_sys closes at +9 km/s with air-conversion → air End-to-end V\_sys closure (NOTES Test 3) confirms.
+
+\textbf{B4 V\_sys air vs vacuum × 5 polynomial degrees} --- Run ppxf at degrees \{15, 18, 21, 24, 27\} for each SPS in both frames. ΔV(air − vac) ≈ +83 km/s for FSPS, ≈ −82 km/s for EMILES \& XSL,
+consistent within ±2 km/s across degrees. Frame identification is robust.
+
+\textbf{B5 z × air-vac differential} --- Apply \texttt{vac\_to\_air} at observed wavelengths (KCWI 6500--7500 Å) → v\_offset = −82.7 km/s. Apply at rest wavelengths (3879--4476 Å) → −84.5 km/s.
+Differential = 1.83 km/s --- sub-budget. Either convention is defensible; we follow Cappellari's pattern (apply at obs).
+
+\textbf{B6 fwhm\_gal\_dict frame check} --- Confirmed \texttt{\_prep\_spectrum\_for\_ppxf} builds the dict as \texttt{\{"lam":\ lam\_gal\_rest,\ "fwhm":\ fwhm\_gal\_rest\}} in REST frame, matching
+\texttt{ppxf\_example\_high\_redshift.py:99-101}. FWHM\_obs = 0.692 Å → FWHM\_rest = 0.413 Å at z=0.67564. \texttt{sps\_util.py:167} interpolates this onto template \texttt{lam\_temp} (also rest),
+then \texttt{varsmooth} pre-broadens.
+
+\hypertarget{c.-sps-templates-and-frame-fix}{%
+\subsubsection{C. SPS templates and frame-fix}\label{c.-sps-templates-and-frame-fix}}
+
+\textbf{C1 Frame-aware ppxf} --- \texttt{scripts/bootstrap\_ppxf.py} exposes \texttt{frame\_galaxy=\textquotesingle{}auto\textquotesingle{}} which reads
+\texttt{SPS\_NATIVE\_FRAME\ =\ \{fsps:\ vacuum,\ emiles:\ air,\ xsl:\ air\}}. The galaxy spectrum is prepared in the matching frame (\texttt{util.vac\_to\_air()} applied as scalar median when needed,
+matching \texttt{ppxf\_example\_kinematics\_sdss.py} :127-134). Diagnosed Apr 2026 --- pre-fix the pipeline always converted to air, producing a −90 km/s FSPS V\_sys offset.
+
+\textbf{C2 V\_sys closure} --- Same galaxy spectrum, swap only the frame. Pre-fix: FSPS −90, EMILES +3, XSL +9. Post-fix (frame-aware): FSPS −7, EMILES +3, XSL +9. Split-track collapsed from
+\textasciitilde110 → \textasciitilde15 km/s. NOTES Test 3.
+
+\textbf{C3 σ shift from frame fix} --- Side-effect on σ: ≤5 km/s per SPS, ≤2 km/s on the 3-SPS pool. Carried as ±5 km/s in the error budget (ironically dominated by the per-SPS shifts that pool out,
+but conservative).
+
+\textbf{C4 3-SPS pooled posterior} --- \texttt{scripts/final\_sigma\_e.py:pool\_sps} concatenates per-SPS bootstrap σ samples after subtracting per-SPS V\_sys medians (so V offsets don't inflate the V
+posterior; σ posteriors are concatenated raw --- no V\_sys correction needed for σ). The headline σ\_e(\textless R\_e) is the 16/50/84 percentile of this combined-SPS pool.
+
+\hypertarget{d.-aperture-and-ir-framework}{%
+\subsubsection{D. Aperture and I(r) framework}\label{d.-aperture-and-ir-framework}}
+
+\textbf{D1 §6cum cumulative I-weighted ppxf} --- For each spaxel inside R\textless R\_max, build I-weight from the IFU 6500--7500 Å white-light band, drop arc-mask-flagged spaxels, normalize and sum
+to a single 1-D spectrum, fit ppxf. This is the headline path --- matches KH13 / Greene+20 / SAURON / ATLAS3D / MaNGA σ\_e definition (Cappellari+2006 eq. 1). Cross-references in
+\texttt{\textasciitilde{}/.claude/.../reference\_cumulative\_vs\_annular\_sigma\_e.md}. Code: \texttt{scripts/final\_sigma\_e.py:run\_aperture\_sps}.
+
+\textbf{D2 §6cum vs §7 (annular)} --- §7 discrete Gültekin annular sum at R\textless R\_safe gives 254.99 km/s; §7b flat-σ extrapolation gives 271 km/s; both within 1σ of §6cum's 267.82 km/s. §6cum is
+the headline because (a) it matches the literature definition, (b) it preserves LOSVD line-shape information that §7's moment-pooling discards, (c) bright-center I-weighting auto-suppresses arc
+contamination.
+
+\textbf{D3 I(r) shape sweep (10 shapes)} --- Hold the spaxel selection fixed (F200-raw mask, R\textless R\_e), vary only the I-weight map. Shapes: 1. IFU\_band --- 6500-7500 Å (headline) 2. IFU\_wl
+--- full IFU white-light 3. F140W\_raw --- HST F140W reprojected 4. F200LP\_raw --- HST F200LP reprojected 5. F140W\_arcmasked --- F140W with arc zeroed 6. F200LP\_arcmasked --- F200LP with own
+arc-mask zeroed 7. F140W\_1Dcog --- annular-mean F140W → interp1d to spaxels 8. F200LP\_1Dcog --- annular-mean F200LP → interp1d 9. F140W\_Sersic2D --- full 2D Sersic fit 10. F200LP\_Sersic2D --- full
+2D Sersic fit (poor fit, n=0.30 --- outlier)
+
+Range excluding F200LP\_Sersic2D outlier = 12.9 km/s → ±13 km/s budget. Script: \texttt{scripts/run\_isource\_shape\_sweep.py} Analysis: \texttt{scripts/analyze\_isource\_shape\_sweep.py} Caches:
+\texttt{results/annular\_bootstrap\_07c\_ishape/\{shape\}\_\{sps\}.npz} Figure: \texttt{results/figures/nb07c\_ishape\_sweep.png}
+
+\textbf{D4 I-shape sweep refresh post-frame-fix} --- Original sweep at N=250 predated the frame fix. Re-ran at N=500 with \texttt{frame\_galaxy=\textquotesingle{}auto\textquotesingle{}} on 2026-04-29.
+Per-SPS σ shifts \textless0.5 km/s; spread unchanged at 12.9 km/s; ±13 budget validated. Pre-frame caches preserved at \texttt{results/annular\_bootstrap\_07c\_ishape\_oldframe/}. NOTES addendum (d).
+
+\textbf{D5 Aperture choice} --- Three apertures considered: R\textless R\_e/8 (=0.288``), R\textless R\_e/2 (=1.152''), R\textless R\_e (=2.305``). R\textless R\_e/8 dropped because it sits inside
+half the seeing FWHM (=0.64'') --- only 3 spaxels, and the inner σ would underestimate due to seeing-broadened sampling. R\textless R\_e is the paper headline; R\textless R\_e/2 is quoted as a
+gradient diagnostic.
+
+\textbf{D6 Equal-N vs equal-width annular binning} --- For the §7 cross-check only. Equal-N inside R\_safe = 3R\_e/4 + 1 outer flagged bin (\texttt{notebooks/07c}) gives balanced bootstrap variance
+per bin and isolates arc contamination in the outer bin. Equal-width annuli (\texttt{notebooks/07b}, 5 bins) shifted σ\_e by \textasciitilde10 km/s --- at the SPS-systematic level (±24). Equal-N is
+the §7 paper choice.
+
+\hypertarget{e.-mask-treatment}{%
+\subsubsection{E. Mask treatment}\label{e.-mask-treatment}}
+
+\textbf{E1 F200LP arc mask reprojection} --- F200LP \texttt{\_mask.fits} (HST 0.04``/pix, arc-tuned) is reprojected to the IFU 0.30''/spax grid via \texttt{scipy.ndimage.map\_coordinates(order=0)}
+(nearest- neighbor). 69 of 10000 spaxels (0.69\%) flagged. Inside R\textless R\_e: 38 of 184 spaxels in the aperture, \textasciitilde21\% --- but only \textasciitilde27\% of the I-weight (arc spaxels
+are mostly off-center).
+
+\textbf{E2 Hard-mask (w=0.0) headline} --- track A. \textbf{E3 No-mask (w=1.0) sensitivity} --- track B. Δ\_mask = −15.0 km/s. \textbf{E4 Soft-mask single point (w=0.5)} --- track C. Δ\_soft = −9.3
+km/s. \textbf{E5 5-point mask-weight sweep (w∈\{0,0.25,0.5,0.75,1\})} --- Per-step σ drops at R\textless R\_e: 5.0 → 4.3 → 3.5 → 2.2 km/s. Quadratic c = +7.3 (concave-up, super-linear).
+Threshold-dominated bias: a few heavily-arc-contaminated spaxels carry most of the bias. First 25\% of arc weight captures 34\% of the total mask sensitivity. Scripts:
+\texttt{scripts/soft\_mask\_track.py}, \texttt{scripts/analyze\_mask\_weight\_sweep.py} Figure: \texttt{results/figures/nb09\_mask\_weight\_sweep.png} NOTES addendums (b) and (c).
+
+\textbf{E6 Mask dilation} --- Tested whether expanding the F200 mask further reduces σ. \textbf{Negative finding}: dilation inflates σ via noise --- the dropped spaxels are S/N contributors, not bias
+contributors. Memory: \texttt{\textasciitilde{}/.claude/.../project\_nb07d\_overmasking\_finding.md}. Notebook: \texttt{nb07d}.
+
+\textbf{E7 Arc-spectrum subtraction sibling} --- Build an arc-only spectrum from F200-masked spaxels, fit α × arc + β × deflector model, subtract. Result matches §6cum within 0.1 km/s →
+\emph{residual} arc dilution is sub-dominant at production statistics. The F200 mask already does the heavy lifting. Notebook: \texttt{nb07e}.
+
+\hypertarget{f.-centering}{%
+\subsubsection{F. Centering}\label{f.-centering}}
+
+\textbf{F1 5-center sweep} --- Tested HST\_mean (paper choice), F140W only, F200LP only, IFU peak, arc-suppressed IFU peak. σ\_e spread = 3.7 km/s. Carried as ±4 km/s in the error budget. Notes:
+\texttt{NOTES\_centering\_investigation\_2026-04-27.md}.
+
+\textbf{F2 F140W vs F200LP centroid} --- Δ = 0.36" --- driven by the F200LP arc dragging that filter's centroid toward the arc. F140W is the cleaner bulge centroid; HST-mean is the robust compromise.
+
+\hypertarget{g.-bootstrap-and-polynomial-degree}{%
+\subsubsection{G. Bootstrap and polynomial degree}\label{g.-bootstrap-and-polynomial-degree}}
+
+\textbf{G1 Wild bootstrap} --- Hybrid Rademacher sign-flip × local-residual scaling (75-pix rolling window). For each iteration: residual = (galaxy − bestfit) × sign, scaled by local σ. Re-fit, record
+V/σ. Implemented in \texttt{scripts/bootstrap\_ppxf.py:run\_bootstrap\_single\_degree}.
+
+\textbf{G2 Parallel bootstrap} --- joblib + threadpoolctl pinning BLAS=1 per worker (otherwise BLAS thread oversubscription pathology --- saw 4-hour runtimes). 8 workers gives \textasciitilde6 min for
+6 fits at N=500. Script: \texttt{scripts/bootstrap\_ppxf\_parallel.py:run\_bootstrap\_single\_degree\_parallel}.
+
+\textbf{G3 Polynomial degree sweep} --- Degrees 15-29 (15 values) per fit. Diagnostic: σ vs degree should be flat within bootstrap envelope; monotonic trend indicates the polynomial is absorbing LOSVD
+signal. Plotted at \texttt{nb09\ §6.5} and saved to \texttt{results/figures/nb09\_sigma\_vs\_degree.png}. Saturation confirmed at this degree range --- picked from earlier \texttt{notebooks/03c}
+analysis.
+
+\textbf{G4 N=50 vs N=500} --- N=50 smoke and N=500 production agree on σ\_e to within 1 km/s. N=50 is \textasciitilde6 min, N=500 is \textasciitilde50 min. Production headline is N=500; the smoke is
+for quick rebuilds.
+
+\hypertarget{h.-cross-checks}{%
+\subsubsection{H. Cross-checks}\label{h.-cross-checks}}
+
+\textbf{H1 §7 discrete Gültekin} --- \texttt{notebooks/07c\ §7}. Annular sum σ\_e²(\textless R) = Σ F\_j (V\_j² + σ\_j²) / Σ F\_j with arc-filter on outer annulus. Result: 254.99 −24.2/+28.4 km/s.
+\textless1σ from §6cum.
+
+\textbf{H2 §7b flat-σ extrapolation} --- \texttt{notebooks/07c\ §7b}. Push the §7 sum into the outer annulus assuming σ\_outer = σ at the last clean annulus. Result: 271 −33/+35 km/s. Bracket on the
+§7 result.
+
+\textbf{H3 F200 mask sensitivity (independent)} --- \texttt{results/annular\_bootstrap\_07c\_nomask/}. Same §6cum pipeline with mask off. σ\_e(\textless R\_e) = 250.96 km/s. Δ = −16.4 km/s.
+Independently confirms the nb09 mask-weight sweep at w=1.0.
+
+\hypertarget{i.-earlier-sigma-discrepancy-work-notebooks05x}{%
+\subsubsection{\texorpdfstring{I. Earlier sigma-discrepancy work (\texttt{notebooks/05x})}{I. Earlier sigma-discrepancy work (notebooks/05x)}}\label{i.-earlier-sigma-discrepancy-work-notebooks05x}}
+
+The 21-test diagnostic notebook resolving the σ ≈ 301 km/s (190-spaxel box, NB01) vs σ ≈ 210 km/s (inner circular aperture, NB05) discrepancy. \textbf{Resolution:} σ depends on aperture; the
+190-spaxel box is contaminated by the lensed arc. This work motivated the cumulative-I path (Tests 7-13 explored masking variants, Tests 14-16 went radial, Tests 18-19 tried binning approaches).
+PowerBin (Test 19) was rejected. The headline analysis moved to circular apertures + cumulative I-weighting (nb06 → nb07c → nb09).
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{file-index}{%
+\subsection{3. File index}\label{file-index}}
+
+\hypertarget{documents-top-level}{%
+\subsubsection{Documents (top-level)}\label{documents-top-level}}
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}ll@{}}
+\toprule
+File & Purpose \\
+\midrule
+\endhead
+\texttt{TESTS\_AND\_DIAGNOSTICS.md} & \textbf{This file} --- master test index \\
+\texttt{NOTES\_nb09\_frame\_fix\_and\_final\_sigma\_e\_2026-04-28.md} & Frame fix derivation + addenda (a)--(d) \\
+\texttt{HANDOVER.md} & Apr 27 σ\_e analysis snapshot (pre-frame-fix; superseded by nb09) \\
+\texttt{HANDOFF\_Ir\_sweep\_2026-04-28.md} & I(r) sweep design doc (consumed; sweep complete) \\
+\texttt{NOTES\_methodology\_2026-04-27.md} & Cube provenance + earlier methodology \\
+\texttt{NOTES\_centering\_investigation\_2026-04-27.md} & 5-center sweep result + ±4 km/s budget \\
+\texttt{CLAUDE.md} & Repo conventions, key results summary \\
+\texttt{README.md} & High-level project description \\
+\bottomrule
+\end{longtable}\endgroup
+
+\hypertarget{notebooks-paper-ready-current}{%
+\subsubsection{Notebooks (paper-ready / current)}\label{notebooks-paper-ready-current}}
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}ll@{}}
+\toprule
+Notebook & Purpose \\
+\midrule
+\endhead
+\texttt{notebooks/09\_final\_sigma\_e\_paper.ipynb} & \textbf{Paper-ready σ\_e} (headline 268 ± 32 km/s) \\
+\texttt{notebooks/04\_redshift\_verification.ipynb} & z = 0.67564 line-fit \\
+\texttt{notebooks/02\_streamlined\_Bagpipes\_SED.ipynb} & log M★ = 11.33 \\
+\texttt{notebooks/08\_sersic\_total\_photometry.ipynb} & Sersic-total photometry cross-check \\
+\texttt{notebooks/07c\_sigma\_e\_equalN.ipynb} & §6cum + §7 equal-N annular cross-check \\
+\texttt{notebooks/07e\_sigma\_e\_arc\_subtract.ipynb} & Arc-subtraction sibling cross-check \\
+\texttt{notebooks/05x\_sigma\_discrepancy\_diagnostic.ipynb} & Tests 1-21 (foundational diagnostics) \\
+\bottomrule
+\end{longtable}\endgroup
+
+\hypertarget{notebooks-history-reference-not-paper-driving}{%
+\subsubsection{Notebooks (history / reference, not paper-driving)}\label{notebooks-history-reference-not-paper-driving}}
+
+\texttt{01\_*}, \texttt{02\_*}, \texttt{03\_bootstrap\_ppxf\_errors}, \texttt{03b\_*}, \texttt{03c\_*}, \texttt{05\_*}, \texttt{06\_*}, \texttt{07\_*}, \texttt{07a\_*}, \texttt{07b\_*},
+\texttt{07d\_*} --- kept for the history of the analysis.
+
+\hypertarget{scripts-production}{%
+\subsubsection{Scripts (production)}\label{scripts-production}}
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}ll@{}}
+\toprule
+Script & Purpose \\
+\midrule
+\endhead
+\texttt{scripts/final\_sigma\_e.py} & nb09 production driver --- runs all 3 mask tracks at N=500 \\
+\texttt{scripts/build\_nb09.py} & Generates the paper notebook from the saved artifacts \\
+\texttt{scripts/bootstrap\_ppxf.py} & Frame-aware ppxf input prep + wild bootstrap \\
+\texttt{scripts/bootstrap\_ppxf\_parallel.py} & joblib parallel bootstrap (BLAS=1 per worker) \\
+\texttt{scripts/measure\_Re.py} & R\_e via masked CoG (multi-band, multi-strategy) \\
+\texttt{scripts/redshift\_verify.py} & Line-fitting redshift module \\
+\texttt{scripts/ifu\_spectral\_resolution.py} & LSF audit \\
+\bottomrule
+\end{longtable}\endgroup
+
+\hypertarget{scripts-sweeps-and-audits}{%
+\subsubsection{Scripts (sweeps and audits)}\label{scripts-sweeps-and-audits}}
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}ll@{}}
+\toprule
+Script & Purpose \\
+\midrule
+\endhead
+\texttt{scripts/audit\_ppxf\_methodology.py} & 4 orthogonal correctness audits \\
+\texttt{scripts/sigma\_inst\_sensitivity.py} & DISPSCAL × \{0.5..2.0\} sweep \\
+\texttt{scripts/run\_isource\_shape\_sweep.py} & 10-shape I(r) sweep \\
+\texttt{scripts/analyze\_isource\_shape\_sweep.py} & I-shape sweep analysis + figure \\
+\texttt{scripts/soft\_mask\_track.py} & Mask-weight runs (CLI \texttt{-\/-weight}) \\
+\texttt{scripts/analyze\_mask\_weight\_sweep.py} & 5-point sweep analysis + linearity fit \\
+\texttt{scripts/regen\_s6cum\_nomask\_diagnostic.py} & Centering investigation \\
+\texttt{scripts/relock\_nomask\_Re\_N500.py} & One-off N=500 relock for the no-mask track \\
+\bottomrule
+\end{longtable}\endgroup
+
+\hypertarget{result-files-key}{%
+\subsubsection{Result files (key)}\label{result-files-key}}
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}ll@{}}
+\toprule
+File & Contents \\
+\midrule
+\endhead
+\texttt{results/final\_sigma\_e\_paper.npz} & nb09 headline + per-SPS + 3-track summaries \\
+\texttt{results/final\_sigma\_e\_paper/} & Per-(aperture, SPS, mask\_weight) caches \\
+\texttt{results/sigma\_e\_ishape\_sweep.npz} & I-shape sweep summary \\
+\texttt{results/sigma\_e\_ishape\_sweep\_oldframe.npz} & Pre-frame-fix I-shape (audit) \\
+\texttt{results/annular\_bootstrap\_07c\_ishape/} & Per-(shape, SPS) I-shape caches (N=500) \\
+\texttt{results/annular\_bootstrap\_07c\_ishape\_oldframe/} & Pre-frame-fix I-shape caches (N=250) \\
+\texttt{results/annular\_bootstrap\_07c\_nomask/} & §6cum nomask caches \\
+\texttt{results/mask\_weight\_sweep.npz} & 5-point mask-weight sweep summary \\
+\texttt{results/ppxf\_methodology\_audit.npz} & 4-audit results \\
+\texttt{results/figures/nb09\_*.png} & nb09 paper figures \\
+\texttt{results/figures/nb07c\_ishape\_sweep.png} & I-shape sweep figure \\
+\bottomrule
+\end{longtable}\endgroup
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{reproduction-recipes}{%
+\subsection{4. Reproduction recipes}\label{reproduction-recipes}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{conda}\NormalTok{ activate ISMgas}
+
+\CommentTok{\# === Headline pipeline (\textasciitilde{}50 min at N=500) ===}
+\ExtensionTok{python}\NormalTok{ scripts/final\_sigma\_e.py }\AttributeTok{{-}{-}n\_bootstrap}\NormalTok{ 500}
+\ExtensionTok{python}\NormalTok{ scripts/build\_nb09.py}
+\ExtensionTok{jupyter}\NormalTok{ nbconvert }\AttributeTok{{-}{-}to}\NormalTok{ notebook }\AttributeTok{{-}{-}execute} \AttributeTok{{-}{-}inplace}\NormalTok{ notebooks/09\_final\_sigma\_e\_paper.ipynb}
+
+\CommentTok{\# === Methodology audits (\textasciitilde{}3 min) ===}
+\ExtensionTok{python}\NormalTok{ scripts/audit\_ppxf\_methodology.py}
+\ExtensionTok{python}\NormalTok{ scripts/sigma\_inst\_sensitivity.py}
+
+\CommentTok{\# === I{-}shape sweep (\textasciitilde{}50 min at N=500) ===}
+\ExtensionTok{python}\NormalTok{ scripts/run\_isource\_shape\_sweep.py }\AttributeTok{{-}{-}n{-}bootstrap}\NormalTok{ 500 }\AttributeTok{{-}{-}n{-}jobs}\NormalTok{ 8}
+\ExtensionTok{python}\NormalTok{ scripts/analyze\_isource\_shape\_sweep.py}
+
+\CommentTok{\# === Mask{-}weight sweep (\textasciitilde{}25 min total) ===}
+\CommentTok{\# (w=0 and w=1 are produced by final\_sigma\_e.py; only need 0.25/0.5/0.75)}
+\ExtensionTok{python}\NormalTok{ scripts/soft\_mask\_track.py }\AttributeTok{{-}{-}weight}\NormalTok{ 0.25}
+\ExtensionTok{python}\NormalTok{ scripts/soft\_mask\_track.py }\AttributeTok{{-}{-}weight}\NormalTok{ 0.50}
+\ExtensionTok{python}\NormalTok{ scripts/soft\_mask\_track.py }\AttributeTok{{-}{-}weight}\NormalTok{ 0.75}
+\ExtensionTok{python}\NormalTok{ scripts/analyze\_mask\_weight\_sweep.py}
+
+\CommentTok{\# === Smoke run (\textasciitilde{}6 min, useful for rebuilds) ===}
+\ExtensionTok{python}\NormalTok{ scripts/final\_sigma\_e.py }\AttributeTok{{-}{-}n\_bootstrap}\NormalTok{ 50}
+\end{Highlighting}
+\end{Shaded}
+
+Caches are keyed by N\_bootstrap and mask\_weight in the filename --- re-runs at the same N skip cached fits unless \texttt{-\/-force} is passed.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{whats-intentionally-not-done}{%
+\subsection{5. What's intentionally NOT done}\label{whats-intentionally-not-done}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Re-run nb09 at higher N} (e.g.~N=2000): the pooled posterior is already smooth; SPS systematics dominate the residual statistical variance.
+\item
+  \textbf{Re-fit Sersic2D F200LP}: the n=0.30 fit is non-physical due to UV-arc domination; the F140W Sersic fit is the trustworthy one. F200LP\_Sersic2D is the I-shape outlier \emph{by design} and is
+  excluded from the budget.
+\item
+  \textbf{Voronoi binning} --- Test 18 / nb05x --- abandoned; not pursued at N=500.
+\item
+  \textbf{PowerBin spatial binning} --- Test 19 / nb05x --- rejected (outer-bin σ \textgreater{} 800 km/s); not pursued.
+\item
+  \textbf{Per-spaxel rotation map at production statistics} --- no rotation detected at the seeing limit; not paper-driving.
+\item
+  \textbf{Full nb07a Sersic-I revisit at the post-frame-fix headline} --- superseded by the I-shape sweep (D3/D4) which covers the Sersic2D shape.
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\emph{See \texttt{\textasciitilde{}/.claude/projects/.../memory/MEMORY.md} for compressed cross-session references, including:} - \emph{\texttt{reference\_cumulative\_vs\_annular\_sigma\_e.md} ---
+§6cum vs §7 design choice} - \emph{\texttt{reference\_sps\_systematic.md} --- per-SPS V\_sys + frame-fix details} - \emph{\texttt{reference\_ppxf\_vacair\_handling.md} --- vac/air conversion
+methodology} - \emph{\texttt{reference\_kcwi\_data\_properties.md} --- KCWI cube + LSF + paper boilerplate} - \emph{\texttt{project\_nb09\_final\_sigma\_e.md} --- current headline status}
+
+\end{document}
