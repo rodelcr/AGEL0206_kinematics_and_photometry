@@ -59,8 +59,18 @@ NOISE_SLICE = (slice(28, 40), slice(45, 70))       # cube[:, 28:40, 45:70]
 # Setup functions
 # =============================================================================
 
+# Per-SPS native wavelength frame.
+# Diagnosed empirically (Apr 2026) by locating Ca H+K minima in
+# spectra_{fsps,emiles,xsl}_9.0.npz and confirmed end-to-end with a vac/air
+# galaxy fit: FSPS Ca K is at 3934.86 Å (vacuum), EMILES at 3933.82 Å (air),
+# XSL closes V_sys with an air galaxy. Feeding each SPS its native frame
+# collapses the V_sys split-track from ~110 km/s to ~15 km/s.
+SPS_NATIVE_FRAME = {'fsps': 'vacuum', 'emiles': 'air', 'xsl': 'air'}
+
+
 def _prep_spectrum_for_ppxf(flux_native, noise_native, hdr, sps_name, z,
-                            lam_obs_range, lam_range_temp, verbose=True):
+                            lam_obs_range, lam_range_temp, verbose=True,
+                            frame_galaxy='auto'):
     """Shared internals for setup_ppxf_inputs{,_from_spectrum}.
 
     Given a 1-D flux and noise on the KCWI cube's native (vacuum, observed)
@@ -68,6 +78,14 @@ def _prep_spectrum_for_ppxf(flux_native, noise_native, hdr, sps_name, z,
 
     Both public setup_* functions just differ in how they produce the input
     spectrum (cube slice vs user-supplied); the downstream prep is identical.
+
+    `frame_galaxy` controls air/vacuum convention:
+      - 'auto'   (default): match SPS_NATIVE_FRAME[sps_name] — FSPS→vacuum,
+                            EMILES & XSL→air. Removes the air/vac mismatch
+                            that produced the −90 km/s FSPS V_sys offset.
+      - 'air':              legacy behavior (vacuum→air via scalar median
+                            ratio). Reproduces pre-2026-04-28 fits.
+      - 'vacuum':           keep KCWI native vacuum.
     """
     # Build native wavelength array from WCS (vacuum, observed frame)
     crval = hdr['CRVAL3']
@@ -111,9 +129,14 @@ def _prep_spectrum_for_ppxf(flux_native, noise_native, hdr, sps_name, z,
     galaxy = flux_int / median_flux
     noise_norm = np.sqrt(noise_int**2) / median_flux
 
-    # Vacuum → air
+    # Frame-aware galaxy wavelength axis (see SPS_NATIVE_FRAME and docstring).
+    if frame_galaxy == 'auto':
+        frame_galaxy = SPS_NATIVE_FRAME.get(sps_name, 'air')
     lam_gal = np.copy(lam_int)
-    lam_gal *= np.median(util.vac_to_air(lam_gal) / lam_gal)
+    if frame_galaxy == 'air':
+        lam_gal *= np.median(util.vac_to_air(lam_gal) / lam_gal)
+    elif frame_galaxy != 'vacuum':
+        raise ValueError(f"frame_galaxy must be 'auto'|'air'|'vacuum', got {frame_galaxy!r}")
 
     # Velocity scale
     d_ln_lam_gal = (np.log(lam_gal)[-1] - np.log(lam_gal)[0]) / (np.log(lam_gal).size - 1)
@@ -156,6 +179,7 @@ def _prep_spectrum_for_ppxf(flux_native, noise_native, hdr, sps_name, z,
         'lam_temp': sps.lam_temp,
         'sps_name': sps_name,
         'z': z,
+        'frame_galaxy': frame_galaxy,
     }
 
 
@@ -206,7 +230,7 @@ def setup_ppxf_inputs(ifu_file, sps_name='fsps', z=DEFAULT_Z,
 def setup_ppxf_inputs_from_spectrum(flux, noise, hdr, sps_name='fsps', z=DEFAULT_Z,
                                     lam_obs_range=DEFAULT_LAM_OBS_RANGE,
                                     lam_range_temp=DEFAULT_LAM_RANGE_TEMP,
-                                    verbose=True):
+                                    verbose=True, frame_galaxy='auto'):
     """
     Build a ppxf_inputs dict from a pre-extracted 1-D spectrum.
 
@@ -244,7 +268,8 @@ def setup_ppxf_inputs_from_spectrum(flux, noise, hdr, sps_name='fsps', z=DEFAULT
     if verbose:
         print(f"Setting up ppxf inputs for {sps_name} from user-supplied spectrum...")
     return _prep_spectrum_for_ppxf(flux, noise, hdr, sps_name, z,
-                                   lam_obs_range, lam_range_temp, verbose=verbose)
+                                   lam_obs_range, lam_range_temp, verbose=verbose,
+                                   frame_galaxy=frame_galaxy)
 
 
 # =============================================================================
