@@ -1,16 +1,19 @@
-"""Soft-mask (arc-spaxel I-weight × 0.5) σ_e track at N=500.
+"""Soft-mask (arc-spaxel I-weight × w) σ_e track at N=500.
 
-Tests the interpolation between hard-mask headline (Track A, 267.8 km/s) and
-no-mask sensitivity (Track B, 252.8 km/s) by KEEPING arc-flagged spaxels in
+Maps the linearity curve between hard-mask headline (w=0.0, 267.8 km/s) and
+no-mask sensitivity (w=1.0, 252.8 km/s) by KEEPING arc-flagged spaxels in
 the aperture but DOWN-WEIGHTING their contribution to the I-weighted spectrum
-extraction by a factor of 0.5.
+extraction by a factor of `w`.
 
-Caches to results/final_sigma_e_paper/{label}_{sps}_N500_softmask_w0p5.npz
+Caches to results/final_sigma_e_paper/{label}_{sps}_N500_softmask_w{w}.npz
 matching the schema of `scripts.final_sigma_e.run_aperture_sps`.
 
 Usage:
-    python scripts/soft_mask_track.py
+    python scripts/soft_mask_track.py                # default w=0.5
+    python scripts/soft_mask_track.py --weight 0.25
+    python scripts/soft_mask_track.py --weight 0.75
 """
+import argparse
 import os
 import sys
 import warnings
@@ -35,8 +38,17 @@ from scripts.bootstrap_ppxf_parallel import run_bootstrap_single_degree_parallel
 
 N_BOOTSTRAP = 500
 N_JOBS = 8
-MASK_WEIGHT = 0.5
-SUFFIX = "_softmask_w0p5"
+
+
+def _suffix_for_weight(w: float) -> str:
+    """Map weight float to cache suffix, matching existing convention.
+
+    0.5  -> _softmask_w0p5
+    0.25 -> _softmask_w0p25
+    0.75 -> _softmask_w0p75
+    """
+    s = f"{w:g}".replace(".", "p")
+    return f"_softmask_w{s}"
 
 
 def extract_aperture_spectrum_soft(state, r_max, mask_weight):
@@ -56,25 +68,36 @@ def extract_aperture_spectrum_soft(state, r_max, mask_weight):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--weight", type=float, default=0.5,
+        help="Soft-mask weight w in [0, 1]: 0=hard-mask, 1=no-mask. Default 0.5.",
+    )
+    args = parser.parse_args()
+    mask_weight = float(args.weight)
+    if not (0.0 <= mask_weight <= 1.0):
+        raise SystemExit(f"--weight must be in [0,1]; got {mask_weight}")
+    suffix = _suffix_for_weight(mask_weight)
+
     state = load_setup()
-    print(f"\nSoft mask track: arc-spaxel I-weight × {MASK_WEIGHT}")
+    print(f"\nSoft mask track: arc-spaxel I-weight × {mask_weight}")
     print(f"  N_bootstrap = {N_BOOTSTRAP}, parallel n_jobs = {N_JOBS}")
-    print(f"  Suffix     = {SUFFIX}")
+    print(f"  Suffix     = {suffix}")
 
     for label_idx, (frac, label) in enumerate(zip(APERTURE_FRACS, APERTURE_LABELS)):
         r_max = frac * state["R_E"]
         flux, noise, n_active, sn_band = extract_aperture_spectrum_soft(
-            state, r_max, MASK_WEIGHT,
+            state, r_max, mask_weight,
         )
         print(f"\n  Aperture {label}  R<{r_max:.3f}\"  "
               f"({n_active} active spaxels, S/N={sn_band:.1f})")
 
         for sps_name in SPS_LIBS:
-            cache = CACHE_DIR / f"{label}_{sps_name}_N{N_BOOTSTRAP}{SUFFIX}.npz"
+            cache = CACHE_DIR / f"{label}_{sps_name}_N{N_BOOTSTRAP}{suffix}.npz"
             if cache.exists():
                 print(f"    Skip {sps_name}: {cache.name} exists")
                 continue
-            print(f"    === {label}/{sps_name}/softmask_w{MASK_WEIGHT} ===")
+            print(f"    === {label}/{sps_name}/softmask_w{mask_weight} ===")
             inputs = setup_ppxf_inputs_from_spectrum(
                 flux, noise, state["hdr"], sps_name=sps_name, z=Z_SYSTEMIC,
                 verbose=False, frame_galaxy="auto",
@@ -107,7 +130,7 @@ def main():
             np.savez(
                 cache,
                 label=label, sps_name=sps_name, r_max=float(r_max),
-                mask_on=False, mask_weight=float(MASK_WEIGHT),
+                mask_on=False, mask_weight=float(mask_weight),
                 n_spax=int(n_active), sn_band=float(sn_band),
                 degrees=np.asarray(DEGREES),
                 V_orig=V_orig, sig_orig=sig_orig, chi2_orig=chi2_orig,
@@ -122,7 +145,7 @@ def main():
             print(f"      done in {elapsed:.1f}s ({elapsed/60:.1f} min); "
                   f"σ={sig_orig.min():.0f}-{sig_orig.max():.0f} km/s")
 
-    print("\n  All soft-mask N=500 fits committed to cache.")
+    print(f"\n  All soft-mask (w={mask_weight}) N=500 fits committed to cache.")
 
 
 if __name__ == "__main__":
