@@ -507,3 +507,86 @@ to the methodology.
 - `results/ppxf_methodology_audit.npz` — saved audit data
 - `results/sigma_inst_sensitivity.npz` — saved LSF data
 - `results/figures/nb09_sigma_vs_degree.png` — degree stability figure (added to nb09 §6.5)
+
+---
+
+## ADDENDUM 2026-04-29 (b) — Soft-mask track (mask_weight=0.5)
+
+User question: "what's the linearity of σ_e response to arc-spaxel weighting?"
+Run a third track that interpolates between masked (w=0.0) and no-mask (w=1.0)
+by setting the I-weight of arc-flagged spaxels to **0.5** (kept in aperture
+but down-weighted to half their flux contribution).
+
+`scripts/soft_mask_track.py` runs at N=500 with the joblib parallel runner.
+Cache schema: `results/final_sigma_e_paper/{label}_{sps}_N500_softmask_w0p5.npz`
+matching the existing convention. `scripts/final_sigma_e.py` extended to
+load + pool the soft track via the new `_mask_suffix(mask_weight)` helper
+and `mask_weight` parameter on `extract_aperture_spectrum` /
+`run_aperture_sps`.
+
+### Result (executed 2026-04-29)
+
+| Aperture | Track A (w=0.0, masked) | Track C (w=0.5, soft) | Track B (w=1.0, nomask) | Δ_soft | Δ_nomask | Δ_soft / Δ_nomask |
+|---|---|---|---|---|---|---|
+| R<R_e/2 | 223.6 | 220.6 | 219.6 | −3.0 | −4.0 | 0.75 |
+| **R<R_e** | **267.8** | 258.5 | 252.8 | **−9.3** | **−15.0** | **0.62** |
+
+Per-SPS σ at R<R_e (soft track): FSPS 250.2, EMILES 257.8, XSL 269.9 (mean 259.3).
+
+**Linearity = 0.62 — slightly super-linear.** A perfectly linear response
+would give Δ_soft = 0.5 × Δ_nomask. Observed soft-mask is 0.62 × Δ_nomask,
+i.e. *the bias suppresses faster than 1:1 with arc weight* — meaning a few
+highly-contaminating spaxels dominate the bias rather than uniform
+mixture-driven dilution.
+
+### Why this test matters
+
+The linearity test is diagnostic of *what's actually biasing σ_e*:
+- **Linear** (Δsoft / Δnomask ≈ 0.5): the bias is **mixture-driven**, i.e.
+  σ_arc and σ_def contribute proportionally to the I-weighted joint LOSVD.
+  σ_e shifts proportionally to f_arc.
+- **Sub-linear** (Δsoft < 0.5 × Δnomask): the bias has a *threshold* —
+  e.g. a few highly contaminating spaxels dominate, not the full arc-spaxel
+  ensemble.
+- **Super-linear** (Δsoft > 0.5 × Δnomask): the down-weighted arc spaxels
+  still drag σ down via narrow features (their absorption depth dominates
+  over their I-weight). **OR** a few specific spaxels are highly biasing,
+  and even at half-weight they continue to dominate the joint fit.
+
+**Our result is super-linear (0.62, leans toward the threshold-driven case).**
+A 50% down-weight doesn't fully suppress the arc bias — soft-mask still
+sits 9.3 km/s below the hard-masked headline. Reading: a small number of
+arc-flagged spaxels (likely the brightest ones near the deflector
+boundary) carry most of the contamination signal. Down-weighting by half
+preserves 62% of the bias, not 50%.
+
+This **strengthens the hard-mask headline argument**: gentle reduction is
+not sufficient; the contaminating spaxels need to be removed entirely.
+Soft-mask is a partial solution; hard-mask cleanly removes the bias.
+
+### Soft-mask vs hard-mask in the paper
+
+The soft track is a **diagnostic**, not a replacement for the headline. A
+0.5 down-weight is arbitrary — there's no physical principle picking 0.5
+over 0.3 or 0.7. The hard mask (w=0.0) is justified by the arc being a
+*known* contaminant from a different galaxy at z=1.302, and dropping its
+contribution is the conservative anti-bias choice. The headline stays at
+**masked = 267.8 km/s**.
+
+What soft-mask buys us:
+1. Confirms the bias direction and rough magnitude (sub-linear / linear /
+   super-linear).
+2. Bounds σ_mask in the error budget — if soft is roughly linear with
+   no-mask, σ_mask = ±16 spans the systematic uncertainty correctly. If
+   soft is highly non-linear, we'd reconsider the budget.
+3. Establishes the masking choice is rate-limited by I-weighting (not a
+   knife-edge cliff) — i.e. the systematic isn't fragile to small mask
+   redrawings.
+
+### Files added
+- `scripts/soft_mask_track.py` — standalone parallel runner for w=0.5
+- `results/final_sigma_e_paper/{Re_2,Re}_{fsps,emiles,xsl}_N500_softmask_w0p5.npz`
+  — 6 cache files
+- `scripts/final_sigma_e.py` — extended with `mask_weight` parameter
+  (backward-compat with `mask_on` boolean)
+- `scripts/build_nb09.py` — 3-track histogram + table

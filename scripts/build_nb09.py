@@ -202,47 +202,76 @@ for i, lab in enumerate(p['aperture_labels']):
 
 # ─── §4 Three-aperture σ_e ──────────────────────────────────────────────
 md(r"""## §4 — σ_e at three apertures (headline = masked track)""")
-co(r"""# Pretty table of σ_e at the three apertures (both tracks)
-print(f'{"Aperture":<10}  {"R_max (″)":>10}  {"σ_e masked":>22}  {"σ_e nomask":>22}  {"Δ":>8}')
-print('-' * 80)
+co(r"""# Pretty table of σ_e at the apertures (all three tracks)
+hdr = (f'{"Aperture":<10}  {"R_max (″)":>10}  {"σ masked (w=0)":>22}  '
+       f'{"σ soft (w=0.5)":>22}  {"σ nomask (w=1)":>22}  '
+       f'{"Δsoft":>7}  {"Δnomask":>8}')
+print(hdr)
+print('-' * len(hdr))
 for i, lab in enumerate(p['aperture_labels']):
     rm = p['aperture_r_max'][i]
-    sm = (p['sigma_p50'][i], p['sigma_p50'][i]-p['sigma_p16'][i], p['sigma_p84'][i]-p['sigma_p50'][i])
+    sm = (p['sigma_p50'][i], p['sigma_p50'][i]-p['sigma_p16'][i],
+          p['sigma_p84'][i]-p['sigma_p50'][i])
+    ss = (p['soft_sigma_p50'][i], p['soft_sigma_p50'][i]-p['soft_sigma_p16'][i],
+          p['soft_sigma_p84'][i]-p['soft_sigma_p50'][i])
     sn = (p['nomask_sigma_p50'][i], p['nomask_sigma_p50'][i]-p['nomask_sigma_p16'][i],
           p['nomask_sigma_p84'][i]-p['nomask_sigma_p50'][i])
-    delta = float(sn[0]) - float(sm[0])
+    d_soft = float(ss[0]) - float(sm[0])
+    d_nomask = float(sn[0]) - float(sm[0])
     print(f'{str(lab):<10}  {float(rm):>10.3f}  '
           f'{sm[0]:>7.1f} (-{sm[1]:>4.1f}/+{sm[2]:>4.1f})  '
+          f'{ss[0]:>7.1f} (-{ss[1]:>4.1f}/+{ss[2]:>4.1f})  '
           f'{sn[0]:>7.1f} (-{sn[1]:>4.1f}/+{sn[2]:>4.1f})  '
-          f'{delta:>+8.2f}')""")
+          f'{d_soft:>+7.2f}  {d_nomask:>+8.2f}')
+
+# Linearity check at R<R_e
+i_re = list(p['aperture_labels']).index('Re') if 'Re' in list(p['aperture_labels']) else -1
+d_soft_re = float(p['soft_sigma_p50'][i_re]) - float(p['sigma_p50'][i_re])
+d_nomask_re = float(p['nomask_sigma_p50'][i_re]) - float(p['sigma_p50'][i_re])
+print(f'\nLinearity at R<R_e: Δsoft / Δnomask = {d_soft_re/d_nomask_re:.3f}')
+print(f'  (expect ≈ 0.5 if σ_e responds linearly to arc-spaxel I-weight)')""")
 
 # ─── §5 Two-track comparison ────────────────────────────────────────────
-md(r"""## §5 — Track A (masked) vs Track B (no-mask) — sensitivity
+md(r"""## §5 — Three masking tracks: pros, cons, and the σ_e systematic
 
 The F200LP arc mask reprojected onto the IFU grid drops only **0.7%** of all
-spaxels (~38/184 inside R < R_e). The §6cum I-weighting already concentrates
-weight on the bright deflector core, so the arc-mask effect is bounded by the
-no-mask sensitivity.""")
-co(r"""# Histogram overlay of pooled σ_e posteriors for both tracks
+spaxels (~38/184 inside R<R_e ≈ 21% of the aperture, ~27% of I-weight).
+We run three tracks at full N=500 statistics:
+
+- **Track A — masked (w=0.0):** hard-drop arc-flagged spaxels. Headline.
+- **Track B — no-mask (w=1.0):** keep all spaxels at full I-weight. Sensitivity.
+- **Track C — soft mask (w=0.5):** keep arc-flagged spaxels but reduce their
+  I-weight by 50%. Tests whether σ_e responds *linearly* to arc-spaxel
+  weighting; if so, soft should land ~halfway between masked and no-mask.
+
+§6cum's I-weighting already concentrates weight on the bright deflector core
+(arc spaxels at R~1″ have ~10× lower I-weight than the core), so the
+mask-on/off difference is bounded.""")
+co(r"""# Histogram overlay of pooled σ_e posteriors for all three tracks
 fig, axes = plt.subplots(1, 2, figsize=(11, 4.5), sharey=True)
 samples_masked = [p['sigma_samples_Re_2'], p['sigma_samples_Re']]
 samples_nomask = [p['nomask_sigma_samples_Re_2'], p['nomask_sigma_samples_Re']]
+samples_soft   = [p['soft_sigma_samples_Re_2'],   p['soft_sigma_samples_Re']]
 labels_disp = [r'$R<R_e/2$', r'$R<R_e$ (headline)']
 
-for ax, sm, sn, lab in zip(axes, samples_masked, samples_nomask, labels_disp):
+for ax, sm, sn, ss, lab in zip(axes, samples_masked, samples_nomask, samples_soft, labels_disp):
     bins = np.linspace(120, 360, 50)
-    ax.hist(sm, bins=bins, density=True, alpha=0.55, color='C0', label='masked')
-    ax.hist(sn, bins=bins, density=True, alpha=0.55, color='C3', label='no-mask')
-    p50_m = float(np.percentile(sm, 50)); p50_n = float(np.percentile(sn, 50))
+    ax.hist(sm, bins=bins, density=True, alpha=0.50, color='C0', label='masked (w=0.0)')
+    ax.hist(ss, bins=bins, density=True, alpha=0.50, color='C2', label='soft (w=0.5)')
+    ax.hist(sn, bins=bins, density=True, alpha=0.50, color='C3', label='no-mask (w=1.0)')
+    p50_m = float(np.percentile(sm, 50))
+    p50_s = float(np.percentile(ss, 50))
+    p50_n = float(np.percentile(sn, 50))
     ax.axvline(p50_m, color='C0', ls='--', lw=1.5)
+    ax.axvline(p50_s, color='C2', ls='--', lw=1.5)
     ax.axvline(p50_n, color='C3', ls='--', lw=1.5)
-    ax.set_title(f'{lab}\nmasked={p50_m:.0f}  nomask={p50_n:.0f}  Δ={p50_n-p50_m:+.1f}',
-                 fontsize=11)
+    ax.set_title(f'{lab}\nmasked={p50_m:.0f}  soft={p50_s:.0f}  nomask={p50_n:.0f}',
+                 fontsize=10)
     ax.set_xlabel(r'$\sigma_e$ [km/s]')
-    ax.legend(fontsize=9)
+    ax.legend(fontsize=8)
     ax.grid(alpha=0.3)
 axes[0].set_ylabel('PDF')
-fig.suptitle('Pooled σ_e posteriors — masked (headline) vs no-mask (sensitivity)',
+fig.suptitle('Pooled σ_e posteriors — three masking tracks (mask_weight=0.0/0.5/1.0)',
              fontsize=13)
 plt.tight_layout()
 out = REPO / 'results' / 'figures' / 'nb09_two_tracks.png'

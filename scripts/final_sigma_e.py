@@ -202,36 +202,57 @@ def load_setup():
 # ─────────────────────────────────────────────────────────────────────────────
 # Aperture extraction
 # ─────────────────────────────────────────────────────────────────────────────
-def extract_aperture_spectrum(state, r_max, mask_on=True):
+def extract_aperture_spectrum(state, r_max, mask_weight=None, mask_on=None):
     """I-weighted spectrum of all spaxels with r < r_max.
 
-    mask_on=True  (default, headline track) — drop spaxels in the F200LP arc mask.
-    mask_on=False (sensitivity track)        — keep all spaxels in the aperture.
+    The `mask_weight` parameter generalizes mask handling:
+      0.0 → hard mask (drop arc spaxels via zero weight) — DEFAULT, headline behavior
+      1.0 → no mask (use all spaxels at full I-weight) — sensitivity check
+      0.5 → soft mask (arc spaxels kept but down-weighted by 0.5) — interpolation track
+      arbitrary float in [0, 1] → continuous weighting
+
+    Backward compat: if `mask_on` is given (legacy boolean), translate to
+    mask_weight = 0.0 (mask_on=True) or 1.0 (mask_on=False).
     """
+    if mask_weight is None:
+        mask_weight = 0.0 if (mask_on is None or mask_on) else 1.0
+
     sel = state["r_spax"] < r_max
-    if mask_on:
-        sel = sel & ~state["arc_spax_mask"]
-    n_kept = int(sel.sum())
     I = np.clip(state["ifu_band"], 0, None)
-    w = I[sel]
+    I_eff = I.copy()
+    I_eff[state["arc_spax_mask"]] *= mask_weight
+    w = I_eff[sel]
+    n_active = int((w > 0).sum())
     w_norm = w / max(w.sum(), 1e-30)
     flux = np.sum(state["cube"][:, sel] * w_norm[None, :], axis=1)
     sn_band = float(np.median(flux[state["band_mask"]])
                     / np.median(state["noise_sky"][state["band_mask"]]))
-    return flux, state["noise_sky"].copy(), n_kept, sn_band
+    return flux, state["noise_sky"].copy(), n_active, sn_band
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Per-(aperture, SPS) ppxf + bootstrap
 # ─────────────────────────────────────────────────────────────────────────────
-def run_aperture_sps(state, label, r_max, sps_name, n_bootstrap, force, mask_on=True,
-                     fallback_n=None):
+def _mask_suffix(mask_weight):
+    """Cache filename suffix for a given mask_weight."""
+    if mask_weight == 0.0:
+        return ""
+    if mask_weight == 1.0:
+        return "_nomask"
+    s = f"{mask_weight:.2f}".rstrip("0").rstrip(".").replace(".", "p")
+    return f"_softmask_w{s}"
+
+
+def run_aperture_sps(state, label, r_max, sps_name, n_bootstrap, force,
+                     mask_on=True, mask_weight=None, fallback_n=None):
     """Run §6cum at one (label, sps, mask) config with bootstrap.
 
     Cache lookup chain: N={n_bootstrap}, then N={fallback_n} (if specified).
     The actual N used is recorded in the returned dict's `n_bootstrap` key.
     """
-    suffix = "" if mask_on else "_nomask"
+    if mask_weight is None:
+        mask_weight = 0.0 if mask_on else 1.0
+    suffix = _mask_suffix(mask_weight)
     chain = [n_bootstrap]
     if fallback_n is not None and fallback_n != n_bootstrap:
         chain.append(fallback_n)
@@ -246,7 +267,9 @@ def run_aperture_sps(state, label, r_max, sps_name, n_bootstrap, force, mask_on=
                 return d
     cache = CACHE_DIR / f"{label}_{sps_name}_N{n_bootstrap}{suffix}.npz"
 
-    flux, noise, n_kept, sn_band = extract_aperture_spectrum(state, r_max, mask_on=mask_on)
+    flux, noise, n_kept, sn_band = extract_aperture_spectrum(
+        state, r_max, mask_weight=mask_weight,
+    )
     inputs = setup_ppxf_inputs_from_spectrum(
         flux, noise, state["hdr"], sps_name=sps_name, z=Z_SYSTEMIC,
         verbose=False, frame_galaxy="auto",
@@ -279,7 +302,7 @@ def run_aperture_sps(state, label, r_max, sps_name, n_bootstrap, force, mask_on=
 
     out = dict(
         label=label, sps_name=sps_name, r_max=float(r_max),
-        mask_on=bool(mask_on),
+        mask_on=bool(mask_weight == 0.0), mask_weight=float(mask_weight),
         n_spax=int(n_kept), sn_band=float(sn_band),
         degrees=np.asarray(DEGREES),
         V_orig=V_orig, sig_orig=sig_orig, chi2_orig=chi2_orig,
@@ -292,8 +315,12 @@ def run_aperture_sps(state, label, r_max, sps_name, n_bootstrap, force, mask_on=
         lam_gal_rest=inputs["lam_gal_rest"], best_fit=bf_arr,
     )
     np.savez(cache, **out)
-    tag = "masked" if mask_on else "nomask"
-    print(f"    [{tag:6s}] {label}/{sps_name:6s}  σ={sig_orig.min():.0f}-{sig_orig.max():.0f} "
+    tag = (
+        "masked" if mask_weight == 0.0
+        else "nomask" if mask_weight == 1.0
+        else f"soft_w{mask_weight}"
+    )
+    print(f"    [{tag:11s}] {label}/{sps_name:6s}  σ={sig_orig.min():.0f}-{sig_orig.max():.0f} "
           f"V={V_orig.mean():+.1f}  frame={inputs['frame_galaxy']:7s}  "
           f"{elapsed:.0f}s  ({n_kept} spax, S/N={sn_band:.1f})")
     return out
@@ -374,12 +401,18 @@ def main(n_bootstrap, force):
 
     state = load_setup()
 
-    print(f"\n§5  Two tracks × three apertures × {len(SPS_LIBS)} SPS libraries\n" + "─"*70)
-    print(f"      Track A — F200LP arc mask ON  (headline)")
-    print(f"      Track B — arc mask OFF        (sensitivity / no-masking)")
+    print(f"\n§5  Three tracks × {len(APERTURE_LABELS)} apertures × {len(SPS_LIBS)} SPS libraries\n" + "─"*70)
+    print(f"      Track A — F200LP arc mask ON   (mask_weight=0.0, headline)")
+    print(f"      Track B — arc mask OFF         (mask_weight=1.0, sensitivity)")
+    print(f"      Track C — soft mask            (mask_weight=0.5, interpolation)")
     tracks = {}
-    for track_label, mask_on in (("masked", True), ("nomask", False)):
-        print(f"\n  ─── Track: {track_label} ───")
+    track_specs = (
+        ("masked",         0.0),
+        ("nomask",         1.0),
+        ("softmask_w0p5",  0.5),
+    )
+    for track_label, mask_weight in track_specs:
+        print(f"\n  ─── Track: {track_label} (mask_weight={mask_weight}) ───")
         apertures = {}
         for frac, label in zip(APERTURE_FRACS, APERTURE_LABELS):
             r_max = frac * state["R_E"]
@@ -388,7 +421,8 @@ def main(n_bootstrap, force):
             for sps in SPS_LIBS:
                 per_sps[sps] = run_aperture_sps(
                     state, label, r_max, sps,
-                    n_bootstrap=n_bootstrap, force=force, mask_on=mask_on,
+                    n_bootstrap=n_bootstrap, force=force,
+                    mask_weight=mask_weight,
                     fallback_n=50,
                 )
             apertures[label] = dict(
@@ -400,18 +434,25 @@ def main(n_bootstrap, force):
 
     pool_Re_masked = tracks["masked"]["Re"]["pool"]
     pool_Re_nomask = tracks["nomask"]["Re"]["pool"]
+    pool_Re_soft   = tracks["softmask_w0p5"]["Re"]["pool"]
     budget = error_budget(pool_Re_masked)
     delta_mask = pool_Re_nomask["sigma_p50"] - pool_Re_masked["sigma_p50"]
+    delta_soft = pool_Re_soft["sigma_p50"]   - pool_Re_masked["sigma_p50"]
 
-    print(f"\n§6  Headline: σ_e(<R_e) — both tracks compared")
+    print(f"\n§6  Headline: σ_e(<R_e) — three tracks compared")
     print("─" * 70)
-    print(f"  Track A (masked):  σ_e = {pool_Re_masked['sigma_p50']:.2f} "
-          f"(+{pool_Re_masked['sigma_p84']-pool_Re_masked['sigma_p50']:.2f} "
-          f"−{pool_Re_masked['sigma_p50']-pool_Re_masked['sigma_p16']:.2f}) km/s")
-    print(f"  Track B (nomask):  σ_e = {pool_Re_nomask['sigma_p50']:.2f} "
-          f"(+{pool_Re_nomask['sigma_p84']-pool_Re_nomask['sigma_p50']:.2f} "
-          f"−{pool_Re_nomask['sigma_p50']-pool_Re_nomask['sigma_p16']:.2f}) km/s")
-    print(f"  Δ(nomask − masked) = {delta_mask:+.2f} km/s")
+    def _show(name, p):
+        print(f"  Track {name}:  σ_e = {p['sigma_p50']:.2f} "
+              f"(+{p['sigma_p84']-p['sigma_p50']:.2f} "
+              f"−{p['sigma_p50']-p['sigma_p16']:.2f}) km/s")
+    _show("A (masked,    w=0.0)", pool_Re_masked)
+    _show("B (nomask,    w=1.0)", pool_Re_nomask)
+    _show("C (softmask,  w=0.5)", pool_Re_soft)
+    print(f"  Δ(nomask − masked)   = {delta_mask:+.2f} km/s")
+    print(f"  Δ(softmask − masked) = {delta_soft:+.2f} km/s")
+    if abs(delta_mask) > 1e-6:
+        print(f"  Linearity check: Δ_soft / Δ_nomask = "
+              f"{delta_soft/delta_mask:.3f}  (expect 0.5 if linear in arc weight)")
     print(f"\n  Error budget (masked headline):")
     for k in ("stat", "I_shape", "mask", "frame", "centering"):
         print(f"    σ_{k:9s} = {budget[k]:.1f} km/s")
@@ -470,7 +511,7 @@ def main(n_bootstrap, force):
         # Pooled posterior samples for the headline aperture (masked track) — for figures
         sigma_samples_Re=apertures["Re"]["pool"]["sigma_samples"],
         sigma_samples_Re_2=apertures["Re_2"]["pool"]["sigma_samples"],
-        # No-mask track summaries (sensitivity)
+        # No-mask track summaries (sensitivity, mask_weight=1.0)
         nomask_sigma_p16=np.array([tracks["nomask"][l]["pool"]["sigma_p16"] for l in APERTURE_LABELS]),
         nomask_sigma_p50=np.array([tracks["nomask"][l]["pool"]["sigma_p50"] for l in APERTURE_LABELS]),
         nomask_sigma_p84=np.array([tracks["nomask"][l]["pool"]["sigma_p84"] for l in APERTURE_LABELS]),
@@ -481,6 +522,17 @@ def main(n_bootstrap, force):
              for l in APERTURE_LABELS]
         ),
         delta_mask_kms=float(delta_mask),
+        # Soft-mask track summaries (interpolation, mask_weight=0.5)
+        soft_sigma_p16=np.array([tracks["softmask_w0p5"][l]["pool"]["sigma_p16"] for l in APERTURE_LABELS]),
+        soft_sigma_p50=np.array([tracks["softmask_w0p5"][l]["pool"]["sigma_p50"] for l in APERTURE_LABELS]),
+        soft_sigma_p84=np.array([tracks["softmask_w0p5"][l]["pool"]["sigma_p84"] for l in APERTURE_LABELS]),
+        soft_sigma_samples_Re=tracks["softmask_w0p5"]["Re"]["pool"]["sigma_samples"],
+        soft_sigma_samples_Re_2=tracks["softmask_w0p5"]["Re_2"]["pool"]["sigma_samples"],
+        soft_per_sps_summary=np.array(
+            [[tracks["softmask_w0p5"][l]["pool"]["per_sps"][s]["sigma_p50"] for s in SPS_LIBS]
+             for l in APERTURE_LABELS]
+        ),
+        delta_soft_kms=float(delta_soft),
         # Error budget (masked track is headline)
         budget_stat=budget["stat"], budget_I_shape=budget["I_shape"],
         budget_mask=budget["mask"], budget_frame=budget["frame"],
