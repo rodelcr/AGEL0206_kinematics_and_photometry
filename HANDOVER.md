@@ -1,10 +1,19 @@
 # HANDOVER — AGEL0206 ApJL σ_e analysis (last updated 2026-04-27)
 
-This document captures the state of the AGEL0206 stellar velocity dispersion analysis at the point of context compaction. Read this first when resuming.
+> **This file is now superseded.** The frame-aware nb09 pipeline (Apr 28-29
+> 2026) is the production path. **Read `TESTS_AND_DIAGNOSTICS.md` first**
+> for the complete test catalog and current headline number.
+>
+> | Then | Now (2026-04-29) |
+> |---|---|
+> | σ_e(<R_e) = 267.32 ± 24 km/s | **σ_e(<R_e) = 268 ± 32 km/s** (frame-aware, full systematic budget) |
+> | nb07c (pre-frame-fix) | `notebooks/09_final_sigma_e_paper.ipynb` |
+>
+> The discussion below is preserved for the audit trail.
 
 ---
 
-## 1. Headline numbers (paper-ready, N=500)
+## 1. Headline numbers (paper-ready, N=500) — **superseded by nb09**
 
 **σ_e(<R_e) = 267.32 ± 24 km/s** — for the M•–σ relation (Kormendy & Ho 2013, Greene+2020)
 
