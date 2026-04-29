@@ -674,3 +674,86 @@ buried inside that bar.
 - `results/figures/nb09_mask_weight_sweep.png` — σ_e(w) curve, both apertures
 - `scripts/build_nb09.py` — §5b section displays sweep figure + per-w
   table + linearity verdict
+
+---
+
+## ADDENDUM 2026-04-29 (d) — I(r)-shape sweep refresh at N=500 (post-frame-fix)
+
+The I-shape budget contribution (±13 km/s in `error_budget()`) was derived
+from `scripts/run_isource_shape_sweep.py` at N=250 on Apr 28 morning,
+**before the frame fix** committed that evening. Re-ran the full 10-shape
+sweep at N=500 with the post-frame-fix `setup_ppxf_inputs_from_spectrum`
+(`frame_galaxy='auto'`) to validate that the budget value is still right.
+
+Pre-frame-fix caches preserved at `results/annular_bootstrap_07c_ishape_oldframe/`
+and `results/sigma_e_ishape_sweep_oldframe.npz` for the audit trail.
+
+### Frame impact at the headline shape (IFU_band, R<R_e)
+
+| SPS | oldframe (N=250) | newframe (N=500) | Δσ |
+|---|---|---|---|
+| FSPS | 255.45 | 255.08 | −0.37 |
+| EMILES | 267.84 | 268.18 | +0.33 |
+| XSL | 279.70 | 280.19 | +0.49 |
+
+Per-SPS shifts are <0.5 km/s — fully consistent with the ±5 km/s frame
+budget component already carried in the error budget. Frame fix has no
+material effect on the I-shape sweep at the σ level.
+
+### Post-frame-fix I-shape spread at R<R_e (N=500, mask FIXED at F200-raw)
+
+| Shape | σ_e [km/s] | Δheadline | Group |
+|---|---|---|---|
+| **IFU_band** (headline) | 268.5 −24.6/+23.3 | 0.0 | IFU |
+| IFU_wl | 268.2 −24.3/+23.2 | −0.3 | IFU |
+| F140W_raw | 262.8 −26.1/+23.8 | −5.7 | raw HST |
+| F200LP_raw | 265.6 −26.5/+24.3 | −2.8 | raw HST |
+| F140W_arcmasked | 266.3 −27.7/+24.5 | −2.2 | arc-masked HST |
+| F200LP_arcmasked | 264.9 −24.6/+23.4 | −3.6 | arc-masked HST |
+| F140W_1Dcog | 255.6 −24.2/+23.1 | −12.9 | 1D CoG smooth |
+| F200LP_1Dcog | 265.3 −25.7/+24.5 | −3.2 | 1D CoG smooth |
+| F140W_Sersic2D | 261.4 −24.3/+23.0 | −7.1 | 2D Sersic smooth |
+| F200LP_Sersic2D | 297.1 −31.5/+29.1 | +28.6 | 2D Sersic smooth ← outlier |
+
+### Spreads
+
+- Full 10-shape range: 41.6 km/s (skewed by F200LP_Sersic2D)
+- **Excluding F200LP_Sersic2D outlier: 12.9 km/s** (range = max − min)
+- Per-group spreads:
+  - IFU: 0.3 km/s
+  - raw HST: 2.9 km/s
+  - arc-masked HST: 1.3 km/s
+  - 1D CoG smooth: 9.7 km/s
+  - 2D Sersic smooth: 35.7 km/s (driven by F200LP_Sersic2D)
+
+### F200LP_Sersic2D outlier
+
+The F200LP Sersic2D fit returns n=0.30 r_eff=1.86" — non-physical for an
+elliptical galaxy (n=0.3 is essentially Gaussian, real ellipticals have
+n=2-6) and well below F140W's n=2.14. The poor fit is because the F200LP
+filter samples the rest-UV (≤3000 Å rest at z=0.67564), where the
+deflector is very faint and the arc dominates — the Sersic fitter is
+effectively pulled toward the arc geometry. Excluding it from the
+budget is justified.
+
+### What this means for the paper
+
+1. **±13 km/s I-shape budget value is correct.** Range excluding the
+   outlier is 12.9 km/s ≈ 13. No change to the error budget needed.
+2. **Frame fix is sub-budget at the σ level for the I-shape sweep**, fully
+   consistent with the ±5 km/s frame budget component already in place.
+3. **Headline IFU_band σ_e = 268.5 km/s in the I-shape sweep** matches the
+   nb09 mask-weight-sweep headline (267.8 km/s) to within 0.7 km/s.
+   Both are at the same masked aperture (F200-raw mask, R<R_e) but use
+   slightly different code paths — agreement validates pipeline.
+
+### Files added (this addendum)
+
+- `results/annular_bootstrap_07c_ishape_oldframe/` — pre-frame-fix caches
+  preserved for audit trail (10 shapes × 3 SPS × N=250)
+- `results/sigma_e_ishape_sweep_oldframe.npz` — old summary
+- `results/annular_bootstrap_07c_ishape/` — refreshed N=500 caches
+- `results/sigma_e_ishape_sweep.npz` — refreshed summary
+- `results/figures/nb07c_ishape_sweep.png` — refreshed figure
+- `scripts/analyze_isource_shape_sweep.py` — N label now read from cache
+  (was hardcoded to N=250)

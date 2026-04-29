@@ -84,10 +84,16 @@ def main():
 
     head_p50 = next(r[1]["p50"] for r in rows if r[0] == HEADLINE_SHAPE)
 
+    # Read actual N_bootstrap from a representative cache for honest reporting
+    _probe = np.load(os.path.join(CACHE_DIR, f"{HEADLINE_SHAPE}_{SPS_LIBS[0]}.npz"),
+                      allow_pickle=True)
+    n_boot_actual = (int(_probe["n_bootstrap"]) if "n_bootstrap" in _probe.files
+                     else int(_probe["sig_boot"].shape[1]))
+
     sep = "=" * 110
     print(f"\n{sep}")
     print(f"§6cum I(r)-SHAPE sweep at R<R_e   (mask FIXED at F200-raw)   "
-          f"N=250 boot × 3 SPS × 15 deg")
+          f"N={n_boot_actual} boot × 3 SPS × 15 deg")
     print(f"Headline σ_e ({HEADLINE_SHAPE}): {head_p50:.2f} km/s")
     print(sep)
     print(f"{'I-shape':<20} {'group':<19} "
@@ -153,7 +159,7 @@ def main():
     axA.set_xticks(x)
     axA.set_xticklabels(lbls, rotation=30, ha="right", fontsize=10)
     axA.set_ylabel(r"$\sigma_e (<R_e)$ [km/s]")
-    axA.set_title(f"§6cum I(r)-shape sweep — mask FIXED at F200-raw (N=250 × 3 SPS × 15 deg)\n"
+    axA.set_title(f"§6cum I(r)-shape sweep — mask FIXED at F200-raw (N={n_boot_actual} × 3 SPS × 15 deg)\n"
                   f"All shapes use sel = (r_spax < R_e) ∧ ¬arc_spax_mask")
     # Legend handles for groups
     from matplotlib.patches import Patch
