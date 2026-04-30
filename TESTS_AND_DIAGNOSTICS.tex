@@ -204,6 +204,8 @@ E5 & 5-point mask-weight sweep w∈\{0,0.25,0.5,0.75,1\} & \texttt{scripts/soft\
 E6 & Mask dilation (over-masking diagnostic) & \texttt{notebooks/07d\_sigma\_e\_forceful\_mask.ipynb}, \texttt{\textasciitilde{}/.claude/.../project\_nb07d\_overmasking\_finding.md} & Dilation
 inflates σ via noise; do NOT dilate (negative finding) & ✅ \\
 E7 & Arc-spectrum subtraction sibling & \texttt{notebooks/07e\_sigma\_e\_arc\_subtract.ipynb} & Matches §6cum within 0.1 km/s --- residual arc dilution sub-dominant & ✅ \\
+E8 & Arc-as-sky mechanism test (no-mask + arc-sky template) & \texttt{scripts/run\_07f\_arc\_sky.py}, \texttt{notebooks/07f\_arc\_sky\_subtract.ipynb} & σ\_D=274.6 vs σ\_A=267.8 / σ\_B=252.8;
+recovery=145\% --- dilution explains the full no-mask Δ & ✅ \\
 \textbf{F. Centering} & & & & \\
 F1 & 5-center sweep (±0.4" perturbations) & \texttt{NOTES\_centering\_investigation\_2026-04-27.md}, \texttt{scripts/regen\_s6cum\_nomask\_diagnostic.py} & σ\_e spread = 3.7 km/s → ±4 km/s budget &
 ✅ \\
@@ -438,7 +440,41 @@ Threshold-dominated bias: a few heavily-arc-contaminated spaxels carry most of t
 contributors. Memory: \texttt{\textasciitilde{}/.claude/.../project\_nb07d\_overmasking\_finding.md}. Notebook: \texttt{nb07d}.
 
 \textbf{E7 Arc-spectrum subtraction sibling} --- Build an arc-only spectrum from F200-masked spaxels, fit α × arc + β × deflector model, subtract. Result matches §6cum within 0.1 km/s →
-\emph{residual} arc dilution is sub-dominant at production statistics. The F200 mask already does the heavy lifting. Notebook: \texttt{nb07e}.
+\emph{residual} arc dilution (the small fraction that leaks through the F200 mask) is sub-dominant at production statistics. The F200 mask already does the heavy lifting. Note: this test compares
+``masked + arc-subtract'' against ``masked alone'' --- it does NOT directly validate the no-mask vs masked Δ mechanism (that's E8). Notebook: \texttt{nb07e}.
+
+\textbf{E8 Arc-as-sky mechanism test (rigorous test of the no-mask Δ)} --- Run §6cum at the \emph{no-mask} R\textless R\_e aperture with the bright outer-arc spectrum passed to ppxf as a \texttt{sky}
+template (free-amplitude additive component, NOT convolved with the deflector LOSVD --- physically appropriate since the arc is at z=1.302, decoupled from the deflector kinematics). At N=500,
+FSPS+EMILES+XSL pooled:
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}lll@{}}
+\toprule
+Track & σ\_e {[}km/s{]} & Δ from σ\_A \\
+\midrule
+\endhead
+A: masked headline & 267.82 & --- \\
+B: no-mask & 252.82 & −15.00 \\
+\textbf{D: no-mask + arc-sky (E8)} & \textbf{274.64} & \textbf{+6.82} \\
+\bottomrule
+\end{longtable}\endgroup
+
+Recovery fraction (σ\_D − σ\_B)/(σ\_A − σ\_B) = \textbf{145\%} --- i.e.~arc-sky \textbf{overshoots} the masked headline by \textasciitilde7 km/s. Interpretation:
+
+\begin{itemize}
+\tightlist
+\item
+  Continuum dilution explains the FULL no-mask Δ. There is no detectable kinematic-blend or template-mix mechanism contributing in the \emph{opposite} direction.
+\item
+  The 7 km/s overshoot is consistent with the known caveat that the outer-arc-mask spaxels (R \textgreater{} 3R\_e/4) still receive seeing-blurred deflector light at the few-percent level, so
+  subtracting α × arc oversubtracts a small amount of \emph{real} deflector flux too. This inflates σ slightly.
+\item
+  The masked headline (Track A, paper number) remains the cleaner measurement because it doesn't have this oversubtraction artefact.
+\item
+  α\_arc ≈ 0.31 across all three SPS --- internally consistent.
+\end{itemize}
+
+Code: \texttt{scripts/run\_07f\_arc\_sky.py} (uses \texttt{setup\_ppxf\_inputs\_from\_spectrum} + ppxf \texttt{sky=} argument). Display: \texttt{notebooks/07f\_arc\_sky\_subtract.ipynb}. Caches:
+\texttt{results/arc\_sky\_07f/\{sps\}\_N500.npz} + \texttt{results/arc\_sky\_07f.npz}. Figures: \texttt{results/figures/nb07f\_\{arc\_template,recovery,posteriors\}.png}.
 
 \hypertarget{f.-centering}{%
 \subsubsection{F. Centering}\label{f.-centering}}

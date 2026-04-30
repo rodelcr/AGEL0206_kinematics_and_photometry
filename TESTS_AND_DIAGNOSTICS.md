@@ -48,6 +48,7 @@ script/notebook that runs it and the result file or note it produced.
 | E5 | 5-point mask-weight sweep w∈{0,0.25,0.5,0.75,1} | `scripts/soft_mask_track.py --weight ...`, `scripts/analyze_mask_weight_sweep.py`, NOTES addendum (c) | Per-step drops 5.0→4.3→3.5→2.2; quadratic c=+7.3 (concave-up); threshold-dominated | ✅ |
 | E6 | Mask dilation (over-masking diagnostic) | `notebooks/07d_sigma_e_forceful_mask.ipynb`, `~/.claude/.../project_nb07d_overmasking_finding.md` | Dilation inflates σ via noise; do NOT dilate (negative finding) | ✅ |
 | E7 | Arc-spectrum subtraction sibling | `notebooks/07e_sigma_e_arc_subtract.ipynb` | Matches §6cum within 0.1 km/s — residual arc dilution sub-dominant | ✅ |
+| E8 | Arc-as-sky mechanism test (no-mask + arc-sky template) | `scripts/run_07f_arc_sky.py`, `notebooks/07f_arc_sky_subtract.ipynb` | σ_D=274.6 vs σ_A=267.8 / σ_B=252.8; recovery=145% — dilution explains the full no-mask Δ | ✅ |
 | **F. Centering** | | | | |
 | F1 | 5-center sweep (±0.4" perturbations) | `NOTES_centering_investigation_2026-04-27.md`, `scripts/regen_s6cum_nomask_diagnostic.py` | σ_e spread = 3.7 km/s → ±4 km/s budget | ✅ |
 | F2 | HST F140W vs F200LP centroid offset | `scripts/final_sigma_e.py:find_center` | 0.36" — driven by F200LP arc; HST-mean robust | ✅ |
@@ -346,8 +347,45 @@ contributors, not bias contributors. Memory:
 **E7 Arc-spectrum subtraction sibling** —
 Build an arc-only spectrum from F200-masked spaxels, fit α × arc + β ×
 deflector model, subtract. Result matches §6cum within 0.1 km/s →
-*residual* arc dilution is sub-dominant at production statistics. The
-F200 mask already does the heavy lifting. Notebook: `nb07e`.
+*residual* arc dilution (the small fraction that leaks through the
+F200 mask) is sub-dominant at production statistics. The F200 mask
+already does the heavy lifting. Note: this test compares
+"masked + arc-subtract" against "masked alone" — it does NOT directly
+validate the no-mask vs masked Δ mechanism (that's E8). Notebook:
+`nb07e`.
+
+**E8 Arc-as-sky mechanism test (rigorous test of the no-mask Δ)** —
+Run §6cum at the *no-mask* R<R_e aperture with the bright outer-arc
+spectrum passed to ppxf as a `sky` template (free-amplitude additive
+component, NOT convolved with the deflector LOSVD — physically
+appropriate since the arc is at z=1.302, decoupled from the deflector
+kinematics). At N=500, FSPS+EMILES+XSL pooled:
+
+| Track | σ_e [km/s] | Δ from σ_A |
+|---|---|---|
+| A: masked headline                 | 267.82 | — |
+| B: no-mask                         | 252.82 | −15.00 |
+| **D: no-mask + arc-sky (E8)**      | **274.64** | **+6.82** |
+
+Recovery fraction (σ_D − σ_B)/(σ_A − σ_B) = **145%** — i.e. arc-sky
+**overshoots** the masked headline by ~7 km/s. Interpretation:
+
+- Continuum dilution explains the FULL no-mask Δ. There is no
+  detectable kinematic-blend or template-mix mechanism contributing in
+  the *opposite* direction.
+- The 7 km/s overshoot is consistent with the known caveat that the
+  outer-arc-mask spaxels (R > 3R_e/4) still receive seeing-blurred
+  deflector light at the few-percent level, so subtracting α × arc
+  oversubtracts a small amount of *real* deflector flux too. This
+  inflates σ slightly.
+- The masked headline (Track A, paper number) remains the cleaner
+  measurement because it doesn't have this oversubtraction artefact.
+- α_arc ≈ 0.31 across all three SPS — internally consistent.
+
+Code: `scripts/run_07f_arc_sky.py` (uses `setup_ppxf_inputs_from_spectrum`
++ ppxf `sky=` argument). Display: `notebooks/07f_arc_sky_subtract.ipynb`.
+Caches: `results/arc_sky_07f/{sps}_N500.npz` + `results/arc_sky_07f.npz`.
+Figures: `results/figures/nb07f_{arc_template,recovery,posteriors}.png`.
 
 ### F. Centering
 
