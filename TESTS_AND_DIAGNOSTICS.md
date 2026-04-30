@@ -1,6 +1,6 @@
 # Tests & Diagnostics — AGEL0206 σ_e ApJL paper
 
-**Last updated:** 2026-04-29
+**Last updated:** 2026-04-30
 **Headline:** σ_e(<R_e) = **268 ± 32 km/s** (stat ±24 ⊕ I-shape ±13 ⊕ mask ±16 ⊕ frame ±5 ⊕ centering ±4)
 **Method:** §6cum cumulative I-weighted ppxf at R<R_e=2.305" inside the F200LP-masked, frame-aware, SPS-pooled (FSPS+EMILES+XSL) bootstrap × polynomial-degree posterior
 
@@ -280,7 +280,43 @@ and isolates arc contamination in the outer bin. Equal-width annuli
 (`notebooks/07b`, 5 bins) shifted σ_e by ~10 km/s — at the SPS-systematic
 level (±24). Equal-N is the §7 paper choice.
 
+**D7 R_e source systematic (mean vs F140W vs F200LP vs Ca H+K + G)** —
+The headline integrates the I-weighted aperture spectrum inside the
+**mean** F140W+F200LP masked CoG R_e (=2.305"). Three alternative R_e
+definitions test sensitivity to that choice (Track A masked, N=500):
+
+| R_e source | R_e ["] | σ_e [km/s] | Δσ_e |
+|---|---|---|---|
+| mean (paper)         | 2.305 | 267.82 | — |
+| F140W only           | 2.168 | 264.87 | −2.96 |
+| F200LP only          | 2.441 | 275.86 | +8.04 |
+| Ca H+K + G-band depth| 2.866 | 281.74 | +13.92 |
+
+Spread = 16.9 km/s — at the mask-budget level (±16) but sub-budget
+vs the total ±32. σ_e rises monotonically with R_e (more outer-bulge
+spaxels in the I-weighted aperture). The Ca H+K + G-band absorption-
+depth I-map (rest 3925-3942, 3960-3976, 4297-4313 Å, summed
+`(continuum − flux)` per spaxel — see `cahk_g_line_depth_map` in
+`scripts/final_sigma_e.py`) is the most stellar-only of the four;
+its larger R_e reflects that the deflector light extends further than
+the F200LP UV-leaning band suggests.
+Code: `scripts/final_sigma_e.py` §7 + `cahk_g_line_depth_map`.
+Display: `notebooks/09 §7b` + `results/figures/nb09_re_source_systematic.png`.
+Caches: `results/final_sigma_e_paper/Re_{F140W,F200LP,CaHK}_{sps}_N500.npz`.
+
 ### E. Mask treatment
+
+**Masking vs no-masking — pro/con summary**
+
+| Track | Pro | Con |
+|---|---|---|
+| Hard mask (w=0.0, headline) | Removes arc contamination; matches literature convention; F200LP mask is purpose-built for this lens | Drops 38 of 184 spaxels inside R<R_e (~21% by count, ~27% by I-weight) → lower S/N; hard boundary may over-clip a few edge spaxels |
+| No mask (w=1.0, sensitivity) | Maximum S/N; no boundary artifacts | Arc adds low-velocity continuum dilution → σ biased low by 15-17 km/s (Δ_mask = −16 km/s at R<R_e) |
+| Soft mask (w=0.5) | Smooth middle ground | Super-linear in w (quadratic c=+7.3); threshold-dominated bias → first 25% of arc weight already captures 34% of total mask sensitivity. Arbitrary weight choice; not a literature convention |
+| Mask dilation (E6) | — | Inflates σ via noise (dropped spaxels are S/N contributors, not bias contributors). **Negative finding** — do not dilate |
+
+The 16 km/s no-mask Δ is propagated into the error budget as
+`σ_mask = ±16`, so the choice is bounded, not assumed.
 
 **E1 F200LP arc mask reprojection** —
 F200LP `_mask.fits` (HST 0.04"/pix, arc-tuned) is reprojected to the IFU
