@@ -584,6 +584,114 @@ plt.savefig(out, dpi=150, bbox_inches='tight')
 plt.show()
 print(f'Saved → {out.relative_to(REPO)}')""")
 
+# ─── §7c Annular Gültekin cross-checks (post-frame-fix refresh) ─────────
+md(r"""## §7c — Annular Gültekin cross-checks (independent estimators)
+
+Two independent paths to σ_e using the per-annulus posteriors
+(equal-N inner binning + 1 outer flagged bin, F200LP arc-mask hard-
+applied), refreshed 2026-05-01 with frame-aware ppxf via
+`scripts/refresh_07c_gultekin.py`. Both are <1σ from the §6cum
+headline.
+
+| Estimator | σ_e [km/s] | Notes |
+|---|---|---|
+| §6cum cumulative I-weighted (HEADLINE) | 267.82 −24/+24 | this notebook, paper number |
+| §7  discrete Gültekin annular (arc-filtered) | 256.17 −13/+13 | post-frame-fix; pre-fix 254.99 −24/+28 |
+| §7b flat-σ extrapolation (outer bin inherits) | 274.37 −16/+17 | post-frame-fix; pre-fix 271 −33/+35 |
+
+The frame fix collapsed the V_sys split from ~99 km/s to ~8 km/s
+(per-SPS V_sys: FSPS −11.2, EMILES −7.4, XSL −3.1), halving the
+Gültekin error bars without moving σ_e values significantly
+(Δ < 5 km/s).""")
+co(r"""rg = np.load(REPO / 'results' / 'refresh_07c_gultekin_postframe.npz', allow_pickle=True)
+
+s7_p50 = float(rg['s7_p50']); s7_lo = s7_p50 - float(rg['s7_p16']); s7_hi = float(rg['s7_p84']) - s7_p50
+s7b_p50 = float(rg['s7b_p50']); s7b_lo = s7b_p50 - float(rg['s7b_p16']); s7b_hi = float(rg['s7b_p84']) - s7b_p50
+sig_6cum = float(p['sigma_p50'][-1])
+err_6cum_lo = sig_6cum - float(p['sigma_p16'][-1])
+err_6cum_hi = float(p['sigma_p84'][-1]) - sig_6cum
+
+print(f'  Cross-check at R<R_e (post-frame-fix, N=500):')
+print(f'    {"method":<32} {"σ_e [km/s]":>22}')
+print(f'    {"§6cum cumulative (HEADLINE)":<32} {sig_6cum:>7.2f} -{err_6cum_lo:.1f}/+{err_6cum_hi:.1f}')
+print(f'    {"§7  discrete Gültekin filt.":<32} {s7_p50:>7.2f} -{s7_lo:.1f}/+{s7_hi:.1f}')
+print(f'    {"§7b flat-σ extrapolation":<32} {s7b_p50:>7.2f} -{s7b_lo:.1f}/+{s7b_hi:.1f}')
+
+print(f'\n  Per-SPS V_sys offsets (post-frame-fix, ann0):')
+for s, v in zip(rg['sps_libs'], rg['V_sys_per_sps']):
+    print(f'    {str(s):<8} V_sys = {float(v):+.2f} km/s')
+
+# Cross-check figure
+fig, ax = plt.subplots(figsize=(8, 5))
+labels = ['§6cum\n(headline)', '§7\nGültekin', '§7b\nflat-σ ext.']
+sigmas = [sig_6cum, s7_p50, s7b_p50]
+los = [err_6cum_lo, s7_lo, s7b_lo]; his = [err_6cum_hi, s7_hi, s7b_hi]
+colors = ['C0', 'C1', 'C2']
+ax.bar(labels, sigmas, yerr=[los, his], capsize=7, color=colors, alpha=0.75,
+       edgecolor='k', linewidth=0.7)
+for i, s in enumerate(sigmas):
+    ax.text(i, s + max(his) + 4, f'{s:.0f}', ha='center', va='bottom',
+            fontsize=12, fontweight='bold')
+ax.axhline(sig_6cum, color='C0', ls=':', alpha=0.6,
+           label=f'headline ±{float(p["budget_total"]):.0f} km/s budget')
+ax.fill_between([-0.5, 2.5], [sig_6cum - float(p['budget_total'])] * 2,
+                [sig_6cum + float(p['budget_total'])] * 2, color='C0', alpha=0.1)
+ax.set_xlim(-0.5, 2.5)
+ax.set_ylabel(r'$\sigma_e(<R_e)$ [km/s]', fontsize=12)
+ax.set_title('Cross-check estimators (frame-aware, N=500)', fontsize=12)
+ax.legend(loc='lower left', fontsize=10)
+ax.grid(alpha=0.3, axis='y')
+plt.tight_layout()
+out = REPO / 'results' / 'figures' / 'nb09_crosschecks.png'
+plt.savefig(out, dpi=150, bbox_inches='tight'); plt.show()
+print(f'Saved → {out.relative_to(REPO)}')""")
+
+# ─── §7d Dilution-mechanism test (nb07f arc-as-sky) ─────────────────────
+md(r"""## §7d — Dilution mechanism test (no-mask + arc-as-sky)
+
+Why does removing the F200LP mask shift σ_e *down* by ~16 km/s
+(Track A → Track B)? **Continuum dilution** is the candidate
+mechanism: the arc adds featureless flux at our fit window (its own
+absorption lines are mostly outside z=1.302 → observed 6500-7500 Å),
+making deflector lines look shallower against a higher continuum,
+which ppxf converges to with a narrower LOSVD.
+
+`notebooks/07f_arc_sky_subtract.ipynb` tests this rigorously by
+re-running §6cum at the no-mask R<R_e aperture with the bright
+outer-arc spectrum passed to ppxf as a free-amplitude `sky` template
+(additive, NOT convolved with the deflector LOSVD — physically
+appropriate since the arc is at z=1.302 ≠ z_deflector=0.676).
+
+| Track | σ_e (R<R_e) [km/s] | Δ from σ_A |
+|---|---|---|
+| A: masked headline | 267.82 | — |
+| B: no-mask (sensitivity) | 252.82 | −15.00 |
+| **D: no-mask + arc-sky (07f)** | **274.64** | **+6.82** |
+
+**Recovery fraction = 145%** — arc-sky overshoots σ_A by ~7 km/s.
+Interpretation: continuum dilution explains the **full** no-mask Δ,
+with no detectable opposite-sign mechanism. The 7 km/s overshoot is
+consistent with the known caveat that the outer-arc-mask spaxels
+(R > 3R_e/4) still receive seeing-blurred deflector light at the few-
+percent level; subtracting α × arc therefore oversubtracts a small
+amount of real deflector flux. The masked headline (Track A, no
+oversubtraction artefact) remains the cleanest measurement and the
+paper number.""")
+co(r"""asky = np.load(REPO / 'results' / 'arc_sky_07f.npz', allow_pickle=True)
+sigma_A = float(asky['sigma_A_masked'])
+sigma_B = float(asky['sigma_B_nomask'])
+sigma_D = float(asky['sigma_D_arc_sky'])
+recovery = float(asky['recovery_fraction'])
+
+print(f'  σ_A (masked headline)            = {sigma_A:7.2f} km/s')
+print(f'  σ_B (no-mask)                    = {sigma_B:7.2f} km/s   [Δ = {sigma_B - sigma_A:+.2f}]')
+print(f'  σ_D (no-mask + arc-sky, nb07f)   = {sigma_D:7.2f} km/s   [Δ from B = {sigma_D - sigma_B:+.2f}]')
+print(f'\n  Recovery fraction = (σ_D − σ_B)/(σ_A − σ_B) = {recovery:.1%}')
+print(f'  α_arc per SPS: '
+      + ', '.join(f'{str(s)}={float(a):+.3f}'
+                  for s, a in zip(asky['sps_libs'], asky['per_sps_sky_amp'])))
+print(f'  Verdict: {asky["verdict"]}')""")
+
 # ─── §8 Headline ────────────────────────────────────────────────────────
 md(r"""## §8 — Paper-ready headline
 
