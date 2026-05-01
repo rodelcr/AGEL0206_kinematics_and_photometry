@@ -1,6 +1,6 @@
 # Tests & Diagnostics — AGEL0206 σ_e ApJL paper
 
-**Last updated:** 2026-04-30
+**Last updated:** 2026-05-01
 **Headline:** σ_e(<R_e) = **268 ± 32 km/s** (stat ±24 ⊕ I-shape ±13 ⊕ mask ±16 ⊕ frame ±5 ⊕ centering ±4)
 **Method:** §6cum cumulative I-weighted ppxf at R<R_e=2.305" inside the F200LP-masked, frame-aware, SPS-pooled (FSPS+EMILES+XSL) bootstrap × polynomial-degree posterior
 
@@ -58,8 +58,8 @@ script/notebook that runs it and the result file or note it produced.
 | G3 | Polynomial degree sweep (deg 15-29) | `notebooks/03c`, `scripts/build_nb09.py:§6.5` | σ flat within bootstrap envelope; polynomial saturated | ✅ |
 | G4 | N=50 smoke vs N=500 production agreement | `scripts/final_sigma_e.py --n_bootstrap` | Within 1 km/s | ✅ |
 | H | **Cross-checks (independent estimators)** | | | |
-| H1 | §7 discrete Gültekin annular sum | `notebooks/07c §7` | 254.99 −24.2/+28.4 km/s (arc-filtered) | ✅ |
-| H2 | §7b flat-σ extrapolation into outer annulus | `notebooks/07c §7b` | 271 −33/+35 km/s | ✅ |
+| H1 | §7 discrete Gültekin annular sum (frame-aware, refresh 2026-05-01) | `scripts/refresh_07c_gultekin.py`, `notebooks/07c §7` | **256.17 −13.0/+12.7 km/s** (post-fix; was 254.99 −24/+28 pre-fix) | ✅ |
+| H2 | §7b flat-σ extrapolation (frame-aware, refresh 2026-05-01) | `scripts/refresh_07c_gultekin.py`, `notebooks/07c §7b` | **274.37 −16.2/+17.4 km/s** (post-fix; was 271 −33/+35 pre-fix) | ✅ |
 | H3 | F200 mask sensitivity at N=500 | `results/annular_bootstrap_07c_nomask/` | Δ_mask = −16.4 km/s → ±16 budget | ✅ |
 | **I. Earlier sigma-discrepancy work (Tests 1-21)** | | | | |
 | I1 | NB01 vs NB05 σ reproduction | `notebooks/05x` Tests 1-4 | Confirmed σ depends on aperture | ✅ |
@@ -427,13 +427,37 @@ quick rebuilds.
 
 ### H. Cross-checks
 
-**H1 §7 discrete Gültekin** — `notebooks/07c §7`. Annular sum
-σ_e²(<R) = Σ F_j (V_j² + σ_j²) / Σ F_j with arc-filter on outer annulus.
-Result: 254.99 −24.2/+28.4 km/s. <1σ from §6cum.
+**H1 §7 discrete Gültekin (refreshed 2026-05-01)** — `notebooks/07c §7`,
+recomputed with frame-aware ppxf via `scripts/refresh_07c_gultekin.py`.
+Annular sum σ_e²(<R) = Σ F_j (V_j² + σ_j²) / Σ F_j with arc-filter on
+outer annulus.
 
-**H2 §7b flat-σ extrapolation** — `notebooks/07c §7b`. Push the §7 sum
-into the outer annulus assuming σ_outer = σ at the last clean annulus.
-Result: 271 −33/+35 km/s. Bracket on the §7 result.
+| | Pre-frame-fix (Apr 24) | Post-frame-fix (May 1) | Δ |
+|---|---|---|---|
+| σ_e (arc-filtered) | 254.99 −24.2/+28.4 | **256.17 −13.0/+12.7** | +1.18 |
+
+Δ < ±5 km/s frame budget. Errors **halved** because the V_sys split
+collapsed from ~99 km/s (pre-fix) to ~8 km/s (post-fix per-SPS V_sys:
+fsps −11.2, emiles −7.4, xsl −3.1), shrinking the V² contribution to
+the Gültekin sum's MC scatter.
+
+**H2 §7b flat-σ extrapolation (refreshed 2026-05-01)** —
+`notebooks/07c §7b`, same refresh. Push the §7 sum into the outer
+flagged bin assuming σ_outer = σ at the last clean annulus.
+
+| | Pre-frame-fix | Post-frame-fix | Δ |
+|---|---|---|---|
+| σ_e | 271 −33/+35 | **274.37 −16.2/+17.4** | +3.37 |
+
+Both H1 and H2 remain consistent with the §6cum headline (267.82) at
+<1σ. The point of these cross-checks is preserved by the refresh, and
+the post-fix bands are tighter, strengthening rather than weakening
+the consistency.
+
+Note: nb07e (E7, arc-spectrum-subtraction sibling) was *not* refreshed
+because its result is a **relative comparison** (matches §6cum within
+0.1 km/s) — a uniform per-SPS σ shift moves both arms of the
+comparison together and the relative match is unchanged.
 
 **H3 F200 mask sensitivity (independent)** — `results/annular_bootstrap_07c_nomask/`.
 Same §6cum pipeline with mask off. σ_e(<R_e) = 250.96 km/s. Δ = −16.4

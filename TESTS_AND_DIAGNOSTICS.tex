@@ -143,7 +143,7 @@
 \hypertarget{tests-diagnostics-agel0206-ux3c3_e-apjl-paper}{%
 \section{Tests \& Diagnostics --- AGEL0206 σ\_e ApJL paper}\label{tests-diagnostics-agel0206-ux3c3_e-apjl-paper}}
 
-\textbf{Last updated:} 2026-04-30 \textbf{Headline:} σ\_e(\textless R\_e) = \textbf{268 ± 32 km/s} (stat ±24 ⊕ I-shape ±13 ⊕ mask ±16 ⊕ frame ±5 ⊕ centering ±4) \textbf{Method:} §6cum cumulative
+\textbf{Last updated:} 2026-05-01 \textbf{Headline:} σ\_e(\textless R\_e) = \textbf{268 ± 32 km/s} (stat ±24 ⊕ I-shape ±13 ⊕ mask ±16 ⊕ frame ±5 ⊕ centering ±4) \textbf{Method:} §6cum cumulative
 I-weighted ppxf at R\textless R\_e=2.305" inside the F200LP-masked, frame-aware, SPS-pooled (FSPS+EMILES+XSL) bootstrap × polynomial-degree posterior
 
 This document is the canonical index of every test, sweep, audit, and sensitivity check run for the σ\_e measurement. Each row points to the script/notebook that runs it and the result file or note it
@@ -216,8 +216,10 @@ G2 & Parallel bootstrap (joblib, BLAS=1 per worker) & \texttt{scripts/bootstrap\
 G3 & Polynomial degree sweep (deg 15-29) & \texttt{notebooks/03c}, \texttt{scripts/build\_nb09.py:§6.5} & σ flat within bootstrap envelope; polynomial saturated & ✅ \\
 G4 & N=50 smoke vs N=500 production agreement & \texttt{scripts/final\_sigma\_e.py\ -\/-n\_bootstrap} & Within 1 km/s & ✅ \\
 H & \textbf{Cross-checks (independent estimators)} & & & \\
-H1 & §7 discrete Gültekin annular sum & \texttt{notebooks/07c\ §7} & 254.99 −24.2/+28.4 km/s (arc-filtered) & ✅ \\
-H2 & §7b flat-σ extrapolation into outer annulus & \texttt{notebooks/07c\ §7b} & 271 −33/+35 km/s & ✅ \\
+H1 & §7 discrete Gültekin annular sum (frame-aware, refresh 2026-05-01) & \texttt{scripts/refresh\_07c\_gultekin.py}, \texttt{notebooks/07c\ §7} & \textbf{256.17 −13.0/+12.7 km/s} (post-fix; was
+254.99 −24/+28 pre-fix) & ✅ \\
+H2 & §7b flat-σ extrapolation (frame-aware, refresh 2026-05-01) & \texttt{scripts/refresh\_07c\_gultekin.py}, \texttt{notebooks/07c\ §7b} & \textbf{274.37 −16.2/+17.4 km/s} (post-fix; was 271 −33/+35
+pre-fix) & ✅ \\
 H3 & F200 mask sensitivity at N=500 & \texttt{results/annular\_bootstrap\_07c\_nomask/} & Δ\_mask = −16.4 km/s → ±16 budget & ✅ \\
 \textbf{I. Earlier sigma-discrepancy work (Tests 1-21)} & & & & \\
 I1 & NB01 vs NB05 σ reproduction & \texttt{notebooks/05x} Tests 1-4 & Confirmed σ depends on aperture & ✅ \\
@@ -503,11 +505,37 @@ for quick rebuilds.
 \hypertarget{h.-cross-checks}{%
 \subsubsection{H. Cross-checks}\label{h.-cross-checks}}
 
-\textbf{H1 §7 discrete Gültekin} --- \texttt{notebooks/07c\ §7}. Annular sum σ\_e²(\textless R) = Σ F\_j (V\_j² + σ\_j²) / Σ F\_j with arc-filter on outer annulus. Result: 254.99 −24.2/+28.4 km/s.
-\textless1σ from §6cum.
+\textbf{H1 §7 discrete Gültekin (refreshed 2026-05-01)} --- \texttt{notebooks/07c\ §7}, recomputed with frame-aware ppxf via \texttt{scripts/refresh\_07c\_gultekin.py}. Annular sum σ\_e²(\textless R)
+= Σ F\_j (V\_j² + σ\_j²) / Σ F\_j with arc-filter on outer annulus.
 
-\textbf{H2 §7b flat-σ extrapolation} --- \texttt{notebooks/07c\ §7b}. Push the §7 sum into the outer annulus assuming σ\_outer = σ at the last clean annulus. Result: 271 −33/+35 km/s. Bracket on the
-§7 result.
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}llll@{}}
+\toprule
+& Pre-frame-fix (Apr 24) & Post-frame-fix (May 1) & Δ \\
+\midrule
+\endhead
+σ\_e (arc-filtered) & 254.99 −24.2/+28.4 & \textbf{256.17 −13.0/+12.7} & +1.18 \\
+\bottomrule
+\end{longtable}\endgroup
+
+Δ \textless{} ±5 km/s frame budget. Errors \textbf{halved} because the V\_sys split collapsed from \textasciitilde99 km/s (pre-fix) to \textasciitilde8 km/s (post-fix per-SPS V\_sys: fsps −11.2,
+emiles −7.4, xsl −3.1), shrinking the V² contribution to the Gültekin sum's MC scatter.
+
+\textbf{H2 §7b flat-σ extrapolation (refreshed 2026-05-01)} --- \texttt{notebooks/07c\ §7b}, same refresh. Push the §7 sum into the outer flagged bin assuming σ\_outer = σ at the last clean annulus.
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}llll@{}}
+\toprule
+& Pre-frame-fix & Post-frame-fix & Δ \\
+\midrule
+\endhead
+σ\_e & 271 −33/+35 & \textbf{274.37 −16.2/+17.4} & +3.37 \\
+\bottomrule
+\end{longtable}\endgroup
+
+Both H1 and H2 remain consistent with the §6cum headline (267.82) at \textless1σ. The point of these cross-checks is preserved by the refresh, and the post-fix bands are tighter, strengthening rather
+than weakening the consistency.
+
+Note: nb07e (E7, arc-spectrum-subtraction sibling) was \emph{not} refreshed because its result is a \textbf{relative comparison} (matches §6cum within 0.1 km/s) --- a uniform per-SPS σ shift moves
+both arms of the comparison together and the relative match is unchanged.
 
 \textbf{H3 F200 mask sensitivity (independent)} --- \texttt{results/annular\_bootstrap\_07c\_nomask/}. Same §6cum pipeline with mask off. σ\_e(\textless R\_e) = 250.96 km/s. Δ = −16.4 km/s.
 Independently confirms the nb09 mask-weight sweep at w=1.0.
