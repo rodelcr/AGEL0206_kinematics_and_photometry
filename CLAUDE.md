@@ -44,9 +44,10 @@ The streamlined IFU notebook uses veldis (degree=[4,30]) for the integrated spec
 - σ_e(<Re/2 ≈ 1.10") ≈ 225.78 ± 18 km/s
 - σ_e(<Re/8 ≈ 0.76") ≈ 209.18 ± 20 km/s
 
-Cross-checks (all consistent at <1σ, notebook 07c):
-- §7 discrete Gültekin annular sum (arc-filtered to R < Re_safe): **254.99 −24.2/+28.4 km/s**
-- §7b flat-σ extrapolation into outer annulus: **271 −33/+35 km/s**
+Cross-checks (all consistent at <1σ, notebook 07c — refreshed 2026-05-01 with frame-aware ppxf via `scripts/refresh_07c_gultekin.py`):
+- §7 discrete Gültekin annular sum (arc-filtered to R < Re_safe): **256.17 −13.0/+12.7 km/s** (post-frame-fix; pre-fix was 254.99 −24/+28)
+- §7b flat-σ extrapolation into outer annulus: **274.37 −16.2/+17.4 km/s** (post-frame-fix; pre-fix was 271 −33/+35)
+- The frame fix collapsed the V_sys split from ~99 km/s to ~8 km/s, halving the Gültekin-sum error bars without moving the σ_e values significantly (Δ < 5 km/s)
 - nb07e arc-spectrum subtraction (residual arc through F200 mask): matches §6cum bit-identically, §7 within 0.1 km/s — *residual* arc dilution sub-dominant at N=500
 - **F200LP mask sensitivity test (§6cum-nomask, N=500, executed 2026-04-27)**: disabling the F200 mask gives σ_e(<R_e) = **250.96 ± 23 km/s** (Δ = −16.36 km/s vs headline). The F200 mask itself is at the ~half-SPS-budget level — quote as sensitivity, not negligible. Cache: `results/annular_bootstrap_07c_nomask/`.
 - **Do NOT include ann5 in §7 (unfiltered gives 386 km/s, unphysical)** — single α_arc template insufficient; use §6cum or §7b instead
