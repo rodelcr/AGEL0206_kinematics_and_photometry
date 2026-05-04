@@ -143,7 +143,7 @@
 \hypertarget{tests-diagnostics-agel0206-ux3c3_e-apjl-paper}{%
 \section{Tests \& Diagnostics --- AGEL0206 σ\_e ApJL paper}\label{tests-diagnostics-agel0206-ux3c3_e-apjl-paper}}
 
-\textbf{Last updated:} 2026-05-01 \textbf{Headline:} σ\_e(\textless R\_e) = \textbf{268 ± 32 km/s} (stat ±24 ⊕ I-shape ±13 ⊕ mask ±16 ⊕ frame ±5 ⊕ centering ±4) \textbf{Method:} §6cum cumulative
+\textbf{Last updated:} 2026-05-04 \textbf{Headline:} σ\_e(\textless R\_e) = \textbf{268 ± 32 km/s} (stat ±24 ⊕ I-shape ±13 ⊕ mask ±16 ⊕ frame ±5 ⊕ centering ±4) \textbf{Method:} §6cum cumulative
 I-weighted ppxf at R\textless R\_e=2.305" inside the F200LP-masked, frame-aware, SPS-pooled (FSPS+EMILES+XSL) bootstrap × polynomial-degree posterior
 
 This document is the canonical index of every test, sweep, audit, and sensitivity check run for the σ\_e measurement. Each row points to the script/notebook that runs it and the result file or note it
@@ -169,7 +169,8 @@ A1 & KCWI cube provenance & \texttt{NOTES\_methodology\_2026-04-27.md} & Multi-n
 A2 & Systemic redshift via line fitting & \texttt{notebooks/04\_redshift\_verification.ipynb}, \texttt{scripts/redshift\_verify.py} & z = 0.67564 (vs DR2 0.67511) & ✅ \\
 A3 & R\_e from masked curve-of-growth (F140W+F200LP) & \texttt{scripts/measure\_Re.py}, \texttt{scripts/final\_sigma\_e.py:curve\_of\_growth} & R\_e = 2.305" = 16.23 kpc & ✅ \\
 A4 & HST-mean center via centroid\_2dg & \texttt{scripts/final\_sigma\_e.py:find\_center} & F140W \& F200LP agree to 0.36" & ✅ \\
-A5 & Bagpipes SED fitting (M★) & \texttt{notebooks/02\_streamlined\_Bagpipes\_SED.ipynb}, \texttt{08\_sersic\_total\_photometry.ipynb} & log M★ = 11.33 +0.07/−0.09 & ✅ \\
+A5 & Bagpipes SED fitting (M★) --- aperture vs Sersic-total & \texttt{notebooks/02\_streamlined\_Bagpipes\_SED.ipynb}, \texttt{08\_sersic\_total\_photometry.ipynb} & log M★ = 11.33 +0.07/−0.09
+(aperture, headline); 11.40 +0.11/−0.15 (Sersic-total, +0.065 dex / +16\%) & ✅ \\
 \textbf{B. Pipeline correctness audits} & & & & \\
 B1 & Instrumental LSF audit (DISPSCAL=0.294) & \texttt{scripts/ifu\_spectral\_resolution.py} & FWHM=0.692 Å; σ\_v\_inst≈12-14 km/s & ✅ \\
 B2 & σ\_inst sensitivity (×0.5 to ×2.0 LSF) & \texttt{scripts/sigma\_inst\_sensitivity.py}, audit 3 & max \textbar Δσ\textbar{} = 0.83 km/s & ✅ \\
@@ -308,8 +309,76 @@ pipeline. Cross-check: IFU white-light proper-masked CoG gave 2.61" earlier --- 
 world coordinates, then propagate to IFU sub-pixel: \texttt{scripts/final\_sigma\_e.py:find\_center}. F140W vs F200LP centroid offset = 0.36" --- flags the F200LP arc-affected detection but the
 HST-mean is robust (verified by the 5-center sweep, F1).
 
-\textbf{A5 Stellar mass} --- Bagpipes SED fitting on HST + JWST aperture photometry → log M★/M☉ = 11.33 +0.07/−0.09 (notebook 02). Cross-checked at the Sersic-total level in
-\texttt{notebooks/08\_sersic\_total\_photometry.ipynb}.
+\textbf{A5 Stellar mass} --- Bagpipes SED fitting on HST + JWST aperture photometry (notebook 02, N\_posterior = 500). Bagpipes config: exponential-τ SFH, BPASS+CLOUDY templates, Calzetti dust, free
+metallicity, redshift fixed at 0.67564.
+
+Per-filter observed flux + best-fit modelled flux:
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}lllllll@{}}
+\toprule
+Filter & λ\_pivot {[}Å{]} & AB obs & AB model (p50) & F\_obs {[}10⁻¹⁸ cgs{]} & F\_model (p50) & residual \\
+\midrule
+\endhead
+F200LP & 4 972 & 22.613 & 22.563 & 3.97 ± 0.06 & 4.16 & +4.7\% \\
+F140W & 13 923 & 19.134 & 19.264 & 12.47 ± 0.05 & 11.06 & −11.3\% \\
+F150W2 & 16 720 & 18.942 & 19.033 & 10.31 ± 0.005 & 9.49 & −8.0\% \\
+F322W2 & 32 470 & 18.604 & 18.505 & 3.73 ± 0.001 & 4.09 & +9.6\% \\
+\bottomrule
+\end{longtable}\endgroup
+
+Posteriors:
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}llll@{}}
+\toprule
+Parameter & p16 & p50 & p84 \\
+\midrule
+\endhead
+\textbf{log M★/M☉} & \textbf{11.24} & \textbf{11.33} & \textbf{11.41} \\
+mass-weighted age {[}Gyr{]} & 3.69 & 5.10 & 6.11 \\
+exponential SFH age {[}Gyr{]} & 4.46 & 5.98 & 6.97 \\
+exponential τ {[}Gyr{]} & 0.43 & 0.68 & 1.21 \\
+metallicity Z/Z☉ & 0.17 & 0.89 & 1.87 \\
+A\_V {[}mag{]} & 0.34 & 0.82 & 1.55 \\
+z\_phot & 0.674 & 0.675 & 0.676 \\
+\bottomrule
+\end{longtable}\endgroup
+
+→ M★ = 2.15 × 10¹¹ M☉; z\_phot agrees with the line-fit z = 0.67564 within ±0.001.
+
+The model under-predicts the two NIR bands (F140W, F150W2) by \textasciitilde8-11\% and over-predicts the bluest+reddest by \textasciitilde5-10\%. Classic ``redder NIR slope than a single-τ SFH
+prefers'' tension; not catastrophic, but flags that a more flexible SFH (delayed-τ or non-parametric) might tighten the fit if revisited.
+
+\textbf{Sersic-total cross-check} (\texttt{notebooks/08\_sersic\_total\_photometry.ipynb}, \texttt{scripts/measure\_Re.py}-style 2D Sersic fits per filter, extrapolated to total flux):
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}llllll@{}}
+\toprule
+Filter & AB aperture & AB Sersic-total & Δmag & Sersic n & r\_eff {[}″{]} \\
+\midrule
+\endhead
+F200LP & 22.613 & 20.672 & −1.94 & 1.42 & 2.49 \\
+F140W & 19.134 & 18.282 & −0.85 & 1.54 & 1.88 \\
+F150W2 & 18.942 & 18.154 & −0.79 & 1.40 & 1.72 \\
+F322W2 & 18.604 & 17.633 & −0.97 & 1.97 & 2.03 \\
+\bottomrule
+\end{longtable}\endgroup
+
+Re-fed through Bagpipes with the same priors:
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\begin{longtable}[]{@{}llll@{}}
+\toprule
+Quantity & aperture (paper) & Sersic-total & Δ \\
+\midrule
+\endhead
+log M★/M☉ p50 & 11.33 +0.07/−0.09 & 11.40 +0.11/−0.15 & +0.065 dex \\
+M★ {[}M☉{]} & 2.15 × 10¹¹ & 2.49 × 10¹¹ & +16\% \\
+\bottomrule
+\end{longtable}\endgroup
+
+The aperture under-counts outer-profile flux by \textasciitilde0.8-1.9 mag depending on filter, but at the integrated-mass level the Sersic correction is +0.07 dex --- within the aperture-photometry
+quoted uncertainties. The paper cites the aperture value as the headline; Sersic-total is the sensitivity floor.
+
+Cache: \texttt{results/bagpipes\_sed\_results.npz} (aperture, 500-sample posterior), \texttt{results/bagpipes\_sersic\_refit.npz} (Sersic-total), \texttt{results/sersic\_total\_photometry.npz} (Sersic
+fit parameters). Figure: \texttt{results/AGEL0206\_spectra\_SED\_fit.pdf}.
 
 \hypertarget{b.-pipeline-correctness-audits-scriptsaudit_ppxf_methodology.py}{%
 \subsubsection{\texorpdfstring{B. Pipeline correctness audits

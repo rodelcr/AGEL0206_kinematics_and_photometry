@@ -1,6 +1,6 @@
 # Tests & Diagnostics — AGEL0206 σ_e ApJL paper
 
-**Last updated:** 2026-05-01
+**Last updated:** 2026-05-04
 **Headline:** σ_e(<R_e) = **268 ± 32 km/s** (stat ±24 ⊕ I-shape ±13 ⊕ mask ±16 ⊕ frame ±5 ⊕ centering ±4)
 **Method:** §6cum cumulative I-weighted ppxf at R<R_e=2.305" inside the F200LP-masked, frame-aware, SPS-pooled (FSPS+EMILES+XSL) bootstrap × polynomial-degree posterior
 
@@ -19,7 +19,7 @@ script/notebook that runs it and the result file or note it produced.
 | A2 | Systemic redshift via line fitting | `notebooks/04_redshift_verification.ipynb`, `scripts/redshift_verify.py` | z = 0.67564 (vs DR2 0.67511) | ✅ |
 | A3 | R_e from masked curve-of-growth (F140W+F200LP) | `scripts/measure_Re.py`, `scripts/final_sigma_e.py:curve_of_growth` | R_e = 2.305" = 16.23 kpc | ✅ |
 | A4 | HST-mean center via centroid_2dg | `scripts/final_sigma_e.py:find_center` | F140W & F200LP agree to 0.36" | ✅ |
-| A5 | Bagpipes SED fitting (M★) | `notebooks/02_streamlined_Bagpipes_SED.ipynb`, `08_sersic_total_photometry.ipynb` | log M★ = 11.33 +0.07/−0.09 | ✅ |
+| A5 | Bagpipes SED fitting (M★) — aperture vs Sersic-total | `notebooks/02_streamlined_Bagpipes_SED.ipynb`, `08_sersic_total_photometry.ipynb` | log M★ = 11.33 +0.07/−0.09 (aperture, headline); 11.40 +0.11/−0.15 (Sersic-total, +0.065 dex / +16%) | ✅ |
 | **B. Pipeline correctness audits** | | | | |
 | B1 | Instrumental LSF audit (DISPSCAL=0.294) | `scripts/ifu_spectral_resolution.py` | FWHM=0.692 Å; σ_v_inst≈12-14 km/s | ✅ |
 | B2 | σ_inst sensitivity (×0.5 to ×2.0 LSF) | `scripts/sigma_inst_sensitivity.py`, audit 3 | max \|Δσ\| = 0.83 km/s | ✅ |
@@ -145,9 +145,68 @@ average in world coordinates, then propagate to IFU sub-pixel:
 (verified by the 5-center sweep, F1).
 
 **A5 Stellar mass** —
-Bagpipes SED fitting on HST + JWST aperture photometry → log M★/M☉ =
-11.33 +0.07/−0.09 (notebook 02). Cross-checked at the Sersic-total level
-in `notebooks/08_sersic_total_photometry.ipynb`.
+Bagpipes SED fitting on HST + JWST aperture photometry (notebook 02,
+N_posterior = 500). Bagpipes config: exponential-τ SFH, BPASS+CLOUDY
+templates, Calzetti dust, free metallicity, redshift fixed at 0.67564.
+
+Per-filter observed flux + best-fit modelled flux:
+
+| Filter | λ_pivot [Å] | AB obs | AB model (p50) | F_obs [10⁻¹⁸ cgs] | F_model (p50) | residual |
+|---|---|---|---|---|---|---|
+| F200LP | 4 972 | 22.613 | 22.563 | 3.97 ± 0.06 | 4.16 | +4.7% |
+| F140W | 13 923 | 19.134 | 19.264 | 12.47 ± 0.05 | 11.06 | −11.3% |
+| F150W2 | 16 720 | 18.942 | 19.033 | 10.31 ± 0.005 | 9.49 | −8.0% |
+| F322W2 | 32 470 | 18.604 | 18.505 | 3.73 ± 0.001 | 4.09 | +9.6% |
+
+Posteriors:
+
+| Parameter | p16 | p50 | p84 |
+|---|---|---|---|
+| **log M★/M☉** | **11.24** | **11.33** | **11.41** |
+| mass-weighted age [Gyr] | 3.69 | 5.10 | 6.11 |
+| exponential SFH age [Gyr] | 4.46 | 5.98 | 6.97 |
+| exponential τ [Gyr] | 0.43 | 0.68 | 1.21 |
+| metallicity Z/Z☉ | 0.17 | 0.89 | 1.87 |
+| A_V [mag] | 0.34 | 0.82 | 1.55 |
+| z_phot | 0.674 | 0.675 | 0.676 |
+
+→ M★ = 2.15 × 10¹¹ M☉; z_phot agrees with the line-fit z = 0.67564
+within ±0.001.
+
+The model under-predicts the two NIR bands (F140W, F150W2) by ~8-11%
+and over-predicts the bluest+reddest by ~5-10%. Classic "redder NIR
+slope than a single-τ SFH prefers" tension; not catastrophic, but
+flags that a more flexible SFH (delayed-τ or non-parametric) might
+tighten the fit if revisited.
+
+**Sersic-total cross-check** (`notebooks/08_sersic_total_photometry.ipynb`,
+`scripts/measure_Re.py`-style 2D Sersic fits per filter, extrapolated
+to total flux):
+
+| Filter | AB aperture | AB Sersic-total | Δmag | Sersic n | r_eff [″] |
+|---|---|---|---|---|---|
+| F200LP | 22.613 | 20.672 | −1.94 | 1.42 | 2.49 |
+| F140W | 19.134 | 18.282 | −0.85 | 1.54 | 1.88 |
+| F150W2 | 18.942 | 18.154 | −0.79 | 1.40 | 1.72 |
+| F322W2 | 18.604 | 17.633 | −0.97 | 1.97 | 2.03 |
+
+Re-fed through Bagpipes with the same priors:
+
+| Quantity | aperture (paper) | Sersic-total | Δ |
+|---|---|---|---|
+| log M★/M☉ p50 | 11.33 +0.07/−0.09 | 11.40 +0.11/−0.15 | +0.065 dex |
+| M★ [M☉] | 2.15 × 10¹¹ | 2.49 × 10¹¹ | +16% |
+
+The aperture under-counts outer-profile flux by ~0.8-1.9 mag depending
+on filter, but at the integrated-mass level the Sersic correction is
++0.07 dex — within the aperture-photometry quoted uncertainties. The
+paper cites the aperture value as the headline; Sersic-total is the
+sensitivity floor.
+
+Cache: `results/bagpipes_sed_results.npz` (aperture, 500-sample
+posterior), `results/bagpipes_sersic_refit.npz` (Sersic-total),
+`results/sersic_total_photometry.npz` (Sersic fit parameters).
+Figure: `results/AGEL0206_spectra_SED_fit.pdf`.
 
 ### B. Pipeline correctness audits (`scripts/audit_ppxf_methodology.py`)
 
