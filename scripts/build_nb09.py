@@ -692,6 +692,119 @@ print(f'  α_arc per SPS: '
                   for s, a in zip(asky['sps_libs'], asky['per_sps_sky_amp'])))
 print(f'  Verdict: {asky["verdict"]}')""")
 
+# ─── §7e Stellar mass — SED fits + M★ posteriors ────────────────────────
+md(r"""## §7e — Stellar mass: Bagpipes SED fit + M★ posteriors
+
+Two parallel Bagpipes runs (exponential-τ SFH, Calzetti dust, 500
+posterior samples, redshift fixed at 0.67564):
+
+1. **Aperture photometry** (paper headline) — empirical aperture mags
+   from the same filters used for σ_e (HST F200LP, F140W; JWST F150W2,
+   F322W2).
+2. **Sersic-total photometry** (cross-check) — 2D Sersic2D fits per
+   filter, **analytically** integrated to infinity via Graham & Driver
+   (2005) eq. 4: F_tot = 2π·n·Γ(2n)·b_n^(−2n)·I_e·r_eff²·(1−ellip)·exp(b_n).
+   Cross-checked numerically on a 400-pix grid (agrees to 0.04%).
+   The "model-filled" overlay in nb08 §2 is a *visualisation only*,
+   never summed for photometry.
+
+Left panel: model-vs-observed SED at the four filter pivots. Right
+panel: log M★ posterior histograms — the +0.07 dex shift is small
+compared to the per-fit ±0.07-0.15 width.""")
+co(r"""ap = np.load(REPO / 'results' / 'bagpipes_sed_results.npz', allow_pickle=True)
+sr = np.load(REPO / 'results' / 'bagpipes_sersic_refit.npz', allow_pickle=True)
+
+filt = list(ap['filter_names'])
+piv = ap['pivot_wavelengths_AA']
+fobs = ap['fluxes_lambda']; fobs_err = ap['fluxes_lambda_error']
+fmod_ap = ap['model_photometry']  # (500, 4)
+fap_p16 = np.percentile(fmod_ap, 16, axis=0); fap_p50 = np.percentile(fmod_ap, 50, axis=0)
+fap_p84 = np.percentile(fmod_ap, 84, axis=0)
+
+flam_sr = sr['flam_sersic']  # Sersic-total fluxes fed to bagpipes
+flam_sr_err = sr['flam_err_used']  # 10% fractional
+
+fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+
+# Left: SED comparison
+ax = axes[0]
+piv_um = piv / 10000  # observed-frame microns
+ax.errorbar(piv_um, fobs, yerr=fobs_err, fmt='o', ms=10, color='C0',
+            capsize=4, label='aperture obs', zorder=4)
+ax.errorbar(piv_um*1.03, flam_sr, yerr=flam_sr_err, fmt='s', ms=10, color='C3',
+            capsize=4, label='Sersic-total obs', zorder=4)
+ax.errorbar(piv_um, fap_p50, yerr=[fap_p50 - fap_p16, fap_p84 - fap_p50], fmt='x', ms=12, mew=2,
+            color='C0', alpha=0.75, label='aperture model (p50)', zorder=3)
+
+# Aperture posterior model spectrum: rest-frame wavelengths × (1+z)
+z = 0.67564
+ms_ap = ap['model_spectrum']  # (500, 1624)
+mw = ap['model_wavelengths'] * (1 + z) / 10000  # observed µm
+ms_p50 = np.percentile(ms_ap, 50, axis=0)
+ms_p16 = np.percentile(ms_ap, 16, axis=0); ms_p84 = np.percentile(ms_ap, 84, axis=0)
+window = (mw > 0.3) & (mw < 5.0) & (ms_p50 > 1e-22)
+ax.fill_between(mw[window], ms_p16[window], ms_p84[window],
+                color='C0', alpha=0.18, label='aperture model 16-84%')
+ax.plot(mw[window], ms_p50[window], color='C0', alpha=0.9, lw=0.8)
+
+ax.set_xscale('log'); ax.set_yscale('log')
+ax.set_xlabel(r'observed-frame $\lambda$ [µm]', fontsize=12)
+ax.set_ylabel(r'$F_\lambda$ [erg s$^{-1}$ cm$^{-2}$ Å$^{-1}$]', fontsize=12)
+ax.set_title('SED: aperture (blue) vs Sersic-total (red)', fontsize=12)
+ax.legend(loc='lower center', fontsize=9, ncol=2)
+ax.grid(alpha=0.3, which='both')
+ax.set_xlim(0.3, 5.0)
+
+# Filter labels
+for i, f in enumerate(filt):
+    ax.annotate(f, (piv_um[i], fobs[i]*1.4), ha='center', fontsize=9, color='C0')
+
+# Right: log M★ posteriors
+ax = axes[1]
+m_ap = ap['stellar_mass']
+m_sr = sr['log_M_sersic_samples']
+bins = np.linspace(10.8, 11.9, 60)
+ax.hist(m_ap, bins=bins, density=True, histtype='stepfilled', alpha=0.45,
+        color='C0', edgecolor='C0', lw=2,
+        label=f'aperture: {float(np.percentile(m_ap, 50)):.2f} '
+              f'+{float(np.percentile(m_ap, 84) - np.percentile(m_ap, 50)):.2f}'
+              f'/-{float(np.percentile(m_ap, 50) - np.percentile(m_ap, 16)):.2f}')
+ax.hist(m_sr, bins=bins, density=True, histtype='stepfilled', alpha=0.45,
+        color='C3', edgecolor='C3', lw=2,
+        label=f'Sersic-total: {float(sr["log_M_sersic_p50"]):.2f} '
+              f'+{float(sr["log_M_sersic_p84"]) - float(sr["log_M_sersic_p50"]):.2f}'
+              f'/-{float(sr["log_M_sersic_p50"]) - float(sr["log_M_sersic_p16"]):.2f}')
+ax.axvline(np.percentile(m_ap, 50), color='C0', ls='--', alpha=0.7)
+ax.axvline(float(sr['log_M_sersic_p50']), color='C3', ls='--', alpha=0.7)
+
+dlogM = float(sr['delta_log_M'])
+ax.set_xlabel(r'$\log_{10}(M_\star / M_\odot)$', fontsize=12)
+ax.set_ylabel('posterior density', fontsize=12)
+ax.set_title(f'Stellar mass posterior (Δ = +{dlogM:.2f} dex Sersic−aperture)', fontsize=12)
+ax.legend(loc='upper left', fontsize=10)
+ax.grid(alpha=0.3)
+
+plt.tight_layout()
+out = REPO / 'results' / 'figures' / 'nb09_sed_and_Mstar.png'
+plt.savefig(out, dpi=150, bbox_inches='tight')
+plt.show()
+print(f'Saved → {out.relative_to(REPO)}')
+
+# Numbers
+print(f'\\n  Per-filter observed vs aperture model:')
+print(f'    {"Filter":<8} {"λ_obs[µm]":>10} {"AB obs":>9} {"F_obs":>14} {"F_model_p50":>14}')
+abmag_ap = ap['abmags']
+for i in range(len(filt)):
+    print(f'    {str(filt[i]):<8} {piv_um[i]:>10.3f} {abmag_ap[i]:>9.3f} '
+          f'{fobs[i]:>14.3e} {fap_p50[i]:>14.3e}')
+
+print(f'\\n  log M★ summary:')
+print(f'    aperture (paper)  : {float(np.percentile(m_ap, 50)):.3f} +{float(np.percentile(m_ap, 84) - np.percentile(m_ap, 50)):.3f}/-{float(np.percentile(m_ap, 50) - np.percentile(m_ap, 16)):.3f}')
+print(f'    Sersic-total      : {float(sr["log_M_sersic_p50"]):.3f} +{float(sr["log_M_sersic_p84"]) - float(sr["log_M_sersic_p50"]):.3f}/-{float(sr["log_M_sersic_p50"]) - float(sr["log_M_sersic_p16"]):.3f}')
+print(f'    Δlog M★            : +{dlogM:.3f} dex  ({(10**dlogM - 1)*100:+.1f}% in linear M★)')
+print(f'\\n  Sersic-total flux source: F_total_analytic from Graham & Driver (2005) eq. 4 —')
+print(f'    pure Sersic2D model integral to infinity, NOT a sum over the model-filled image.')""")
+
 # ─── §8 Headline ────────────────────────────────────────────────────────
 md(r"""## §8 — Paper-ready headline
 
