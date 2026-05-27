@@ -35,26 +35,49 @@ There are two versions of the base analysis notebooks (01, 02), plus a sequence 
 
 The streamlined IFU notebook uses veldis (degree=[4,30]) for the integrated spectrum and raw ppxf for per-spaxel and power-binned fitting. The `ppxf_per_spaxel()` function appends `best_fit` twice per degree iteration — account for this when indexing results (`best_fit_idx = deg_idx * 2`). This bug is **only** in notebook 01_streamlined; `scripts/bootstrap_ppxf.py` (which notebooks 03/03b/03c/06 build on) does not have it.
 
-## Key Results (Gültekin σ_e pipeline, N=500 production)
+## Key Results (σ_e pipeline, N=500 production)
 
-**Primary paper number** — σ_e(<Re) via cumulative I-weighted ppxf (notebook 07c §6cum):
+**Primary paper number** — σ_e(<Re) on the NEW `_mtwdo_` reduction, wide arc-masked window ppxf, **with He I 3819 source-emission mask added (promoted to headline 2026-05-27)**:
 
-- **σ_e(<Re) = 267.32 ± 24 km/s** — for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5)
-- σ_e(<Re_safe = 3Re/4 = 1.72") = 238.78 ± 20 km/s — arc-free cumulative aperture
-- σ_e(<Re/2 ≈ 1.10") ≈ 225.78 ± 18 km/s
-- σ_e(<Re/8 ≈ 0.76") ≈ 209.18 ± 20 km/s
+- **σ_e(<Re) = 271.87 ± 17.86 km/s** (asymmetric −17.99 / +17.74) at `wR3800_5400_arcmask` (rest 3800–5400 Å, Ca H+K through Mg b/Fe5335 + z=1.302 source-emission masks incl. **new He I 3819** + local-MAD bad-pixel mask) — **paper headline** for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5)
+- Source: `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/wR3800_5400_arcmask_{fsps,emiles,xsl}_T*_N500.npz`. Cube: `raw_KCWI/New_red/Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`.
+- Pipeline: bad-pixel mask (52 local-MAD-flagged cosmic-ray residuals in `BAD_PIXELS_REST`) + no-Balmer mask (Hδ, Hγ, Hβ kept in the fit because they're absorption in this passive deflector) + ARC_MASKS_REST catalog with He I 3819 source emission added (5237–5253 Å). See `_clean_hei` presets in `scripts/run_wide_sigma_e.py`.
 
-Cross-checks (all consistent at <1σ, notebook 07c — refreshed 2026-05-01 with frame-aware ppxf via `scripts/refresh_07c_gultekin.py`):
-- §7 discrete Gültekin annular sum (arc-filtered to R < Re_safe): **256.17 −13.0/+12.7 km/s** (post-frame-fix; pre-fix was 254.99 −24/+28)
-- §7b flat-σ extrapolation into outer annulus: **274.37 −16.2/+17.4 km/s** (post-frame-fix; pre-fix was 271 −33/+35)
-- The frame fix collapsed the V_sys split from ~99 km/s to ~8 km/s, halving the Gültekin-sum error bars without moving the σ_e values significantly (Δ < 5 km/s)
-- nb07e arc-spectrum subtraction (residual arc through F200 mask): matches §6cum bit-identically, §7 within 0.1 km/s — *residual* arc dilution sub-dominant at N=500
-- **F200LP mask sensitivity test (§6cum-nomask, N=500, executed 2026-04-27)**: disabling the F200 mask gives σ_e(<R_e) = **250.96 ± 23 km/s** (Δ = −16.36 km/s vs headline). The F200 mask itself is at the ~half-SPS-budget level — quote as sensitivity, not negligible. Cache: `results/annular_bootstrap_07c_nomask/`.
-- **Do NOT include ann5 in §7 (unfiltered gives 386 km/s, unphysical)** — single α_arc template insufficient; use §6cum or §7b instead
+Systematic-budget components on the NEW reduction (post-He I 3819 mask, 2026-05-27):
 
-### Method choice — cumulative vs annular (and binning)
+| component | ± km/s | notes |
+|-----------|--------|-------|
+| stat (N=500) | 4.6 (asym −5.12/+4.16) | wild-bootstrap pool across FSPS+EMILES+XSL on cleaned + He-I-masked new cube. Slightly tighter than the no-He-I run (was −5.47/+4.73) because masking the He I 3819 contamination removes a couple of outlier pixels driving the −side skew |
+| I-shape (10 shapes × N=250) | 1.5 | carried from old-cube sweep; physical shapes unchanged across reductions |
+| F200 mask (peak-to-peak/2) | 3.8 | carried from old-cube sweep; arc mask geometry unchanged |
+| frame (vac/air, carried) | 5.0 | from prior frame-fix work |
+| centering (HST WCS, carried) | 4.0 | HST-derived; reduction-independent |
+| fit-window (3 windows from §9) | 15.0 | carried from old-cube sweep; dominant residual |
+| **reduction-pass (refined 2026-05-27 post-He-I)** | **3.86** | half-Δ between cleaned + He-I-masked new and old reductions = (271.87−264.16)/2. Was ±4.27 pre-He-I; adding the He I mask shrinks the inter-reduction gap further (the He I bias was reduction-dependent). Flag: only 2 reductions; refine if 3rd lands |
+| **TOTAL (symmetric)** | **17.86** | quadrature sum |
+| **TOTAL (asymmetric)** | **−17.99 / +17.74** | preserves stat-side skew |
 
-§6cum (cumulative I-weighted aperture ppxf) is the headline. See `~/.claude/.../memory/reference_cumulative_vs_annular_sigma_e.md` for the full case. Short version of why:
+Cross-checks:
+- **OLD cube cleaned + He I (`--cube headline_clean_hei`)**: σ_e(<Re) = **264.16 ± 17.93 km/s** (asym −18.05/+17.83). 7.71 km/s Δ to the headline → source of the refined ±3.86 reduction-pass systematic. Single-pipeline reproduction: `scripts/run_wide_sigma_e.py --cube headline_clean_hei`.
+- **Pre-He-I cross-checks (clean only)**: NEW cube 268.98 (now −2.89 lower than headline), OLD cube 260.44. Δ = +8.54 km/s. Adding the He I 3819 mask shrinks the inter-reduction gap to +7.71 km/s.
+- **Legacy (un-cleaned, no He I) wide-window cross-checks**: NEW cube 265.76, OLD cube 254.85. Δ = +10.91 km/s. Full cleanup (bad-pix + Balmer kept + He I masked) brings the cubes ~3 km/s closer together.
+- **OLD cube narrow Ca H+K + G** (notebook 09d): σ_e(<Re) = 267.95 ± 30.10 km/s at `w6500_7500`. The cleaned + He-I-masked NEW headline (271.87) is within ~4 km/s of this narrow-window value (vs ~1 km/s pre-He-I — within stat error in both cases).
+
+Hδ may still need targeted masking — flagged for revisit; see `METHODS_AND_SYSTEMATICS.md` Part III.5 item #0 and the inline TODO in `scripts/bootstrap_ppxf.py:_determine_goodpixels_no_balmer`.
+
+Prior cross-checks (notebook 07c Gültekin pipeline, narrow window only — superseded by nb09 but still valid):
+- §6cum cumulative I-weighted aperture ppxf: **σ_e(<Re) = 267.32 ± 24 km/s**, σ_e(<Re/2) ≈ 225.78 ± 18, σ_e(<Re/8) ≈ 209.18 ± 20
+- §7 discrete Gültekin annular sum (arc-filtered to R < Re_safe = 3Re/4 = 1.72"): **256.17 −13.0/+12.7 km/s**
+- §7b flat-σ extrapolation into outer annulus: 274.37 −16.2/+17.4 km/s
+- nb07e arc-spectrum subtraction: matches §6cum bit-identically — residual arc dilution sub-dominant at N=500
+- F200LP mask sensitivity at narrow (§6cum-nomask): σ_e(<R_e) = 250.96 ± 23 km/s (Δ = −16.36 vs §6cum headline) — see nb09 §10.1 for the equivalent test at the wide arc-masked window where the systematic shrinks to ±3.8
+- Do NOT include ann5 in §7 (unfiltered gives 386 km/s, unphysical) — use §6cum or §7b
+
+### Method choice — wide arc-masked window vs cumulative vs annular
+
+**nb09 wide arc-masked** (current paper headline) — single ppxf fit on the I-band-weighted R<R_e aperture spectrum across rest 3800–5400 Å with explicit z=1.302 source-emission masking (Mg II 2796/2803, [O II] 3727/3729, **He I 3819**, [Ne III] 3869). Pros over nb07c §6cum: 4× more spectral pixels (2161 vs 555 good pixels) → ±6 stat vs ±24 stat; orthogonal feature-set cross-check via `wR4000_5400_arcmask` (Hβ + Mg b, no Ca H+K) gives 15 km/s window-spread systematic. Cons: needs explicit catalog of source-emission lines mapped into deflector rest frame (one-time cost; reusable for other AGEL targets).
+
+§6cum (cumulative I-weighted aperture ppxf, nb07c, narrow window only) is preserved as the **method cross-check**. See `~/.claude/.../memory/reference_cumulative_vs_annular_sigma_e.md` for the full case. Short version of why §6cum was preferred over §7 (and why both are now superseded by nb09 for the headline):
 - Single ppxf fit on the I-weighted aperture spectrum at R<R_max — matches what KH13 / Greene+20 / SAURON / ATLAS3D / MaNGA actually compute (Cappellari+2006 eq. 1)
 - No binning to defend (no equal-r vs equal-N debate)
 - Single LOSVD fit preserves line-shape information that §7's moment-pooling discards
