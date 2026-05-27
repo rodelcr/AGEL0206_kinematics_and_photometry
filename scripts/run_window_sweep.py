@@ -120,12 +120,37 @@ ARC_MASKS_REST = [
 # local-MAD units. Each range padded ±0.5 Å to robustly catch the same
 # pixels after log-rebinning. Used when bad_pix_mask=True.
 BAD_PIXELS_REST = [
-    (4010.5, 4011.5),  (4167.4, 4168.4),  (4380.5, 4381.5),  (4400.2, 4401.7),
-    (4489.3, 4490.3),  (4625.1, 4629.8),  (4632.5, 4633.5),  (4650.2, 4651.2),
-    (4652.7, 4654.3),  (4665.6, 4667.2),  (4669.3, 4670.3),  (4689.6, 4690.6),
-    (4691.5, 4692.5),  (4721.9, 4724.2),  (4725.6, 4726.6),  (4728.8, 4730.4),
-    (4754.4, 4756.0),  (4768.9, 4769.9),  (4783.3, 4784.3),  (4789.0, 4791.9),
-    (4941.8, 4942.8),  (4979.7, 4984.0),  (4986.3, 4988.6),  (5052.5, 5054.2),
+    # Original (2026-05-26) 26 cosmic-ray / sky residual entries identified by
+    # local-MAD on ppxf-fit residuals at |residual|/local_MAD > 3σ on the
+    # canonical wide-window fit. Biggest is the 6-pix cluster at 5232-5236.
+    (4010.5, 4011.5),  (4167.4, 4168.4),
+    # 2026-05-27 (M10 sky-line audit): MERGED original (4380.5, 4381.5)
+    # with adjacent unmasked sky band 4382-4384 → (4380.0, 4384.0). Sky
+    # noise 3.7× median at obs 7343-7345.
+    (4380.0, 4384.0),
+    (4400.2, 4401.7),  (4489.3, 4490.3),
+    # M10 additions (2026-05-27): unmasked sky-line audit across full fit
+    # window 3800-5400. Added 9 OH airglow / sky residual bands at >2.5×
+    # median sky std, all VERIFIED non-source via the arc spectrum
+    # (AGEL0206_arc_source_spectrum.pdf — source-rest at each band is flat).
+    # Tag: # M10-sky
+    (4553.0, 4554.6),  # M10-sky: obs 7629-7632 (2.6× sky)
+    (4602.0, 4610.0),  # M10-sky: obs 7712-7724 (2.9× sky) — user-flagged 4600 Å structure
+    (4625.1, 4629.8),  (4632.5, 4633.5),  (4650.2, 4651.2),
+    (4652.7, 4654.3),  (4665.6, 4667.2),  (4669.3, 4670.3),
+    (4687.3, 4688.3),  # M10-sky: obs 7854-7856 (2.5× sky)
+    (4689.6, 4690.6),
+    (4691.5, 4693.6),  # M10-sky: MERGED (4691.5, 4692.5) + adjacent obs 7862-7865 (3.5× sky)
+    (4721.9, 4724.2),  (4725.6, 4726.6),  (4728.8, 4730.4),
+    (4754.4, 4756.0),  (4768.9, 4769.9),
+    (4770.8, 4771.8),  # M10-sky: obs 7994-7996 (2.7× sky)
+    (4783.3, 4784.3),  (4789.0, 4791.9),
+    (4941.8, 4942.8),
+    (4951.6, 4955.0),  # M10-sky: obs 8297-8303 (3.8× sky)
+    (4979.7, 4984.0),  (4986.3, 4988.6),
+    (5011.9, 5015.3),  # M10-sky: obs 8398-8404 (4.0× sky)
+    (5029.8, 5033.8),  # M10-sky: obs 8428-8435 (3.1× sky)
+    (5052.5, 5054.2),
     (5228.8, 5231.2),  (5232.2, 5236.7),
 ]
 

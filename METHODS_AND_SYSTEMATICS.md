@@ -23,10 +23,11 @@ provenance.
 
 | Quantity | Value | Source / notebook |
 |---|---|---|
-| **σ_e(<R_e)** — **paper headline**, wide arc-masked window, NEW `_mtwdo_` reduction, bad-pixel mask + Balmer absorption kept + **He I 3819 source-emission mask** | **271.87 ± 17.86 km/s** (symmetric; asymmetric form **−17.99 / +17.74** preserves the stat-side bootstrap skew). **Includes a refined "reduction-pass" systematic of ±3.86 km/s** (half-Δ between cleaned + He-I-masked cubes 271.87 − 264.16 = 7.71). | `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/` |
-| σ_e(<R_e) — old reduction cross-check, cleaned + He I masked | 264.16 ± 17.93 km/s (asymmetric −18.05 / +17.83) | `scripts/run_wide_sigma_e.py --cube headline_clean_hei`, caches at `results/run_wide_sigma_e/headline_clean_hei/`. The 7.71 km/s Δ to the cleaned + He-I-masked new cube is the source of the refined ±3.86 km/s reduction-pass systematic |
-| σ_e(<R_e) — pre-He-I cleaned cross-check (NEW cube) | 268.98 −18.19/+17.98 km/s | `scripts/run_wide_sigma_e.py --cube new_clean`. The +2.89 km/s shift to the headline is the bias from un-masked He I 3819 source contamination |
-| σ_e(<R_e) — pre-He-I cleaned cross-check (OLD cube) | 260.44 −18.36/+17.97 km/s | `scripts/run_wide_sigma_e.py --cube headline_clean`. +3.72 km/s shift from the new He-I-masked headline_clean_hei value |
+| **σ_e(<R_e)** — **paper headline**, wide arc-masked window, NEW `_mtwdo_` reduction, bad-pixel mask + Balmer kept + He I 3819 mask + **M10 full sky-line audit** | **269.62 ± 17.78 km/s** (symmetric; asymmetric form **−17.92 / +17.65** preserves the stat-side bootstrap skew). **Includes a refined "reduction-pass" systematic of ±3.45 km/s** (half-Δ between cleaned + He-I + M10-sky-masked cubes 269.62 − 262.72 = 6.90). | `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/` |
+| σ_e(<R_e) — old reduction cross-check, cleaned + He I + M10 sky masks | 262.72 ± 17.99 km/s (asymmetric −18.10 / +17.88) | `scripts/run_wide_sigma_e.py --cube headline_clean_hei`, caches at `results/run_wide_sigma_e/headline_clean_hei/`. The 6.90 km/s Δ to the cleaned + He-I + M10-sky-masked new cube is the source of the refined ±3.45 km/s reduction-pass systematic |
+| σ_e(<R_e) — pre-M10 cross-check (cleaned + He I, NEW cube) | 271.87 −17.99/+17.74 km/s | Pre-M10 reference. +2.25 km/s shift to current headline = bias from un-masked OH/sky residuals folded into the M10 systematic |
+| σ_e(<R_e) — pre-He-I cleaned cross-check (NEW cube) | 268.98 −18.19/+17.98 km/s | `--cube new_clean`. +2.89 km/s offset (un-masked He I 3819 contamination biased σ_e *down*) |
+| σ_e(<R_e) — pre-He-I cleaned cross-check (OLD cube) | 260.44 −18.36/+17.97 km/s | `--cube headline_clean` |
 | σ_e(<R_e) — legacy un-cleaned wide-window cross-check (NEW cube) | 265.76 ± 17.87 km/s | Pre-clean reference; `scripts/run_wide_sigma_e.py --cube new`, caches at `results/run_wide_sigma_e/new/` |
 | σ_e(<R_e) — legacy un-cleaned wide-window cross-check (OLD cube) | 254.85 ± 17.87 km/s | Pre-clean reference; `scripts/run_wide_sigma_e.py --cube headline`, caches at `results/run_wide_sigma_e/headline/` |
 | σ_e(<R_e) — narrow Ca H+K+G cross-check window (legacy old cube, no clean) | 267.95 ± 30.10 km/s | nb09d (`results/sigma_e_final_systematics_nb09d.npz`) |
@@ -478,17 +479,19 @@ independent components (one more than the original budget — the
 "reduction-pass" component added 2026-05-26, refined again 2026-05-27
 when the He I 3819 source-emission mask was added):
 
-| Component | Wide arc-masked, NEW `_mtwdo_` CLEAN + He I (headline) | Wide arc-masked, OLD cube CLEAN + He I (2nd reduction) | Narrow Ca H+K+G, OLD cube (X-check) | Source |
+| Component | Wide arc-masked, NEW `_mtwdo_` CLEAN + He I + M10 (headline) | Wide arc-masked, OLD cube CLEAN + He I + M10 (2nd reduction) | Narrow Ca H+K+G, OLD cube (X-check) | Source |
 |---|---|---|---|---|
-| Statistical (pooled 1σ) | **±4.6** (asym −5.12/+4.16) | ±4.9 (asym −5.31/+4.50) | ±23.9 | wild bootstrap N=500 × 3 SPS × 15 degrees (post-clean + He I mask: stat slightly tighter than pre-He-I run, was −5.47/+4.73) |
+| Statistical (pooled 1σ) | **±4.6** (asym −5.16/+4.13) | ±5.1 (asym −5.49/+4.69) | ±23.9 | wild bootstrap N=500 × 3 SPS × 15 degrees |
 | I-shape (10-shape spread, post-Sersic2D bound-fix) | ±1.5 (carried from old) | **±1.5** | ±3.7 | `results/ishape_sweep_wR3800_5400_arcmask/` |
 | F200 spatial mask (peak-to-peak / 2) | ±3.8 (carried from old) | **±3.8** | ±7.5 | `results/maskweight_sweep_wR3800_5400_arcmask/` |
 | Frame (vac/air per SPS, carried) | ±5.0 | ±5.0 | ±5.0 | `audit_ppxf_methodology.py` audit 1 |
 | Centering (5-center sweep ±0.4″, carried) | ±4.0 | ±4.0 | ±4.0 | `NOTES_centering_investigation_2026-04-27.md` |
 | Fit-window (3-window spread, §9) | ±15.0 (carried from old) | **±15.0** | ±15.0 | nb09 §9 (w6500_7500 / wR3800_5400_arcmask / wR4000_5400_arcmask) |
-| **Reduction-pass (refined 2026-05-27 post-He-I)** | **±3.86** | ±3.86 | n/a | `scripts/run_wide_sigma_e.py --cube {new,headline}_clean_hei`; (Δ between cleaned + He-I-masked cubes)/2 = (271.87−264.16)/2 = 3.86 km/s. Was ±4.27 pre-He-I; the He I 3819 source-emission bias was reduction-dependent so masking it shrinks the inter-reduction Δ further. **Flag: only 2 reductions available; revisit if a 3rd lands.** Audit in `NOTES_nb09e_audit_2026-05-20.md` + `project_nb09e_reduction_systematic.md` |
-| **Quadrature total (symmetric)** | **±17.86** | ±17.93 | ±30.10 | |
-| Asymmetric total (lower / upper) | **−17.99 / +17.74** | −18.05 / +17.83 | — | |
+| **Reduction-pass (refined 2026-05-27 post-M10)** | **±3.45** | ±3.45 | n/a | `scripts/run_wide_sigma_e.py --cube {new,headline}_clean_hei`; (Δ between cleaned + He-I + M10-sky-masked cubes)/2 = (269.62−262.72)/2 = 3.45 km/s. Was ±3.86 pre-M10; M10 sky masks tighten the inter-reduction Δ further (sky residuals were reduction-dependent). **Flag: only 2 reductions available; revisit if a 3rd lands.** Audit in `NOTES_nb09e_audit_2026-05-20.md` + `project_nb09e_reduction_systematic.md` |
+| **Quadrature total (symmetric)** | **±17.78** | ±17.99 | ±30.10 | |
+| Asymmetric total (lower / upper) | **−17.92 / +17.65** | −18.10 / +17.88 | — | |
+
+**Flag: I-shape, F200-mask, fit-window components are carried from the OLD-cube pre-clean sweeps.** A rigorous re-derivation on the cleaned + He-I + M10-masked NEW cube (~4 h compute) is recommended as the final paper-prep step. Component magnitudes are *expected* to be similar (same arc, same aperture, same I-weight maps), but this should be verified before final submission.
 
 The fit-window systematic (±15 km/s) is still the **dominant residual**.
 The other six components quadrature-sum to ~10.5 km/s. Tightening the

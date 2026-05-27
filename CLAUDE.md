@@ -37,31 +37,33 @@ The streamlined IFU notebook uses veldis (degree=[4,30]) for the integrated spec
 
 ## Key Results (σ_e pipeline, N=500 production)
 
-**Primary paper number** — σ_e(<Re) on the NEW `_mtwdo_` reduction, wide arc-masked window ppxf, **with He I 3819 source-emission mask added (promoted to headline 2026-05-27)**:
+**Primary paper number** — σ_e(<Re) on the NEW `_mtwdo_` reduction, wide arc-masked window ppxf, **with He I 3819 source-emission mask + M10 full sky-line audit (2026-05-27)**:
 
-- **σ_e(<Re) = 271.87 ± 17.86 km/s** (asymmetric −17.99 / +17.74) at `wR3800_5400_arcmask` (rest 3800–5400 Å, Ca H+K through Mg b/Fe5335 + z=1.302 source-emission masks incl. **new He I 3819** + local-MAD bad-pixel mask) — **paper headline** for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5)
+- **σ_e(<Re) = 269.62 ± 17.78 km/s** (asymmetric −17.92 / +17.65) at `wR3800_5400_arcmask` (rest 3800–5400 Å, Ca H+K through Mg b/Fe5335 + z=1.302 source-emission masks incl. He I 3819 + 35-entry BAD_PIXELS_REST sky/CR catalog) — **paper headline** for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5)
 - Source: `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/wR3800_5400_arcmask_{fsps,emiles,xsl}_T*_N500.npz`. Cube: `raw_KCWI/New_red/Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`.
-- Pipeline: bad-pixel mask (52 local-MAD-flagged cosmic-ray residuals in `BAD_PIXELS_REST`) + no-Balmer mask (Hδ, Hγ, Hβ kept in the fit because they're absorption in this passive deflector) + ARC_MASKS_REST catalog with He I 3819 source emission added (5237–5253 Å). See `_clean_hei` presets in `scripts/run_wide_sigma_e.py`.
+- Pipeline: bad-pixel mask (M10-audited, 35 entries — 26 original CR residuals + 9 OH airglow/sky bands added via full sky-noise audit, all verified non-source via arc spectrum) + no-Balmer mask (Hδ, Hγ, Hβ kept in the fit) + ARC_MASKS_REST catalog with He I 3819 source emission added (5237–5253 Å). See `_clean_hei` presets in `scripts/run_wide_sigma_e.py`.
 
-Systematic-budget components on the NEW reduction (post-He I 3819 mask, 2026-05-27):
+Systematic-budget components on the NEW reduction (post-M10, 2026-05-27):
 
 | component | ± km/s | notes |
 |-----------|--------|-------|
-| stat (N=500) | 4.6 (asym −5.12/+4.16) | wild-bootstrap pool across FSPS+EMILES+XSL on cleaned + He-I-masked new cube. Slightly tighter than the no-He-I run (was −5.47/+4.73) because masking the He I 3819 contamination removes a couple of outlier pixels driving the −side skew |
+| stat (N=500) | 4.6 (asym −5.16/+4.13) | wild-bootstrap pool across FSPS+EMILES+XSL on cleaned + He-I + M10-sky-masked new cube |
 | I-shape (10 shapes × N=250) | 1.5 | carried from old-cube sweep; physical shapes unchanged across reductions |
 | F200 mask (peak-to-peak/2) | 3.8 | carried from old-cube sweep; arc mask geometry unchanged |
 | frame (vac/air, carried) | 5.0 | from prior frame-fix work |
 | centering (HST WCS, carried) | 4.0 | HST-derived; reduction-independent |
 | fit-window (3 windows from §9) | 15.0 | carried from old-cube sweep; dominant residual |
-| **reduction-pass (refined 2026-05-27 post-He-I)** | **3.86** | half-Δ between cleaned + He-I-masked new and old reductions = (271.87−264.16)/2. Was ±4.27 pre-He-I; adding the He I mask shrinks the inter-reduction gap further (the He I bias was reduction-dependent). Flag: only 2 reductions; refine if 3rd lands |
-| **TOTAL (symmetric)** | **17.86** | quadrature sum |
-| **TOTAL (asymmetric)** | **−17.99 / +17.74** | preserves stat-side skew |
+| **reduction-pass (refined 2026-05-27 post-M10)** | **3.45** | half-Δ between cleaned + He-I + M10 new and old reductions = (269.62−262.72)/2 = 3.45. Was ±3.86 pre-M10; adding the M10 sky masks tightens the inter-reduction gap further (sky residuals were reduction-dependent). Flag: only 2 reductions; refine if 3rd lands |
+| **TOTAL (symmetric)** | **17.78** | quadrature sum |
+| **TOTAL (asymmetric)** | **−17.92 / +17.65** | preserves stat-side skew |
 
 Cross-checks:
-- **OLD cube cleaned + He I (`--cube headline_clean_hei`)**: σ_e(<Re) = **264.16 ± 17.93 km/s** (asym −18.05/+17.83). 7.71 km/s Δ to the headline → source of the refined ±3.86 reduction-pass systematic. Single-pipeline reproduction: `scripts/run_wide_sigma_e.py --cube headline_clean_hei`.
-- **Pre-He-I cross-checks (clean only)**: NEW cube 268.98 (now −2.89 lower than headline), OLD cube 260.44. Δ = +8.54 km/s. Adding the He I 3819 mask shrinks the inter-reduction gap to +7.71 km/s.
-- **Legacy (un-cleaned, no He I) wide-window cross-checks**: NEW cube 265.76, OLD cube 254.85. Δ = +10.91 km/s. Full cleanup (bad-pix + Balmer kept + He I masked) brings the cubes ~3 km/s closer together.
-- **OLD cube narrow Ca H+K + G** (notebook 09d): σ_e(<Re) = 267.95 ± 30.10 km/s at `w6500_7500`. The cleaned + He-I-masked NEW headline (271.87) is within ~4 km/s of this narrow-window value (vs ~1 km/s pre-He-I — within stat error in both cases).
+- **OLD cube cleaned + He I + M10 (`--cube headline_clean_hei`)**: σ_e(<Re) = **262.72 ± 17.99 km/s** (asym −18.10/+17.88). 6.90 km/s Δ to the headline → source of the refined ±3.45 reduction-pass systematic.
+- **Pre-M10 cross-checks (cleaned + He I only)**: NEW cube 271.87 (now −2.25 above headline), OLD cube 264.16. Δ = +7.71 km/s. Adding M10 sky masks shrinks the gap to +6.90.
+- **Pre-He-I cross-checks (clean only)**: NEW 268.98, OLD 260.44, Δ = +8.54.
+- **Legacy (un-cleaned, no He I, no M10)**: NEW 265.76, OLD 254.85, Δ = +10.91. Full cleanup brings the cubes ~4 km/s closer together.
+- **OLD cube narrow Ca H+K + G** (notebook 09d): σ_e(<Re) = 267.95 ± 30.10 km/s at `w6500_7500`. The cleaned + He-I + M10 NEW headline (269.62) is within 2 km/s of this narrow-window value.
+- **M9 (DO NOT MASK)**: visible +5-7% bump at def-rest 5193–5204 Å is the Mg b LOSVD wing (NOT source emission per arc spectrum, NOT sky residual per noise spectrum). Smoke-masking it drops σ_e by 7 km/s (largest single mask effect) → it's signal, not contamination. Documented to avoid future second-guessing.
 
 Hδ may still need targeted masking — flagged for revisit; see `METHODS_AND_SYSTEMATICS.md` Part III.5 item #0 and the inline TODO in `scripts/bootstrap_ppxf.py:_determine_goodpixels_no_balmer`.
 

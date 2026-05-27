@@ -102,19 +102,22 @@ PRESETS = {
         'cache_dir': _TEST_CACHE_ROOT / 'new_clean',
         'descr':     'NEW _mtwdo_ reduction + arc-mask + local-MAD bad-pixel mask — CURRENT HEADLINE-PRODUCING PRESET (2026-05-26)',
     },
-    # 2026-05-27: add a He I 3819 source-emission mask (5237-5253 Å) on top of
-    # the existing arc-mask + bad-pix catalog. Separate cache dir so the test
-    # can be compared against the un-masked-HeI 268.98 km/s headline without
-    # forcing a recompute of the existing caches.
+    # 2026-05-27: He I 3819 source-emission mask (5237-5253 Å) + M10 full
+    # sky-line audit (9 added OH/sky-residual bands across the fit window,
+    # all VERIFIED non-source via the arc spectrum). These are the HEADLINE
+    # presets as of 2026-05-27. Separate cache dirs preserve the un-masked-HeI
+    # 268.98 km/s headline at new_clean/ and the He-I-only 271.87 km/s
+    # interim headline (now superseded) was preserved in this dir but
+    # OVERWRITTEN on 2026-05-27 when --force was passed to fold in M10.
     'new_clean_hei': {
         'cube':      'raw_KCWI/New_red/Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits',
         'cache_dir': _TEST_CACHE_ROOT / 'new_clean_hei',
-        'descr':     'NEW _mtwdo_ + arc-mask (incl. new He I 3819 mask 5237-5253) + bad-pix + Balmer-unmasked',
+        'descr':     'NEW _mtwdo_ + arc-mask (He I 3819 mask 5237-5253) + bad-pix (M10 full sky audit) + Balmer-unmasked — CURRENT HEADLINE-PRODUCING PRESET (2026-05-27)',
     },
     'headline_clean_hei': {
         'cube':      'Nov17_2025_DESJ0206_RL_combined_icubes_wcs.fits',
         'cache_dir': _TEST_CACHE_ROOT / 'headline_clean_hei',
-        'descr':     'OLD original cube + arc-mask (incl. new He I 3819 mask 5237-5253) + bad-pix + Balmer-unmasked',
+        'descr':     'OLD original cube + arc-mask (incl. He I 3819 mask 5237-5253) + bad-pix (M10 full sky audit) + Balmer-unmasked',
     },
 }
 
@@ -127,15 +130,16 @@ _R5400_OBS = 5400.0 * (1 + fse.Z_SYSTEMIC)
 LAM_OBS_RANGE = (_R3800_OBS, _R5400_OBS)
 ARC_MASK = True
 
-# Systematic budget carried from the headline. UPDATED 2026-05-27 (post-He I
-# 3819 mask): the reduction-pass component refined from ±4.27 (clean only) to
-# ±3.86 (half-Δ between the two cleaned + He-I-masked headlines:
-# 271.87 - 264.16 = 7.71 → /2). Masking the He I 3819 source emission
-# (added to ARC_MASKS_REST on 2026-05-27) shrinks the inter-reduction gap
-# slightly because the He I bias was reduction-dependent.
-#   I-shape 1.5 ⊕ mask 3.8 ⊕ frame 5 ⊕ centering 4 ⊕ window 15 ⊕ reduction 3.86
+# Systematic budget carried from the headline. UPDATED 2026-05-27 (M10 full
+# sky-line audit added): the reduction-pass component refined from ±3.86
+# (He-I-only) to ±3.45 (half-Δ between cleaned + He-I-masked + M10-sky-audit
+# headlines: 269.62 - 262.72 = 6.90 → /2 = 3.45). M10 added 9 unmasked OH
+# airglow / sky-residual bands to BAD_PIXELS_REST (all verified non-source
+# via the arc spectrum); shifted σ_e down by ~2 km/s on both cubes and
+# tightened the inter-reduction gap further.
+#   I-shape 1.5 ⊕ mask 3.8 ⊕ frame 5 ⊕ centering 4 ⊕ window 15 ⊕ reduction 3.45
 # Added in quadrature to each side of the asymmetric stat error.
-SYS_QUAD = float(np.sqrt(1.5**2 + 3.8**2 + 5.0**2 + 4.0**2 + 15.0**2 + 3.86**2))  # = 17.25
+SYS_QUAD = float(np.sqrt(1.5**2 + 3.8**2 + 5.0**2 + 4.0**2 + 15.0**2 + 3.45**2))  # = 17.16
 
 # Reproduce the deterministic seed-offset convention from run_window_sweep
 # (so caches written by THIS script bit-match the ones already on disk).

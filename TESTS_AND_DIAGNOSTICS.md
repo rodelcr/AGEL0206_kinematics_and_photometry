@@ -1,18 +1,18 @@
 # Tests & Diagnostics — AGEL0206 σ_e ApJL paper
 
-**Last updated:** 2026-05-27
+**Last updated:** 2026-05-27 (M10 sky-line audit added)
 
-**Headline (NEW `_mtwdo_` reduction + bad-pixel mask + Balmer-unmasked + He I 3819 source-emission mask, wide arc-masked window):**
-σ_e(<R_e) = **272 ± 18 km/s** = 271.87 ± 17.86 km/s
-(stat ±5 ⊕ I-shape ±1.5 ⊕ mask ±3.8 ⊕ frame ±5 ⊕ centering ±4 ⊕ window ±15 **⊕ reduction ±3.86**)
-Asymmetric form: 271.87 −17.99 / +17.74 km/s.
-Source: `scripts/run_wide_sigma_e.py --cube new_clean_hei` (M8, 2026-05-27).
+**Headline (NEW `_mtwdo_` + bad-pixel mask + Balmer-unmasked + He I 3819 mask + M10 full sky-line audit, wide arc-masked window):**
+σ_e(<R_e) = **270 ± 18 km/s** = 269.62 ± 17.78 km/s
+(stat ±5 ⊕ I-shape ±1.5 ⊕ mask ±3.8 ⊕ frame ±5 ⊕ centering ±4 ⊕ window ±15 **⊕ reduction ±3.45**)
+Asymmetric form: 269.62 −17.92 / +17.65 km/s.
+Source: `scripts/run_wide_sigma_e.py --cube new_clean_hei` (M8 He I mask + M10 sky audit, both 2026-05-27).
 
-**Second-reduction cross-check (OLD cube + bad-pixel mask + Balmer-unmasked + He I mask):**
-σ_e(<R_e) = 264.16 ± 17.93 km/s (asymmetric −18.05 / +17.83). The 7.71 km/s Δ
-between the two CLEANED + He-I-masked reductions sets the refined ±3.86 km/s
-reduction-pass systematic (was ±4.27 from clean-only cubes; the He I 3819 bias
-was reduction-dependent, so masking it shrinks the gap further).
+**Second-reduction cross-check (OLD cube + bad-pixel mask + Balmer-unmasked + He I + M10 sky masks):**
+σ_e(<R_e) = 262.72 ± 17.99 km/s (asymmetric −18.10 / +17.88). The 6.90 km/s Δ
+between the two CLEANED + He-I + M10-sky-masked reductions sets the refined ±3.45 km/s
+reduction-pass systematic (was ±3.86 from clean+He-I-only cubes; M10 sky masks
+tighten the inter-reduction gap further).
 
 **Narrow-window cross-check (Ca H+K + G, OLD cube):**
 σ_e(<R_e) = **268 ± 30 km/s** = 267.95 ± 30.10 km/s
@@ -133,6 +133,7 @@ script/notebook that runs it and the result file or note it produced.
 | M7 | Noise-scaling + ppxf clean=True scan on new cube | `/tmp/test_noise_scaled_clean.py`, caches at `results/run_wide_sigma_e/new_noise_scaled_clean_N100/` | Scanned noise×{1.0, 0.5, 0.3, 0.2, 0.1, 0.05} at FSPS deg=22 → ppxf clips {0, 1, 18, 95, 591, 1247} pixels respectively. Full pipeline at noise×0.3 (19 pix/fit, closest to M5's 52) gives σ_e = **271.04 km/s** (Δ = +5.28 km/s) — larger shift than local-MAD because ppxf clean=True is iterative and identifies a different (smaller) set of pixels. Sensitivity envelope: cleaning shifts range +1 to +5 km/s depending on method. | ✓ sensitivity |
 | M8 | He I 3819 source-emission mask added to ARC_MASKS_REST (5237–5253 Å) (2026-05-27) | `scripts/run_wide_sigma_e.py --cube {new,headline}_clean_hei`, caches `results/run_wide_sigma_e/{new,headline}_clean_hei/` | Identified 3-pixel +ve residual cluster at def-rest 5244–5248 Å (= source-rest 3818–3820 Å, matches **He I 3819.60** emission from z=1.302 source). Consistent across NEW + OLD reductions → astrophysical, not CR. Adding mask shifts NEW: 268.98 → **271.87** (+2.89), OLD: 260.44 → **264.16** (+3.72). Reduction-pass gap shrinks 8.54 → 7.71 → reduction-pass systematic refined ±4.27 → **±3.86**. New TOTAL sys = ±17.25; **new paper headline σ_e(<R_e) = 271.87 ± 17.86 km/s** (asym −17.99/+17.74). | ✓ HEADLINE update |
 | M9 | def-rest 5193–5210 Å bump investigation — does NOT mask (it's the Mg b LOSVD wing) | `/tmp/smoke_extra_mask_5190_5210.py` (N=100 smoke); cube-arc spectrum extraction in `AGEL0206_arc_source_spectrum.pdf`; sky-line noise diagnostic | Visible +5–7% bump in deflector data above ppxf fit at def-rest 5193–5204 Å. **NOT source emission** (arc-spaxel integrated spectrum in source-rest 3782–3788 Å is flat, no emission line — see fig). **NOT sky residual** (cube `noise_sky` shows 0.6–0.9× median std in this range — well below the strong OH airglow forest at obs 8760–8790 Å that's already covered by BAD_PIXELS + the He I mask). **Diagnosis: Mg b LOSVD wing** — the bump is mirrored on the blue side of Mg b (def-rest 5160–5170 also has +ve residuals). Mg b at 5183 Å convolved with σ ≈ 270 km/s LOSVD broadens 4–5 Å → wings extend out to ~5190–5210 Å. Smoke test: masking 5190–5210 drops σ_e to **264.83 km/s (−7.04 km/s)** — the LARGEST single mask effect seen. **Verdict: DO NOT MASK** — this region is the *signal* ppxf uses to constrain σ_e, not contamination. Documenting so we don't re-investigate. | ✓ DO NOT MASK |
+| M10 | Full sky-line audit across fit window 3800–5400 Å (2026-05-27) | `BAD_PIXELS_REST` updated to 35 entries (26 original + 9 added). Caches `results/run_wide_sigma_e/{new,headline}_clean_hei/`; per-band rationale inline in `scripts/run_window_sweep.py`. Identification via cube `noise_sky` thresholded at >2.5× median; each added band cross-checked against arc spectrum (`AGEL0206_arc_source_spectrum.pdf`) to confirm no source-emission counterpart. | Found 9 unmasked OH airglow / sky-residual bands in the fit window after user-flagged def-rest ~4600 Å structure: (4380.0-4384.0), (4553.0-4554.6), **(4602.0-4610.0)** ← the 4600 Å feature, (4687.3-4688.3), (4691.5-4693.6) merged, (4770.8-4771.8), (4951.6-4955.0), (5011.9-5015.3), (5029.8-5033.8). All in def-rest Å, sky_noise 2.5–4× median. NEW cube σ_e: 271.87 → **269.62** (−2.25 km/s). OLD cube σ_e: 264.16 → **262.72** (−1.44 km/s). Reduction-pass gap shrinks 7.71 → 6.90 → refined ±3.86 → **±3.45**. New TOTAL sys = ±17.16; new paper headline **σ_e(<R_e) = 269.62 ± 17.78 km/s** (asym −17.92/+17.65). | ✓ HEADLINE update |
 | **L. Figure preparation (2026-05-13)** | | | | |
 | L1 | Figure 2 (narrow) — single posterior inset | `AGEL_0206_ApJL_Figures/figures.ipynb` cell `a546db7f`, `Mbh_sigma_SED_final.pdf` (was AGEL0206_sigma_e_SED_final.pdf) | Title shows σ_e = 267 ± 24(stat) ± 18(sys) km/s; no-arc-mask overlay removed | ✓ |
 | L2 | Figure 2 (wide, headline) — single posterior inset | figures.ipynb cell `fig2_wide`, `AGEL0206_sigma_e_SED_final_wide.pdf` | σ_e = 255 ± 6(stat) ± 17(sys); residuals panel; 9 absorption features labeled; 4 arc-emission masks shaded | ✓ |
