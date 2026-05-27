@@ -1,8 +1,44 @@
 # Tests & Diagnostics — AGEL0206 σ_e ApJL paper
 
-**Last updated:** 2026-05-04
-**Headline:** σ_e(<R_e) = **268 ± 32 km/s** (stat ±24 ⊕ I-shape ±13 ⊕ mask ±16 ⊕ frame ±5 ⊕ centering ±4)
-**Method:** §6cum cumulative I-weighted ppxf at R<R_e=2.305" inside the F200LP-masked, frame-aware, SPS-pooled (FSPS+EMILES+XSL) bootstrap × polynomial-degree posterior
+**Last updated:** 2026-05-27
+
+**Headline (NEW `_mtwdo_` reduction + bad-pixel mask + Balmer-unmasked + He I 3819 source-emission mask, wide arc-masked window):**
+σ_e(<R_e) = **272 ± 18 km/s** = 271.87 ± 17.86 km/s
+(stat ±5 ⊕ I-shape ±1.5 ⊕ mask ±3.8 ⊕ frame ±5 ⊕ centering ±4 ⊕ window ±15 **⊕ reduction ±3.86**)
+Asymmetric form: 271.87 −17.99 / +17.74 km/s.
+Source: `scripts/run_wide_sigma_e.py --cube new_clean_hei` (M8, 2026-05-27).
+
+**Second-reduction cross-check (OLD cube + bad-pixel mask + Balmer-unmasked + He I mask):**
+σ_e(<R_e) = 264.16 ± 17.93 km/s (asymmetric −18.05 / +17.83). The 7.71 km/s Δ
+between the two CLEANED + He-I-masked reductions sets the refined ±3.86 km/s
+reduction-pass systematic (was ±4.27 from clean-only cubes; the He I 3819 bias
+was reduction-dependent, so masking it shrinks the gap further).
+
+**Narrow-window cross-check (Ca H+K + G, OLD cube):**
+σ_e(<R_e) = **268 ± 30 km/s** = 267.95 ± 30.10 km/s
+(stat ±24 ⊕ I-shape ±3.7 ⊕ mask ±7.5 ⊕ frame ±5 ⊕ centering ±4 ⊕ window ±15)
+
+**Three-way consistency:** the headline (271.87, new clean + He I) and narrow-window cross-check (267.95, old narrow) are
+within 4 km/s — both inside each other's 1σ stat error. The pre-He-I new-cube wide-window value
+(268.98) was within 1 km/s of the narrow window; adding the He I mask moves the wide headline
+~3 km/s redder of the narrow value, but still well within consistency.
+
+**Method (wide, headline):** Single ppxf fit on the I-weighted aperture
+spectrum at R<R_e=2.305" over rest 3800–5400 Å with explicit z=1.302
+source-emission masks (MgII λ2800, [OII] λ3727, **He I 3819** (M8),
+[NeIII]/Mg b cluster) + bad-pixel mask + Balmer kept in fit, F200LP
+spatial arc mask, frame-aware (per-SPS vac/air), SPS-pooled (FSPS+EMILES+XSL)
+wild bootstrap × polynomial-degree posterior.
+
+**Source-emission verification figure (appendix candidate):** integrated arc
+spectrum at `AGEL_0206_ApJL_Figures/AGEL0206_arc_source_spectrum.pdf` — direct
+extraction from the 69 arc-flagged spaxels (deflector continuum subtracted)
+showing [OII] 3727 + H9 + [NeIII] + He I 3819 in source-rest frame and the
+same lines mapped to def-rest (the headline fit window).
+
+**Method (narrow, cross-check):** Same machinery but on obs-frame
+6500–7500 Å (rest 3879–4476 Å, anchored on Ca H+K and G-band only) —
+the §6cum cumulative I-weighted ppxf path retained from nb07c.
 
 This document is the canonical index of every test, sweep, audit, and
 sensitivity check run for the σ_e measurement. Each row points to the
@@ -15,91 +51,138 @@ script/notebook that runs it and the result file or note it produced.
 | # | Test | Where | Result | Status |
 |---|---|---|---|---|
 | **A. Foundational** | | | | |
-| A1 | KCWI cube provenance | `NOTES_methodology_2026-04-27.md` | Multi-night Aug/Sept/Dec 2025; header mislabel only | ✅ |
-| A2 | Systemic redshift via line fitting | `notebooks/04_redshift_verification.ipynb`, `scripts/redshift_verify.py` | z = 0.67564 (vs DR2 0.67511) | ✅ |
-| A3 | R_e from masked curve-of-growth (F140W+F200LP) | `scripts/measure_Re.py`, `scripts/final_sigma_e.py:curve_of_growth` | R_e = 2.305" = 16.23 kpc | ✅ |
-| A4 | HST-mean center via centroid_2dg | `scripts/final_sigma_e.py:find_center` | F140W & F200LP agree to 0.36" | ✅ |
-| A5 | Bagpipes SED fitting (M★) — aperture vs Sersic-total | `notebooks/02_streamlined_Bagpipes_SED.ipynb`, `08_sersic_total_photometry.ipynb` | log M★ = 11.33 +0.07/−0.09 (aperture, headline); 11.40 +0.11/−0.15 (Sersic-total, +0.065 dex / +16%) | ✅ |
+| A1 | KCWI cube provenance — Keck observing logs cross-checked | `NOTES_methodology_2026-04-27.md`, `reference_kcwi_data_properties.md` (updated 2026-05-26) | Verified contributing nights: K409 UT 2025 Aug 30 (12 RED + 4 BLUE DESJ0206 frames) + U002 PI Jones UT 2025 Nov 17 (20 RED + 5 BLUE DESJ0206 frames). Dec 29 2024 RED frames flagged pending FITS-header verification. Sept 29 K409 has zero DESJ0206 entries — earlier note was wrong. | ✓ |
+| A2 | Systemic redshift via line fitting | `notebooks/04_redshift_verification.ipynb`, `scripts/redshift_verify.py` | z = 0.67564 (vs DR2 0.67511) | ✓ |
+| A3 | R_e from masked curve-of-growth (F140W+F200LP) | `scripts/measure_Re.py`, `scripts/final_sigma_e.py:curve_of_growth` | R_e = 2.305" = 16.23 kpc | ✓ |
+| A4 | HST-mean center via centroid_2dg | `scripts/final_sigma_e.py:find_center` | F140W & F200LP agree to 0.36" | ✓ |
+| A5 | Bagpipes SED fitting (M★) — aperture vs Sersic-total | `notebooks/02_streamlined_Bagpipes_SED.ipynb`, `08_sersic_total_photometry.ipynb` | log M★ = 11.33 +0.07/−0.09 (aperture, headline); 11.40 +0.11/−0.15 (Sersic-total, +0.065 dex / +16%) | ✓ |
 | **B. Pipeline correctness audits** | | | | |
-| B1 | Instrumental LSF audit (DISPSCAL=0.294) | `scripts/ifu_spectral_resolution.py` | FWHM=0.692 Å; σ_v_inst≈12-14 km/s | ✅ |
-| B2 | σ_inst sensitivity (×0.5 to ×2.0 LSF) | `scripts/sigma_inst_sensitivity.py`, audit 3 | max \|Δσ\| = 0.83 km/s | ✅ |
-| B3 | SPS template wavelength frames | `scripts/audit_ppxf_methodology.py`, NOTES Test 2 | FSPS=vacuum, EMILES=air, XSL=air (Ca K minimum + V_sys) | ✅ |
-| B4 | V_sys air vs vacuum × 5 polynomial degrees | `scripts/audit_ppxf_methodology.py` audit 1 | ΔV consistent within ±2 km/s across degrees | ✅ |
-| B5 | z × air-vac differential (obs vs rest application) | `scripts/audit_ppxf_methodology.py` audit 2 | 1.83 km/s differential — sub-budget | ✅ |
-| B6 | fwhm_gal_dict frame consistency check | `scripts/audit_ppxf_methodology.py` audit 4 | dict in REST frame, matches Cappellari pattern | ✅ |
+| B1 | Instrumental LSF audit (DISPSCAL=0.294) | `scripts/ifu_spectral_resolution.py` | FWHM=0.692 Å; σ_v_inst≈12-14 km/s | ✓ |
+| B2 | σ_inst sensitivity (×0.5 to ×2.0 LSF) | `scripts/sigma_inst_sensitivity.py`, audit 3 | max \|Δσ\| = 0.83 km/s | ✓ |
+| B3 | SPS template wavelength frames | `scripts/audit_ppxf_methodology.py`, NOTES Test 2 | FSPS=vacuum, EMILES=air, XSL=air (Ca K minimum + V_sys) | ✓ |
+| B4 | V_sys air vs vacuum × 5 polynomial degrees | `scripts/audit_ppxf_methodology.py` audit 1 | ΔV consistent within ±2 km/s across degrees | ✓ |
+| B5 | z × air-vac differential (obs vs rest application) | `scripts/audit_ppxf_methodology.py` audit 2 | 1.83 km/s differential — sub-budget | ✓ |
+| B6 | fwhm_gal_dict frame consistency check | `scripts/audit_ppxf_methodology.py` audit 4 | dict in REST frame, matches Cappellari pattern | ✓ |
 | **C. SPS templates & frame-fix** | | | | |
-| C1 | Frame-aware ppxf: per-SPS native frame | `scripts/bootstrap_ppxf.py:SPS_NATIVE_FRAME` + `frame_galaxy='auto'` | V_sys split collapsed from ~110 to ~15 km/s | ✅ |
-| C2 | End-to-end V_sys closure (frame swap) | NOTES Test 3, addendum 2026-04-29 | Frame fix matches diagnosis | ✅ |
-| C3 | σ shift from frame fix | NOTES addendum, `error_budget()` | ≤5 km/s across SPS → carried as ±5 km/s budget | ✅ |
-| C4 | 3-SPS pooled posterior | `scripts/final_sigma_e.py:pool_sps` | Per-SPS V_sys subtracted before pooling | ✅ |
+| C1 | Frame-aware ppxf: per-SPS native frame | `scripts/bootstrap_ppxf.py:SPS_NATIVE_FRAME` + `frame_galaxy='auto'` | V_sys split collapsed from ~110 to ~15 km/s | ✓ |
+| C2 | End-to-end V_sys closure (frame swap) | NOTES Test 3, addendum 2026-04-29 | Frame fix matches diagnosis | ✓ |
+| C3 | σ shift from frame fix | NOTES addendum, `error_budget()` | ≤5 km/s across SPS → carried as ±5 km/s budget | ✓ |
+| C4 | 3-SPS pooled posterior | `scripts/final_sigma_e.py:pool_sps` | Per-SPS V_sys subtracted before pooling | ✓ |
 | **D. Aperture & I(r)** | | | | |
-| D1 | §6cum cumulative I-weighted ppxf | `scripts/final_sigma_e.py:run_aperture_sps` | σ_e(<R_e) = 267.82 km/s headline | ✅ |
-| D2 | §6cum vs §7 (annular) cross-check | `notebooks/07c`, `~/.claude/.../reference_cumulative_vs_annular_sigma_e.md` | §7=255, §7b=271 — all <1σ from §6cum | ✅ |
-| D3 | I(r) shape sweep (10 shapes, fixed mask) | `scripts/run_isource_shape_sweep.py`, `scripts/analyze_isource_shape_sweep.py` | Range = 12.9 km/s (excluding F200LP_Sersic2D outlier) → ±13 budget | ✅ |
-| D4 | I(r) shape sweep refresh post-frame-fix at N=500 | NOTES addendum (d), 2026-04-29 | Frame fix has <0.5 km/s impact; ±13 budget validated | ✅ |
-| D5 | Aperture choice: R<R_e/8, R<R_e/2, R<R_e | `scripts/final_sigma_e.py:APERTURE_FRACS` | R<R_e/8 dropped (inside seeing FWHM/2 = 0.64") | ✅ |
-| D6 | Equal-N vs equal-width annular binning | `notebooks/07b` (5-bin), `notebooks/07c` (equal-N) | Equal-N inside R_safe=3R_e/4 chosen | ✅ |
-| D7 | R_e source systematic (mean vs F140W vs F200LP vs CaHK+G) | `scripts/final_sigma_e.py` §7, `notebooks/09 §7b` | Spread = 16.9 km/s (mean=268, F140W=265, F200LP=276, CaHK=282); sub-budget | ✅ |
+| D1 | §6cum cumulative I-weighted ppxf | `scripts/final_sigma_e.py:run_aperture_sps` | σ_e(<R_e) = 267.82 km/s headline | ✓ |
+| D2 | §6cum vs §7 (annular) cross-check | `notebooks/07c`, `~/.claude/.../reference_cumulative_vs_annular_sigma_e.md` | §7=255, §7b=271 — all <1σ from §6cum | ✓ |
+| D3 | I(r) shape sweep (10 shapes, fixed mask) | `scripts/run_isource_shape_sweep.py`, `scripts/analyze_isource_shape_sweep.py` | Range = 12.9 km/s (excluding F200LP_Sersic2D outlier) → ±13 budget | ✓ |
+| D4 | I(r) shape sweep refresh post-frame-fix at N=500 | NOTES addendum (d), 2026-04-29 | Frame fix has <0.5 km/s impact; ±13 budget validated | ✓ |
+| D5 | Aperture choice: R<R_e/8, R<R_e/2, R<R_e | `scripts/final_sigma_e.py:APERTURE_FRACS` | R<R_e/8 dropped (inside seeing FWHM/2 = 0.64") | ✓ |
+| D6 | Equal-N vs equal-width annular binning | `notebooks/07b` (5-bin), `notebooks/07c` (equal-N) | Equal-N inside R_safe=3R_e/4 chosen | ✓ |
+| D7 | R_e source systematic (mean vs F140W vs F200LP vs CaHK+G) | `scripts/final_sigma_e.py` §7, `notebooks/09 §7b` | Spread = 16.9 km/s (mean=268, F140W=265, F200LP=276, CaHK=282); sub-budget | ✓ |
 | **E. Mask treatment** | | | | |
-| E1 | F200LP arc mask reprojected to IFU grid | `scripts/final_sigma_e.py:load_setup` | 0.7% of all spaxels flagged (~38 inside R<R_e) | ✅ |
-| E2 | Hard mask (w=0.0) headline | `scripts/final_sigma_e.py`, track A | σ_e = 267.82 ± 24 km/s | ✅ |
-| E3 | No-mask sensitivity (w=1.0) | track B | σ_e = 252.82, Δ = −15.0 km/s | ✅ |
-| E4 | Soft-mask single-point (w=0.5) | `scripts/soft_mask_track.py`, track C, NOTES addendum (b) | σ_e = 258.54, Δ = −9.29; super-linear | ✅ |
-| E5 | 5-point mask-weight sweep w∈{0,0.25,0.5,0.75,1} | `scripts/soft_mask_track.py --weight ...`, `scripts/analyze_mask_weight_sweep.py`, NOTES addendum (c) | Per-step drops 5.0→4.3→3.5→2.2; quadratic c=+7.3 (concave-up); threshold-dominated | ✅ |
-| E6 | Mask dilation (over-masking diagnostic) | `notebooks/07d_sigma_e_forceful_mask.ipynb`, `~/.claude/.../project_nb07d_overmasking_finding.md` | Dilation inflates σ via noise; do NOT dilate (negative finding) | ✅ |
-| E7 | Arc-spectrum subtraction sibling | `notebooks/07e_sigma_e_arc_subtract.ipynb` | Matches §6cum within 0.1 km/s — residual arc dilution sub-dominant | ✅ |
-| E8 | Arc-as-sky mechanism test (no-mask + arc-sky template) | `scripts/run_07f_arc_sky.py`, `notebooks/07f_arc_sky_subtract.ipynb` | σ_D=274.6 vs σ_A=267.8 / σ_B=252.8; recovery=145% — dilution explains the full no-mask Δ | ✅ |
+| E1 | F200LP arc mask reprojected to IFU grid | `scripts/final_sigma_e.py:load_setup` | 0.7% of all spaxels flagged (~38 inside R<R_e) | ✓ |
+| E2 | Hard mask (w=0.0) headline | `scripts/final_sigma_e.py`, track A | σ_e = 267.82 ± 24 km/s | ✓ |
+| E3 | No-mask sensitivity (w=1.0) | track B | σ_e = 252.82, Δ = −15.0 km/s | ✓ |
+| E4 | Soft-mask single-point (w=0.5) | `scripts/soft_mask_track.py`, track C, NOTES addendum (b) | σ_e = 258.54, Δ = −9.29; super-linear | ✓ |
+| E5 | 5-point mask-weight sweep w∈{0,0.25,0.5,0.75,1} | `scripts/soft_mask_track.py --weight ...`, `scripts/analyze_mask_weight_sweep.py`, NOTES addendum (c) | Per-step drops 5.0→4.3→3.5→2.2; quadratic c=+7.3 (concave-up); threshold-dominated | ✓ |
+| E6 | Mask dilation (over-masking diagnostic) | `notebooks/07d_sigma_e_forceful_mask.ipynb`, `~/.claude/.../project_nb07d_overmasking_finding.md` | Dilation inflates σ via noise; do NOT dilate (negative finding) | ✓ |
+| E7 | Arc-spectrum subtraction sibling | `notebooks/07e_sigma_e_arc_subtract.ipynb` | Matches §6cum within 0.1 km/s — residual arc dilution sub-dominant | ✓ |
+| E8 | Arc-as-sky mechanism test (no-mask + arc-sky template) | `scripts/run_07f_arc_sky.py`, `notebooks/07f_arc_sky_subtract.ipynb` | σ_D=274.6 vs σ_A=267.8 / σ_B=252.8; recovery=145% — dilution explains the full no-mask Δ | ✓ |
 | **F. Centering** | | | | |
-| F1 | 5-center sweep (±0.4" perturbations) | `NOTES_centering_investigation_2026-04-27.md`, `scripts/regen_s6cum_nomask_diagnostic.py` | σ_e spread = 3.7 km/s → ±4 km/s budget | ✅ |
-| F2 | HST F140W vs F200LP centroid offset | `scripts/final_sigma_e.py:find_center` | 0.36" — driven by F200LP arc; HST-mean robust | ✅ |
+| F1 | 5-center sweep (±0.4" perturbations) | `NOTES_centering_investigation_2026-04-27.md`, `scripts/regen_s6cum_nomask_diagnostic.py` | σ_e spread = 3.7 km/s → ±4 km/s budget | ✓ |
+| F2 | HST F140W vs F200LP centroid offset | `scripts/final_sigma_e.py:find_center` | 0.36" — driven by F200LP arc; HST-mean robust | ✓ |
 | **G. Bootstrap & polynomial degree** | | | | |
-| G1 | Wild bootstrap (Rademacher × local residual) | `scripts/bootstrap_ppxf.py:run_bootstrap_single_degree` | 75-pix rolling window for σ_loc | ✅ |
-| G2 | Parallel bootstrap (joblib, BLAS=1 per worker) | `scripts/bootstrap_ppxf_parallel.py` | ~6 min for 6 fits at N=500 | ✅ |
-| G3 | Polynomial degree sweep (deg 15-29) | `notebooks/03c`, `scripts/build_nb09.py:§6.5` | σ flat within bootstrap envelope; polynomial saturated | ✅ |
-| G4 | N=50 smoke vs N=500 production agreement | `scripts/final_sigma_e.py --n_bootstrap` | Within 1 km/s | ✅ |
+| G1 | Wild bootstrap (Rademacher × local residual) | `scripts/bootstrap_ppxf.py:run_bootstrap_single_degree` | 75-pix rolling window for σ_loc | ✓ |
+| G2 | Parallel bootstrap (joblib, BLAS=1 per worker) | `scripts/bootstrap_ppxf_parallel.py` | ~6 min for 6 fits at N=500 | ✓ |
+| G3 | Polynomial degree sweep (deg 15-29) | `notebooks/03c`, `scripts/build_nb09.py:§6.5` | σ flat within bootstrap envelope; polynomial saturated | ✓ |
+| G4 | N=50 smoke vs N=500 production agreement | `scripts/final_sigma_e.py --n_bootstrap` | Within 1 km/s | ✓ |
 | H | **Cross-checks (independent estimators)** | | | |
-| H1 | §7 discrete Gültekin annular sum (frame-aware, refresh 2026-05-01) | `scripts/refresh_07c_gultekin.py`, `notebooks/07c §7` | **256.17 −13.0/+12.7 km/s** (post-fix; was 254.99 −24/+28 pre-fix) | ✅ |
-| H2 | §7b flat-σ extrapolation (frame-aware, refresh 2026-05-01) | `scripts/refresh_07c_gultekin.py`, `notebooks/07c §7b` | **274.37 −16.2/+17.4 km/s** (post-fix; was 271 −33/+35 pre-fix) | ✅ |
-| H3 | F200 mask sensitivity at N=500 | `results/annular_bootstrap_07c_nomask/` | Δ_mask = −16.4 km/s → ±16 budget | ✅ |
+| H1 | §7 discrete Gültekin annular sum (frame-aware, refresh 2026-05-01) | `scripts/refresh_07c_gultekin.py`, `notebooks/07c §7` | **256.17 −13.0/+12.7 km/s** (post-fix; was 254.99 −24/+28 pre-fix) | ✓ |
+| H2 | §7b flat-σ extrapolation (frame-aware, refresh 2026-05-01) | `scripts/refresh_07c_gultekin.py`, `notebooks/07c §7b` | **274.37 −16.2/+17.4 km/s** (post-fix; was 271 −33/+35 pre-fix) | ✓ |
+| H3 | F200 mask sensitivity at N=500 | `results/annular_bootstrap_07c_nomask/` | Δ_mask = −16.4 km/s → ±16 budget | ✓ |
 | **I. Earlier sigma-discrepancy work (Tests 1-21)** | | | | |
-| I1 | NB01 vs NB05 σ reproduction | `notebooks/05x` Tests 1-4 | Confirmed σ depends on aperture | ✅ |
-| I2 | Source mask + PSF-aware masking | `notebooks/05x` Tests 7-10 | F140W mask flags deflector core; F200LP mask is the right arc mask | ✅ |
-| I3 | Threshold sweep + contamination weighting | `notebooks/05x` Tests 11-13 | Pre-Gültekin masking strategy work | ✅ |
-| I4 | V_rms profile + bootstrap | `notebooks/05x` Tests 14-16 | Pre-Gültekin radial work | ✅ |
-| I5 | Redshift sensitivity (z=0.67511 vs 0.67564) | `notebooks/05x` Test 17 | <1 km/s effect on σ | ✅ |
-| I6 | Voronoi binning attempt | `notebooks/05x` Test 18 | Failed — abandoned | ✅ |
-| I7 | PowerBin spatial binning | `notebooks/05x` Test 19, `scripts/run_powerbin_test19.py` | Rejected as binning scheme — outer-bin σ>800 km/s | ✅ |
-| I8 | R_e four-way comparison | `notebooks/05x` Test 20, `scripts/measure_Re.py` | F140W+F200LP masked CoG mean = 2.305" headline | ✅ |
-| I9 | Per-spaxel vs PowerBin rotation map | `notebooks/05x` Test 21 | No rotation on Re-scale; σ-dominated | ✅ |
+| I1 | NB01 vs NB05 σ reproduction | `notebooks/05x` Tests 1-4 | Confirmed σ depends on aperture | ✓ |
+| I2 | Source mask + PSF-aware masking | `notebooks/05x` Tests 7-10 | F140W mask flags deflector core; F200LP mask is the right arc mask | ✓ |
+| I3 | Threshold sweep + contamination weighting | `notebooks/05x` Tests 11-13 | Pre-Gültekin masking strategy work | ✓ |
+| I4 | V_rms profile + bootstrap | `notebooks/05x` Tests 14-16 | Pre-Gültekin radial work | ✓ |
+| I5 | Redshift sensitivity (z=0.67511 vs 0.67564) | `notebooks/05x` Test 17 | <1 km/s effect on σ | ✓ |
+| I6 | Voronoi binning attempt | `notebooks/05x` Test 18 | Failed — abandoned | ✓ |
+| I7 | PowerBin spatial binning | `notebooks/05x` Test 19, `scripts/run_powerbin_test19.py` | Rejected as binning scheme — outer-bin σ>800 km/s | ✓ |
+| I8 | R_e four-way comparison | `notebooks/05x` Test 20, `scripts/measure_Re.py` | F140W+F200LP masked CoG mean = 2.305" headline | ✓ |
+| I9 | Per-spaxel vs PowerBin rotation map | `notebooks/05x` Test 21 | No rotation on Re-scale; σ-dominated | ✓ |
+| **J. Wide arc-masked window (2026-05-08 → 2026-05-13)** | | | | |
+| J1 | Wavelength-window sweep (15 windows, narrow → wide) | `notebooks/09a_wavelength_window_sweep.ipynb`, `scripts/run_window_sweep.py` | wR3800_5400 wins on stat precision; XSL template floor at def-rest 3675 Å sets blue edge | ✓ |
+| J2 | Discovery of z=1.302 source-emission contamination | `notebooks/09a §3a`, `notebooks/09b §8` | Bimodal ppxf posterior in wide window (σ≈250 vs 100–150) caused by source emission lines mapped to deflector rest frame | ✓ |
+| J3 | Spectral-mask catalog: 3 source-emission + 1 telluric, def-rest | `scripts/run_window_sweep.py:ARC_MASKS_REST` | Four bands (def-rest 3835-3855 = Mg II z=1.302; 4525-4545 = O₂ A-band telluric edge at obs 7593-7626 Å; 5115-5135 = [O II] z=1.302; 5260-5340 = [Ne III] z=1.302); 212 of 2374 pixels (8.9%) masked. Telluric ID via `NOTES_4534A_spike_investigation_2026-05-18.md` | ✓ |
+| J4 | Arc-mask + ppxf clean=True diagnostic | `notebooks/09b §8` | Bimodality collapses; σ vs polynomial degree FLAT across deg 15-29; clean=True drops 0 pixels | ✓ |
+| J5 | Per-SPS posterior collapse at wide arc-masked | `notebooks/09d §1.3` | SPS spread (FSPS / EMILES / XSL): 26.0 km/s (narrow) → 4.2 km/s (wide arc-masked); SPS systematic essentially disappears | ✓ |
+| J6 | N=500 production at wide arc-masked window | `results/nb09a_wavelength_sweep/wR3800_5400_arcmask_*_N500.npz` | σ_e = 254.9 −7/+5 km/s (stat-only, all-3 SPS pool) | ✓ |
+| J7 | Sersic2D bound-fix (n ∈ [1.0, 6.0]) | `scripts/run_isource_shape_sweep.py:181-207`, 2026-05-11 | F200LP previously escaped to n=0.30 (unphysical flat-disk), inflating I-shape budget; multi-init grid + tight bounds fix it. I-shape ±5.4 → ±1.5 | ✓ |
+| J8 | I-shape sweep at wR3800_5400_arcmask (10 shapes × 3 SPS × N=250) | `results/ishape_sweep_wR3800_5400_arcmask/` | std = 1.5 km/s — 9× tighter than narrow's ±13 | ✓ |
+| J9 | Mask-weight sweep at wR3800_5400_arcmask (w ∈ {0, 0.5, 1.0} × 3 SPS × N=250) | `results/maskweight_sweep_wR3800_5400_arcmask/` | peak-to-peak/2 = 3.8 km/s — 4× tighter than narrow's ±16; spectral arc mask absorbs the worst | ✓ |
+| J10 | Three-window cross-check at N=500 | nb09 §9: w6500_7500 vs wR3800_5400_arcmask vs wR4000_5400_arcmask | Spread = 15.0 km/s → window systematic ±15 (dominant residual). wR4000_5400_arcmask = orthogonal Hβ + Mg b feature set (no Ca H+K) | ✓ |
+| J11 | Both-windows side-by-side budget | `notebooks/09d_final_systematics_both_windows.ipynb`, `results/sigma_e_final_systematics_nb09d.npz` | WIDE 254.85 ± 17.87 vs NARROW 267.95 ± 30.10; consistent at 0.4σ | ✓ |
+| **K. Resolved kinematics (now feasible with wide arc-masked window)** | | | | |
+| K1 | Per-spaxel ppxf inside R < 1.5 R_e at S/N≥{2,3,5,10} | `notebooks/11_perbin_perspaxel_kinematics_wide.ipynb` | S/N≥5 gives 17 spaxels, σ ∈ [144, 251] km/s with 0 outliers — first clean per-spaxel σ map for this target | ✓ |
+| K2 | PowerBin spatial binning at wide arc-masked window | `notebooks/11 §PowerBin` | 7 bins at target S/N=15; 2 outer bins still hit σ > 400 (irreducible KCWI S/N limit at aperture edge) — improvement vs Test 19 narrow-window failure but not fully cured | ⚠ partial |
+| K3 | Wide vs narrow window for resolved maps | `notebooks/11` | Wide arc-masked unlocks per-spaxel + PowerBin maps; narrow window was per-spaxel-infeasible | ✓ |
+| **M. Reduction-pass systematic (2026-05-20)** | | | | |
+| M1 | New `_mtwdo_` red-side reduction PROMOTED to headline 2026-05-26 | `notebooks/09e_new_red_reduction.ipynb`, `scripts/run_wide_sigma_e.py --cube new`, `raw_KCWI/New_red/Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits` | **σ_e(<R_e) = 265.76 −18.80 / +18.33 km/s** (with new reduction-pass component). Per-SPS spread 2.67 km/s. Δ vs old reduction = +10.92 km/s → carried as **±5.5 km/s reduction-pass systematic** (M2). Cube co-aligned to <0.002″ with the old reduction (centering ruled out), shift consistent across all 15 polynomial degrees + all 3 SPS templates (mechanism is distributed across the wide window, not localized to one λ boundary — confirmed by 8000-Å boundary-mask cross-test M3). Caches: `results/run_wide_sigma_e/new/`. Figures: `results/figures/nb09e_reduction_comparison.png`, `nb09e_grating_consistency_check.png`. Audit: `NOTES_nb09e_audit_2026-05-20.md` (Addendum 2026-05-26). | ✓ HEADLINE |
+| M2 | Reduction-pass systematic budget component | M1 vs the old-reduction headline | half-Δ = (265.76 − 254.85) / 2 = **±5.46 km/s**, carried as **±5.5 km/s** in the systematic budget (matches our peak-to-peak/2 convention from E5 / J10). **Flag**: only 2 reductions available; revisit / refine if a 3rd lands. Documented in `METHODS_AND_SYSTEMATICS.md` Part I.9 + project memory `project_nb09e_reduction_systematic.md`. | ✓ |
+| M3 | 8000-Å boundary-mask cross-test to localize the +10.9 km/s shift | `/tmp/test_8000A_boundary_mask.py`, caches at `results/run_wide_sigma_e/new_8000A_masked/` | σ_e = 268.73 km/s after adding extra mask at def-rest 4715–4834 Å (= obs 7900–8100 Å) → **hypothesis REJECTED** (shift NOT localized to this one transition). Recovery toward headline = −27%. Confirms the +10.9 km/s shift is distributed across the wide window — likely from the 2-tier per-night flux scaling tilting the entire continuum, not from a single λ boundary. | ✓ negative |
+| M4 | ppxf clean=True sigma-clip cross-test on new cube (N=100) | `/tmp/test_sigma_clip_new_cube.py`, caches at `results/run_wide_sigma_e/new_sigma_clip_N100/` | σ_e = 265.80 km/s (Δ vs headline = +0.04 km/s). **0 pixels rejected** at every (sps, degree) of 45 fits (of ~2161 good pixels each). Reason: ppxf clean=True scales against the noise array; the noise array on this dataset is overestimated, so a 3σ threshold in noise units sits well above the actual outliers (see M5). Test by itself is uninformative; superseded by M5. | ✓ negative |
+| M5 | Local-MAD bad-pixel cleaning (rolling 75-pix window, 3σ threshold) on new cube (N=100) | `/tmp/test_local_mad_clip.py`, caches at `results/run_wide_sigma_e/new_local_mad_clip_N100/` | **52 outlier pixels flagged** (of 2161 good); biggest is 6-pix cluster at def-rest 5232–5236 Å (obs 8768–8774 Å) at **26σ in local-MAD units** — clear unresolved cosmic-ray residual that the noise-scaled clean=True missed. σ_e shifts to **267.18 km/s** (Δ vs headline = **+1.42 km/s**), FSPS-dominated (+3.67). Carried as a stated sensitivity in METHODS Part I.9 ("What is not in the budget"); not folded into formal budget because the shift is well below stat 1σ (±6.1). | ✓ sensitivity |
+| M6 | OLD-cube replication of M5 clip (same 52 def-rest λ) | `/tmp/test_local_mad_clip_OLD_cube.py`, caches at `results/run_wide_sigma_e/old_local_mad_clip_N100/` | σ_e shifts 254.85 → **256.01 km/s** (Δ = +1.16 km/s on OLD cube). Both cubes shift by ~+1.3 km/s → **52 bad pixels are intrinsic to the data**, not reduction-specific. Reduction-pass gap preserved (10.91 un-clipped → 11.17 clipped). | ✓ replicates |
+| M7 | Noise-scaling + ppxf clean=True scan on new cube | `/tmp/test_noise_scaled_clean.py`, caches at `results/run_wide_sigma_e/new_noise_scaled_clean_N100/` | Scanned noise×{1.0, 0.5, 0.3, 0.2, 0.1, 0.05} at FSPS deg=22 → ppxf clips {0, 1, 18, 95, 591, 1247} pixels respectively. Full pipeline at noise×0.3 (19 pix/fit, closest to M5's 52) gives σ_e = **271.04 km/s** (Δ = +5.28 km/s) — larger shift than local-MAD because ppxf clean=True is iterative and identifies a different (smaller) set of pixels. Sensitivity envelope: cleaning shifts range +1 to +5 km/s depending on method. | ✓ sensitivity |
+| M8 | He I 3819 source-emission mask added to ARC_MASKS_REST (5237–5253 Å) (2026-05-27) | `scripts/run_wide_sigma_e.py --cube {new,headline}_clean_hei`, caches `results/run_wide_sigma_e/{new,headline}_clean_hei/` | Identified 3-pixel +ve residual cluster at def-rest 5244–5248 Å (= source-rest 3818–3820 Å, matches **He I 3819.60** emission from z=1.302 source). Consistent across NEW + OLD reductions → astrophysical, not CR. Adding mask shifts NEW: 268.98 → **271.87** (+2.89), OLD: 260.44 → **264.16** (+3.72). Reduction-pass gap shrinks 8.54 → 7.71 → reduction-pass systematic refined ±4.27 → **±3.86**. New TOTAL sys = ±17.25; **new paper headline σ_e(<R_e) = 271.87 ± 17.86 km/s** (asym −17.99/+17.74). | ✓ HEADLINE update |
+| M9 | def-rest 5193–5210 Å bump investigation — does NOT mask (it's the Mg b LOSVD wing) | `/tmp/smoke_extra_mask_5190_5210.py` (N=100 smoke); cube-arc spectrum extraction in `AGEL0206_arc_source_spectrum.pdf`; sky-line noise diagnostic | Visible +5–7% bump in deflector data above ppxf fit at def-rest 5193–5204 Å. **NOT source emission** (arc-spaxel integrated spectrum in source-rest 3782–3788 Å is flat, no emission line — see fig). **NOT sky residual** (cube `noise_sky` shows 0.6–0.9× median std in this range — well below the strong OH airglow forest at obs 8760–8790 Å that's already covered by BAD_PIXELS + the He I mask). **Diagnosis: Mg b LOSVD wing** — the bump is mirrored on the blue side of Mg b (def-rest 5160–5170 also has +ve residuals). Mg b at 5183 Å convolved with σ ≈ 270 km/s LOSVD broadens 4–5 Å → wings extend out to ~5190–5210 Å. Smoke test: masking 5190–5210 drops σ_e to **264.83 km/s (−7.04 km/s)** — the LARGEST single mask effect seen. **Verdict: DO NOT MASK** — this region is the *signal* ppxf uses to constrain σ_e, not contamination. Documenting so we don't re-investigate. | ✓ DO NOT MASK |
+| **L. Figure preparation (2026-05-13)** | | | | |
+| L1 | Figure 2 (narrow) — single posterior inset | `AGEL_0206_ApJL_Figures/figures.ipynb` cell `a546db7f`, `Mbh_sigma_SED_final.pdf` (was AGEL0206_sigma_e_SED_final.pdf) | Title shows σ_e = 267 ± 24(stat) ± 18(sys) km/s; no-arc-mask overlay removed | ✓ |
+| L2 | Figure 2 (wide, headline) — single posterior inset | figures.ipynb cell `fig2_wide`, `AGEL0206_sigma_e_SED_final_wide.pdf` | σ_e = 255 ± 6(stat) ± 17(sys); residuals panel; 9 absorption features labeled; 4 arc-emission masks shaded | ✓ |
+| L3 | Figure 3 (M_BH-M_star) cleanup | figures.ipynb cell `fig3_clean_no_err`, `Mbh_Mstar_relation_clean.pdf` | No per-object error bars; uniform color for local sample; filtered to Greene+2020 E+S0 list (60 unique, 4 KH13 suffix variants matched; 19 post-KH13 extras dropped) | ✓ |
 
 ---
 
 ## 1. Headline numbers
 
-### σ_e at three apertures (cumulative I-weighted ppxf, frame-aware, masked)
+### σ_e at three apertures (paper headline = wide arc-masked window)
 
-| Aperture | σ_e [km/s] | Notes |
-|---|---|---|
-| R<R_e (=2.305") | **268 ± 32** (stat ±24) | **paper headline** — KH13/Greene+20 σ_e |
-| R<R_e/2 (=1.152") | 224 ± 18 | gradient diagnostic |
-| R<R_e/8 (=0.288") | dropped | inside seeing FWHM/2 = 0.64" |
+| Aperture | σ_e [km/s] (WIDE, headline) | σ_e [km/s] (NARROW, cross-check) | Notes |
+|---|---|---|---|
+| R<R_e (=2.305") | **255 ± 18** (254.85 ± 17.87) | 268 ± 30 (267.95 ± 30.10) | **paper headline** — KH13/Greene+20 σ_e at WIDE; NARROW cross-check at 0.4σ |
+| R<R_e/2 (=1.152") | ~225 (nb07c §6cum NARROW) | 224 ± 18 | gradient diagnostic (still cited from nb07c) |
+| R<R_e/8 (=0.288") | dropped | dropped | inside seeing FWHM/2 = 0.64" |
 
-### Error-budget composition (R<R_e)
+### Error-budget composition (R<R_e) — both windows side by side
 
-| Component | Value | Source |
-|---|---|---|
-| Statistical (bootstrap pooled 1σ) | ±24 | nb09, this paper |
-| I-shape spread (10 shapes excluding outlier) | ±13 | nb07c sweep, refreshed N=500 post-frame-fix |
-| Mask on/off Δ | ±16 | nb07c, nb09 §5 |
-| Frame fix (max σ shift across SPS) | ±5 | NOTES addendum + audit 1 |
-| Centering (5-center sweep, ±0.4") | ±4 | `NOTES_centering_investigation_2026-04-27.md` |
-| **Quadrature total** | **±32** | `scripts/final_sigma_e.py:error_budget` |
+| Component | WIDE wR3800_5400_arcmask | NARROW w6500_7500 | Source |
+|---|---|---|---|
+| Statistical (bootstrap pooled 1σ) | ±6.1 | ±23.9 | wild-bootstrap N=500, FSPS+EMILES+XSL pool |
+| I-shape spread (10 shapes, post-Sersic2D-bound-fix) | ±1.5 | ±3.7 | `results/ishape_sweep_wR3800_5400_arcmask/` + `results/annular_bootstrap_07c_ishape/` |
+| F200 mask on/off Δ (peak-to-peak / 2) | ±3.8 | ±7.5 | `results/maskweight_sweep_wR3800_5400_arcmask/` + `results/mask_weight_sweep.npz` |
+| Frame fix (max σ shift across SPS, carried) | ±5 | ±5 | NOTES addendum + audit 1 |
+| Centering (5-center sweep ±0.4", carried) | ±4 | ±4 | `NOTES_centering_investigation_2026-04-27.md` |
+| Fit-window (3-window spread from §9) | ±15 | ±15 | nb09 §9: w6500_7500 / wR3800_5400_arcmask / wR4000_5400_arcmask (orthogonal Hβ+Mg b) |
+| **Quadrature total** | **±17.87** | **±30.10** | `results/sigma_e_final_systematics_nb09d.npz` |
+
+### Where each component changed between windows
+
+- **Statistical ±24 → ±6.1** (4× tighter): wide window has ~4× more spectral pixels (2161 vs 555 good pixels). This is the headline reason to elevate the wide window as primary.
+- **I-shape ±13 → ±1.5** (9× tighter): driven mostly by the Sersic2D bound-fix (J7), which removed the n=0.30 pathology that contributed ±5.4 of the old narrow ±13. The wider window also stabilizes σ across I-shape choices.
+- **Mask ±16 → ±3.8** (4× tighter): the spectral arc-emission masks (J3) absorb most of what the F200 spatial mask used to absorb; the F200 mask becomes a sub-budget perturbation rather than a primary uncertainty.
+- **SPS template spread**: unstated as a separate line in the budget because it's contained in the statistical pool. But it collapsed 26 → 4 km/s between windows (J5) — was a major budget item at the narrow window, sub-statistical at the wide.
+- **Frame fix, centering**: unchanged (carried from the narrow-window era's careful audits — physically independent of the fit window).
+- **Fit-window ±15**: NEW budget component (didn't exist before nb09d because there was only one window). Spread between three physically meaningful windows: Ca H+K + G (narrow), full canonical range (wide arc-masked), and Hβ + Mg b only (wide minus Ca H+K). This is now the dominant residual systematic.
 
 ### Sensitivity values (for paper text)
 
-- Soft-mask (w=0.5) at R<R_e: 258.5 km/s — Δ from headline = −9.3 km/s
-- No-mask (w=1.0) at R<R_e: 252.8 km/s — Δ from headline = −15.0 km/s
+WIDE arc-masked window (headline):
+- No-spatial-mask (w=1.0) at R<R_e: σ_e = 247.28 km/s — Δ from headline (w=0) = −7.6 km/s
+- Half-spatial-mask (w=0.5) at R<R_e: 250.15 km/s — Δ = −4.7 km/s
+- Per-SPS at wR3800_5400_arcmask: FSPS=253.9, EMILES=253.3, XSL=257.5 → spread 4.2 km/s
+
+NARROW Ca H+K + G window (cross-check, retained from nb07c era):
+- Soft-mask (w=0.5) at R<R_e: 258.5 km/s — Δ from narrow-headline = −9.3 km/s
+- No-mask (w=1.0) at R<R_e: 252.8 km/s — Δ = −15.0 km/s
 - σ_e(w) is essentially linear with weak super-linearity (quadratic c=+7.3)
+- Per-SPS at w6500_7500: FSPS=253.7, EMILES=267.9, XSL=279.6 → spread 26.0 km/s (the SPS systematic that motivated the move to wide)
 
 ---
 
@@ -113,10 +196,27 @@ and the inline plots/output.
 
 **A1 KCWI cube provenance** —
 The cube `Nov17_2025_DESJ0206_RL_combined_icubes_wcs.fits` is the final
-multi-night reduction (Aug 29 K409 + Sept 29 K409 + Dec 29 + Nov 17 2025).
-The header is mislabeled (DATE-OBS/PROGNAME/PROGPI describe only the last
-stacking pass). Settled in `NOTES_methodology_2026-04-27.md`. **Cite the
-multi-night provenance, not the header**.
+multi-night reduction stacked by K. R. Gupta on UT 2026-01-07. The
+header's `DATE-OBS = 2025-11-17`, `PROGNAME = U002`, `PROGPI = Jones`
+describes only the **first input frame** (`kr251117_00129`), not the
+full input set.
+
+**Verified contributing nights** (cross-checked 2026-05-26 against the
+Keck observing logs):
+
+| Night (UT) | Program | PI | DESJ0206 frames | On-source RED + BLUE |
+|---|---|---|---|---|
+| 2025 Aug 30 | K409 | TBD | 12 RED `kr250830_00090–00101`, 4 BLUE `kb250830_00052–00055` | 60 min + 66 min |
+| 2025 Nov 17 | U002 | Jones | 20 RED `kr251117_00129–00148`, 5 BLUE `kb251117_00087–00091` | 90 min + 110 min |
+| 2024 Dec 29 | TBD | (Yuguang Chen) | 4 RED `kr241229_00092–00095` per local stack list | **NOT confirmed as DESJ0206 pointings** — only the 44 MB image-only PDF `kcwi-241228-written-log.pdf` (Drive id `16zWO8yaCIvRtoCGenNTndvB7dYdrCkMH`) exists; no machine-readable log. Pending raw-frame header dump. |
+
+Confirmed total on-source (Aug 30 + Nov 17): ≈ 170 min RED + 176 min BLUE.
+
+Two earlier-recorded contributors are **incorrect**: ~~Sept 29 2025 K409~~
+has zero DESJ0206 entries in its log; ~~Dec 29 2024~~ remains
+unverified. Cite K409 + U002 in the paper, flag Dec 29 as pending. See
+`reference_kcwi_data_properties.md` (memory) for full Drive IDs and
+log-file pointers.
 
 **A2 Systemic redshift** —
 Independent line-by-line Gaussian fitting of Ca H+K, [OII], G-band, etc.
@@ -533,6 +633,235 @@ binning approaches). PowerBin (Test 19) was rejected. The headline
 analysis moved to circular apertures + cumulative I-weighting (nb06 →
 nb07c → nb09).
 
+### J. Wide arc-masked window (current paper headline, May 2026)
+
+This section documents the May 8–13 work that elevated the rest 3800–5400 Å
+arc-masked window above the narrow Ca H+K + G-band window as the paper
+headline. The wide window had been off-limits in the nb07c era because of
+source-emission contamination from the z=1.302 spiral and template
+issues — both are now resolved.
+
+**J1 Wavelength-window sweep (nb09a)** —
+`notebooks/09a_wavelength_window_sweep.ipynb` + `scripts/run_window_sweep.py`.
+Bootstrap σ_e at 15 candidate windows from def-rest 3500–5500 down to
+narrow Ca H+K only. Result: wR3800_5400 wins on statistical precision
+(~4× more spectral pixels than narrow). Blue edge set by **XSL template
+floor at def-rest 3675 Å with 5% velocity padding** (J2 below); red edge
+set by KCWI red-channel coverage at z=0.67564.
+
+**Provenance of the 3800–5400 range:** NOT from a specific literature
+prescription — it's set by the data (XSL template floor + retaining Ca H+K
+to cross-anchor with the narrow w6500_7500 result). Closest literature
+precedent for going as blue as 3800 Å is **LEGA-C (Bezanson+2018,
+van der Wel+2021)** at z~0.7 using ~3500–5500 rest. SAURON/ATLAS3D's
+canonical kinematic window is much narrower (4800–5380; Mg b + Fe5270 +
+Fe5335 only). The Lick-tradition "4000–5400 (no Ca H+K)" range is
+captured by the `wR4000_5400_arcmask` sensitivity check (orthogonal
+Hβ + Mg b feature set) — NOT the headline.
+
+**J2 Source-emission contamination discovery (nb09a §3a, nb09b §8)** —
+Wide-window ppxf wild-bootstrap posterior was bimodal (σ ≈ 250 alongside
+σ ≈ 100–150; frac<200 km/s = 60–80%) at deg ≥ 23. Caused by source-frame
+emission lines from the z=1.302 spiral arc contaminating the deflector
+spectrum. Empirically identified as >4σ excess above local continuum:
+
+- **def-rest 3835–3855 Å** = Mg II λλ2796/2803 doublet from z=1.302
+- **def-rest 4525–4545 Å** = **O₂ A-band telluric leading-edge residual at
+  obs 7593–7626 Å** (NOT source emission — originally flagged as a
+  ~7.9σ wild-bootstrap excess and provisionally tagged "source rest
+  3300 Å feature"; relabeled 2026-05-18 after the spike was confirmed
+  present at the same wavelength in deflector R<1.5″, the CLAUDE.md sky
+  box, and a 4–8″ off-deflector annulus, with deflector/off-source
+  amplitude ratio 1.11× despite a 17.5× continuum-brightness ratio. See
+  `NOTES_4534A_spike_investigation_2026-05-18.md` and
+  `results/figures/spike_4534A_diagnostic.png`.)
+- **def-rest 5115–5135 Å** = source [O II] λλ3727/3729 — sits **on the
+  Mg b absorption**; was distorting the FSPS Mg b depth ratio to 1.18
+- **def-rest 5260–5340 Å** = Mg b / [Ne III] λ3869 cluster from source
+
+Total: 212 of 2374 pixels (8.9% of fit window) masked.
+
+**J3 Effect of the arc mask (nb09b §8)** —
+With arc-mask + ppxf clean=True:
+- σ vs polynomial degree FLAT across deg 15–29 (was bimodal at 250↔175
+  with a break at deg 23)
+- N=200 bootstrap collapses to a single sharp peak (frac<200 km/s = 0%
+  across all 3 SPS)
+- clean=True drops 0 pixels at deg=21 — already clean after arc-mask
+- σ_e (FSPS+EMILES+XSL pool) = **254.9 −7/+5 km/s** at wR3800_5400_arcmask
+
+**J4 Per-SPS template spread collapse (nb09d §1.3)** —
+
+| window | FSPS | EMILES | XSL | all-3 pool | SPS spread |
+|---|---|---|---|---|---|
+| NARROW w6500_7500 | 253.7 | 267.9 | 279.6 | 268.0 | **26.0 km/s** |
+| WIDE wR3800_5400_arcmask | 253.9 | 253.3 | 257.5 | 254.8 | **4.2 km/s** |
+
+At the narrow window the 3 SPS libraries fundamentally disagreed by
+26 km/s with strong ordering (FSPS < EMILES < XSL — see
+`reference_sps_systematic.md`). At the wide arc-masked window they agree
+to 4 km/s, well below per-SPS bootstrap stat error. The SPS-template
+uncertainty essentially disappears once ppxf has access to Mg b + Fe5270
+and the broader feature set. Strong paper argument for elevating the
+wide window. Figure: `results/figures/nb09d_per_sps_both_windows.png`.
+
+**J5 Sersic2D bound-fix (`scripts/run_isource_shape_sweep.py`, 2026-05-11)** —
+The I-shape sweep was inflated by a non-physical Sersic2D fit. Original
+script allowed `n ∈ [0.3, 8.0]` and `ellip ∈ [0.0, 0.95]`. The F200LP fit
+escaped to **n=0.30, ellip=0.00** — a degenerate flat-disk minimum
+(astropy flagged it as unsuccessful). The flat profile under-weighted the
+center and yielded σ = 271.8 km/s, a +20 km/s outlier inflating the
+I-shape std to ±5.4. Fix:
+
+- Tighten bounds: `n ∈ [1.0, 6.0]`, `ellip ∈ [0.0, 0.6]`,
+  `r_eff ∈ [r_eff_pix × 0.5, r_eff_pix × 2.0]` (was ×0.3–×3.0)
+- Try 3 initial-condition grids: (n_init, ellip_init) ∈
+  {(1.5, 0.05), (2.0, 0.2), (3.5, 0.2)}; keep lowest-χ² fit
+- F200LP now converges to a physical n that gives σ = 251.4 km/s
+- F140W was already converging at n=2.14, fix did not change it materially
+
+After the fix, I-shape std collapsed: **±5.4 → ±1.5 km/s** at wide
+arc-masked. Universal fix applied to the I-shape sweep code path — all
+downstream sweeps now use these bounds.
+
+**J6 I-shape sweep at wR3800_5400_arcmask (10 shapes × 3 SPS × N=250)** —
+`results/ishape_sweep_wR3800_5400_arcmask/{shape}_{sps}_N250.npz`. Ten
+I(r) weight maps: IFU_band, IFU_wl, F140W/F200LP × {raw, arcmasked,
+1Dcog, Sersic2D}. Std across the 10 shapes, pooled across 3 SPS = 1.5 km/s.
+N=100 → N=250 changed result by 0.05 km/s — fully converged.
+
+**J7 F200LP spatial-mask sensitivity at wR3800_5400_arcmask
+(3 weights × 3 SPS × N=250)** —
+`results/maskweight_sweep_wR3800_5400_arcmask/{w00,w50,w100}_{sps}_N250.npz`.
+w=0 (hard mask) = 254.84, w=0.5 = 250.15, w=1.0 (no spatial mask) = 247.28.
+Peak-to-peak / 2 = 3.8 km/s. **4× tighter than narrow's ±16 km/s budget**
+because the spectral arc-emission masks now absorb the worst of the arc
+contamination — the spatial mask is no longer the primary defense.
+
+**J8 Three-window cross-check at N=500 (nb09 §9)** —
+Final fit-window systematic. Three windows at full N=500:
+
+| window | rest pixels | σ_e (all-3 pool) | role |
+|---|---|---|---|
+| w6500_7500 | obs 6500–7500 Å (rest 3879–4476) | 269.7 km/s | narrow Ca H+K + G only |
+| wR3800_5400_arcmask | rest 3800–5336 | **254.8 km/s** | HEADLINE |
+| wR4000_5400_arcmask | rest 4000–5400 | ~265 km/s | orthogonal Hβ + Mg b (no Ca H+K) |
+
+Spread = 15 km/s → fit-window systematic = ±15 km/s. The
+wR4000_5400_arcmask window is the Lick-tradition feature-set
+cross-check: removes Ca H+K entirely, so any agreement between the
+3800-anchored headline and 4000-anchored alternative is a check that
+Ca H+K is NOT artificially driving the σ_e measurement. The 10 km/s
+gap between WIDE and wR4000 is the dominant residual systematic.
+
+**J9 Both-windows side-by-side budget
+(`notebooks/09d_final_systematics_both_windows.ipynb`)** —
+Cache-reuse: narrow I-shape at N=500 reused from `annular_bootstrap_07c_ishape/`
+(only F200LP_Sersic2D and F140W_Sersic2D refit 2026-05-11 with new
+Sersic bounds); narrow mask-weight at N=500 reused from `mask_weight_sweep.npz`;
+both N=500 stat pools from `nb09a_wavelength_sweep/`. Total final budget
+table (also `results/sigma_e_final_systematics_nb09d.npz`):
+
+| component | NARROW w6500_7500 | WIDE wR3800_5400_arcmask |
+|---|---|---|
+| stat (N=500) | ±23.9 | ±6.1 |
+| I-shape (10 shapes, N=250, Sersic2D bound-fix applied) | ±3.7 | ±1.5 |
+| F200 mask (peak-to-peak / 2) | ±7.5 | ±3.8 |
+| frame (vac/air, carried) | ±5.0 | ±5.0 |
+| centering (HST WCS, carried) | ±4.0 | ±4.0 |
+| fit-window (3-window from §9) | ±15.0 | ±15.0 |
+| **TOTAL** | **±30.10** | **±17.87** |
+
+**Headline: σ_e(<R_e) = 254.85 ± 17.87 km/s (WIDE) vs 267.95 ± 30.10
+km/s (NARROW).** Difference 13.1 km/s, well within both budgets at 0.4σ.
+
+### K. Resolved kinematics (per-spaxel + PowerBin at wide arc-masked window)
+
+The wide arc-masked window unlocks resolved-kinematics measurements that
+were previously infeasible at the narrow window. Documented in
+`notebooks/11_perbin_perspaxel_kinematics_wide.ipynb` and memory
+`project_nb11_resolved_kinematics.md`.
+
+**K1 Per-spaxel ppxf inside R < 1.5 R_e** —
+Per-spaxel ppxf fits at S/N floors of {2, 3, 5, 10}. Results inside
+R < 1.5 R_e = 3.46" aperture (358 spaxels total):
+
+| S/N floor | N spaxels | % σ in [150,350] | median σ | usable? |
+|---|---|---|---|---|
+| ≥ 10 | 0 | -- | -- | max per-spaxel S/N is 8.6 |
+| **≥ 5** | **17** | **94%** | **201 km/s** | **YES — production map** |
+| ≥ 3 | ~76 | 68% | ~240 | usable as soft map with outlier flagging |
+| ≥ 2 | ~134 | 53% | ~243 | mostly noise-dominated beyond 1 R_e |
+
+S/N ≥ 5 is the cleanest result — 17 central spaxels with σ ∈ [144, 251]
+km/s, 0 outliers, spanning the central ~1 R_e. σ(R) drops with radius —
+consistent with elliptical bulge morphology. Aperture-edge spatial
+resolution is fundamentally constrained by KCWI per-spaxel S/N, not
+ppxf or fit window.
+
+**K2 PowerBin spatial binning at wide arc-masked window** —
+PowerBin (Cappellari 2025) at target capacity S/N=15. 7 bins inside
+R < 1.5 R_e; median σ = 294.5 km/s. **2 of 7 outer bins still hit
+σ > 400 km/s** — irreducible KCWI per-spaxel S/N limit at the aperture
+edge. Major improvement over Test 19 narrow-window failure (which had
+σ > 800 outer bins) but not fully cured. Flag outer bins as
+noise-limited rather than attempting physical interpretation.
+
+**K3 Wide vs narrow for resolved maps** —
+At the narrow w6500_7500 window, both per-spaxel and PowerBin attempts
+failed (Test 19 in nb05x — outer bins σ > 800 km/s, no per-spaxel S/N
+above floor). At wR3800_5400_arcmask the same machinery works because
+the per-pixel S/N quadruples (more line-strength signal per spaxel from
+the broader feature set + arc-emission masking). This is a direct
+qualitative gain enabled by the methodology change.
+
+**Caches & figures (nb11):**
+- `results/nb11_perbin_perspaxel_wide.npz` — per-bin σ/V/χ², per-spaxel
+  σ/V/χ², bin_map, V_sys
+- `results/figures/nb11_perspaxel_sn.png` — S/N map + S/N histogram
+- `results/figures/nb11_powerbin_map.png` — PowerBin bin map + per-bin S/N
+- `results/figures/nb11_powerbin_kinematics.png` — σ map, V map, σ(R), V(R)
+- `results/figures/nb11_perbin_perspaxel_sigma_vs_r.png` — combined σ(R)
+
+### L. Paper-figure preparation (2026-05-13)
+
+Final figure cleanup for the ApJL submission, in
+`../AGEL_0206_ApJL_Figures/figures.ipynb`.
+
+**L1 Figure 2 narrow (cell `a546db7f`)** —
+Updated title to show σ_e = 267 ± 24 (stat) ± 18 (sys) km/s
+(stat ± sys separately rather than a single combined ±30). Removed the
+"no arc mask" blue overlay from the inset; left inset now shows a
+single red posterior. Saves to `AGEL0206_sigma_e_SED_final.pdf`.
+
+**L2 Figure 2 wide (cell `fig2_wide`, NEW, paper headline)** —
+σ_e = 255 ± 6 (stat) ± 17 (sys) km/s. I-weighted aperture spectrum over
+rest 3800–5400 Å with 9 absorption features labeled (Ca K, Ca H, Hδ,
+G-band, Hγ, Hβ, Mg b, Fe5270, Fe5335) and 4 source-emission arc masks
+hatched. Residual sub-panel underneath. Inset shows single red posterior
+(no-arc-mask comparison removed). Saves to
+`AGEL0206_sigma_e_SED_final_wide.pdf`.
+
+**L3 Figure 3 M_BH–M_star cleanup (cell `fig3_clean_no_err`, NEW)** —
+Cleaned version of the comparison plot. NO per-object error bars, uniform
+medium-gray color for all local early-types (no E vs S0 / KH13 vs
+post-KH13 subdivision). Filtered to **Greene+2020 E+S0 list (60 unique
+galaxies)**: dropped 19 post-KH13 additions that were not in Greene+2020
+Fig 10 (mostly Saglia+2016 / Thater+2019 fills), matched 4 KH13 suffix
+variants (NGC 1316b / 2778c / 3998c / 4486A) to their Greene+2020 names
+(NGC 1316 / 2778 / 3998 / 4486A). All literature relations (Greene+20,
+Reines & Volonteri+15, Farrah+25, Sahu+24) preserved. AGEL0206 point at
+M★=10^11.3, M_BH=6.5e8 preserved. Saves to `Mbh_Mstar_relation_clean.pdf`.
+The legacy cell 33 with per-object error bars and E vs S0 color subdivision
+is preserved as `Mbh_Mstar_relation.pdf`.
+
+**Sanity / withdrawn:** during the wide-window writeup an erroneous
+"Cappellari 2017 recommends extending blueward" citation was drafted in
+chat — **retracted**, no such recommendation exists in the ppxf paper.
+The wavelength-range choice is data-driven (XSL template floor + retain
+Ca H+K), with LEGA-C (van der Wel+21) as the closest literature
+precedent (see J1 above).
+
 ---
 
 ## 3. File index
@@ -554,11 +883,15 @@ nb07c → nb09).
 
 | Notebook | Purpose |
 |---|---|
-| `notebooks/09_final_sigma_e_paper.ipynb` | **Paper-ready σ_e** (headline 268 ± 32 km/s) |
+| `notebooks/09_final_sigma_e_paper.ipynb` | **Paper-ready σ_e** at both windows; §9 three-window cross-check, §10 I-shape N=250, §10.1 mask-weight N=250 |
+| `notebooks/09a_wavelength_window_sweep.ipynb` | 15-window scan; identifies wR3800_5400 sweet spot |
+| `notebooks/09b_lsf_and_sigma_clip.ipynb` | Arc-mask + ppxf clean=True diagnostic with 3×3 zoom plots |
+| `notebooks/09d_final_systematics_both_windows.ipynb` | **Side-by-side WIDE vs NARROW final budget** (paper headline writeup) |
+| `notebooks/11_perbin_perspaxel_kinematics_wide.ipynb` | Per-spaxel + PowerBin σ map at wR3800_5400_arcmask (NEW — previously infeasible) |
 | `notebooks/04_redshift_verification.ipynb` | z = 0.67564 line-fit |
 | `notebooks/02_streamlined_Bagpipes_SED.ipynb` | log M★ = 11.33 |
 | `notebooks/08_sersic_total_photometry.ipynb` | Sersic-total photometry cross-check |
-| `notebooks/07c_sigma_e_equalN.ipynb` | §6cum + §7 equal-N annular cross-check |
+| `notebooks/07c_sigma_e_equalN.ipynb` | §6cum + §7 equal-N annular cross-check (narrow window, retained for cross-check) |
 | `notebooks/07e_sigma_e_arc_subtract.ipynb` | Arc-subtraction sibling cross-check |
 | `notebooks/05x_sigma_discrepancy_diagnostic.ipynb` | Tests 1-21 (foundational diagnostics) |
 
@@ -586,8 +919,9 @@ analysis.
 |---|---|
 | `scripts/audit_ppxf_methodology.py` | 4 orthogonal correctness audits |
 | `scripts/sigma_inst_sensitivity.py` | DISPSCAL × {0.5..2.0} sweep |
-| `scripts/run_isource_shape_sweep.py` | 10-shape I(r) sweep |
+| `scripts/run_isource_shape_sweep.py` | 10-shape I(r) sweep — **Sersic2D bound-fix applied 2026-05-11** (n ∈ [1.0, 6.0] + multi-init grid) |
 | `scripts/analyze_isource_shape_sweep.py` | I-shape sweep analysis + figure |
+| `scripts/run_window_sweep.py` | Wavelength-window driver with arc-mask flag; underpins nb09a + nb09 §9 |
 | `scripts/soft_mask_track.py` | Mask-weight runs (CLI `--weight`) |
 | `scripts/analyze_mask_weight_sweep.py` | 5-point sweep analysis + linearity fit |
 | `scripts/regen_s6cum_nomask_diagnostic.py` | Centering investigation |
@@ -597,17 +931,31 @@ analysis.
 
 | File | Contents |
 |---|---|
-| `results/final_sigma_e_paper.npz` | nb09 headline + per-SPS + 3-track summaries |
+| **WIDE arc-masked (current headline)** | |
+| `results/sigma_e_final_systematics_nb09d.npz` | **Both-windows side-by-side budget** (paper headline writeup) |
+| `results/nb09a_wavelength_sweep/wR3800_5400_arcmask_*_T*_N500.npz` | N=500 stat pool at headline window |
+| `results/nb09a_wavelength_sweep/wR4000_5400_arcmask_*_T*_N500.npz` | N=500 orthogonal-feature-set cross-check |
+| `results/ishape_sweep_wR3800_5400_arcmask/` | 10 shapes × 3 SPS × N=250 (I-shape ±1.5) |
+| `results/maskweight_sweep_wR3800_5400_arcmask/` | 3 weights × 3 SPS × N=250 (mask ±3.8) |
+| `results/sigma_e_window_sweep_09a.npz` | 15-window posterior summary |
+| `results/nb11_perbin_perspaxel_wide.npz` | Per-bin + per-spaxel kinematics at wide |
+| **NARROW Ca H+K + G (cross-check)** | |
+| `results/final_sigma_e_paper.npz` | nb09 narrow headline + per-SPS + 3-track summaries |
 | `results/final_sigma_e_paper/` | Per-(aperture, SPS, mask_weight) caches |
-| `results/sigma_e_ishape_sweep.npz` | I-shape sweep summary |
-| `results/sigma_e_ishape_sweep_oldframe.npz` | Pre-frame-fix I-shape (audit) |
-| `results/annular_bootstrap_07c_ishape/` | Per-(shape, SPS) I-shape caches (N=500) |
-| `results/annular_bootstrap_07c_ishape_oldframe/` | Pre-frame-fix I-shape caches (N=250) |
+| `results/sigma_e_radial_07c.npz` | nb07c §6cum + §7 + §7b posteriors |
+| `results/annular_bootstrap_07c/` | Per-aperture cumulative I-weighted caches |
+| `results/annular_bootstrap_07c_ishape/` | Per-(shape, SPS) I-shape caches (N=500, F140W/F200LP Sersic2D refit 2026-05-11) |
 | `results/annular_bootstrap_07c_nomask/` | §6cum nomask caches |
-| `results/mask_weight_sweep.npz` | 5-point mask-weight sweep summary |
+| `results/mask_weight_sweep.npz` | 5-point mask-weight sweep summary (narrow) |
+| **Audits & figures** | |
 | `results/ppxf_methodology_audit.npz` | 4-audit results |
-| `results/figures/nb09_*.png` | nb09 paper figures |
+| `results/figures/nb09_*.png` | nb09 paper figures (incl. fit windows + I-shape comparison) |
+| `results/figures/nb09d_per_sps_both_windows.png` | Per-SPS posterior collapse (26→4 km/s) |
+| `results/figures/nb11_*.png` | Resolved-kinematics maps (per-spaxel S/N, σ map, V map, σ(R), V(R)) |
 | `results/figures/nb07c_ishape_sweep.png` | I-shape sweep figure |
+| `../AGEL_0206_ApJL_Figures/AGEL0206_sigma_e_SED_final_wide.pdf` | Paper Figure 2 (wide, headline) |
+| `../AGEL_0206_ApJL_Figures/AGEL0206_sigma_e_SED_final.pdf` | Paper Figure 2 (narrow, cross-check) |
+| `../AGEL_0206_ApJL_Figures/Mbh_Mstar_relation_clean.pdf` | Paper Figure 3 (clean, no error bars, Greene+2020-matched) |
 
 ---
 
@@ -647,18 +995,39 @@ at the same N skip cached fits unless `--force` is passed.
 
 ## 5. What's intentionally NOT done
 
+**Updated 2026-05-13** with status changes after the wide arc-masked window
+work and the Sersic2D bound-fix.
+
 - **Re-run nb09 at higher N** (e.g. N=2000): the pooled posterior is already
-  smooth; SPS systematics dominate the residual statistical variance.
-- **Re-fit Sersic2D F200LP**: the n=0.30 fit is non-physical due to UV-arc
-  domination; the F140W Sersic fit is the trustworthy one. F200LP_Sersic2D
-  is the I-shape outlier *by design* and is excluded from the budget.
+  smooth; at the wide arc-masked window the stat error is ±6 km/s while
+  the fit-window systematic dominates at ±15 km/s. More N is wasted compute.
+- **~~Re-fit Sersic2D F200LP~~ DONE 2026-05-11** — the n=0.30 fit was a
+  parameter-bound pathology, not a UV-arc artifact. Bound-fix (J7) tightened
+  bounds to n ∈ [1.0, 6.0] with multi-init grid. F200LP_Sersic2D now
+  converges to a physical fit (σ=251.4 km/s) and is **kept in** the I-shape
+  budget, not flagged as an outlier.
 - **Voronoi binning** — Test 18 / nb05x — abandoned; not pursued at N=500.
-- **PowerBin spatial binning** — Test 19 / nb05x — rejected (outer-bin
-  σ > 800 km/s); not pursued.
-- **Per-spaxel rotation map at production statistics** — no rotation
-  detected at the seeing limit; not paper-driving.
+- **~~PowerBin spatial binning~~ PARTIAL** — Test 19 narrow-window rejected
+  was correct at the time. **At the wide arc-masked window (K2 / nb11)
+  PowerBin now works** for the inner ~5 of 7 bins; 2 outer bins still hit
+  σ > 400 (irreducible KCWI per-spaxel S/N at aperture edge). Not used as
+  headline binning scheme but published as supplementary σ map.
+- **~~Per-spaxel rotation map at production statistics~~ DONE (K1 / nb11)**
+  — at the wide arc-masked window, S/N ≥ 5 gives 17 central spaxels with
+  clean σ values and a visible σ(R) gradient. No coherent rotation detected
+  above the noise (consistent with elliptical-bulge expectation). Published
+  as supplementary kinematic map.
 - **Full nb07a Sersic-I revisit at the post-frame-fix headline** —
-  superseded by the I-shape sweep (D3/D4) which covers the Sersic2D shape.
+  superseded by the I-shape sweep (D3/D4/J6) which covers the Sersic2D
+  shape with the bound-fix applied.
+- **Re-quote σ_e on KH13/Bell+2003 stellar masses for the M_BH–M★ plot** —
+  Figure 3 keeps the KH13 dual-M/L dynamical bulge masses for the local
+  comparison sample. The Greene+2020 list match (L3) restricts to the same
+  60 galaxies as Greene+2020 Fig 10 but with our (better) bulge mass values.
+- **Cross-match nb09a "narrow" window to other AGEL targets** — paper is
+  single-target. The arc-emission-mask methodology (J2/J3) is reusable for
+  future AGEL targets where source z is known, but applying it elsewhere
+  is not in scope for the ApJL.
 
 ---
 
