@@ -23,7 +23,7 @@ provenance.
 
 | Quantity | Value | Source / notebook |
 |---|---|---|
-| **σ_e(<R_e)** — **paper headline**, wide arc-masked window, NEW `_mtwdo_` reduction, bad-pixel mask + Balmer kept + He I 3819 mask + **M10 full sky-line audit** | **269.62 ± 17.78 km/s** (symmetric; asymmetric form **−17.92 / +17.65** preserves the stat-side bootstrap skew). **Includes a refined "reduction-pass" systematic of ±3.45 km/s** (half-Δ between cleaned + He-I + M10-sky-masked cubes 269.62 − 262.72 = 6.90). | `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/` |
+| **σ_e(<R_e)** — **paper headline**, wide arc-masked window, NEW `_mtwdo_` reduction, bad-pixel mask + Balmer kept + He I 3819 mask + M10 full sky audit + **M11 rigorous re-derivation of carried systematics** | **269.62 ± 11.77 km/s** (symmetric; asymmetric form **−11.98 / +11.57** preserves the stat-side bootstrap skew). M11 (2026-05-27) replaced the carried I-shape (±1.5), F200-mask (±3.8), and fit-window (±15) components with cube+mask-matched values (±2.27 / ±6.65 / ±3.82). The fit-window drop is the dominant change (the 3 windows now agree to ±4 km/s on the cleaned NEW cube). Reduction-pass component ±3.45 (M10). | `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/`. M11 sweep caches at `results/{ishape_sweep,maskweight_sweep}_wR3800_5400_arcmask_M10/` + `results/nb09a_wavelength_sweep_M10/` |
 | σ_e(<R_e) — old reduction cross-check, cleaned + He I + M10 sky masks | 262.72 ± 17.99 km/s (asymmetric −18.10 / +17.88) | `scripts/run_wide_sigma_e.py --cube headline_clean_hei`, caches at `results/run_wide_sigma_e/headline_clean_hei/`. The 6.90 km/s Δ to the cleaned + He-I + M10-sky-masked new cube is the source of the refined ±3.45 km/s reduction-pass systematic |
 | σ_e(<R_e) — pre-M10 cross-check (cleaned + He I, NEW cube) | 271.87 −17.99/+17.74 km/s | Pre-M10 reference. +2.25 km/s shift to current headline = bias from un-masked OH/sky residuals folded into the M10 systematic |
 | σ_e(<R_e) — pre-He-I cleaned cross-check (NEW cube) | 268.98 −18.19/+17.98 km/s | `--cube new_clean`. +2.89 km/s offset (un-masked He I 3819 contamination biased σ_e *down*) |
@@ -479,19 +479,21 @@ independent components (one more than the original budget — the
 "reduction-pass" component added 2026-05-26, refined again 2026-05-27
 when the He I 3819 source-emission mask was added):
 
-| Component | Wide arc-masked, NEW `_mtwdo_` CLEAN + He I + M10 (headline) | Wide arc-masked, OLD cube CLEAN + He I + M10 (2nd reduction) | Narrow Ca H+K+G, OLD cube (X-check) | Source |
-|---|---|---|---|---|
-| Statistical (pooled 1σ) | **±4.6** (asym −5.16/+4.13) | ±5.1 (asym −5.49/+4.69) | ±23.9 | wild bootstrap N=500 × 3 SPS × 15 degrees |
-| I-shape (10-shape spread, post-Sersic2D bound-fix) | ±1.5 (carried from old) | **±1.5** | ±3.7 | `results/ishape_sweep_wR3800_5400_arcmask/` |
-| F200 spatial mask (peak-to-peak / 2) | ±3.8 (carried from old) | **±3.8** | ±7.5 | `results/maskweight_sweep_wR3800_5400_arcmask/` |
-| Frame (vac/air per SPS, carried) | ±5.0 | ±5.0 | ±5.0 | `audit_ppxf_methodology.py` audit 1 |
-| Centering (5-center sweep ±0.4″, carried) | ±4.0 | ±4.0 | ±4.0 | `NOTES_centering_investigation_2026-04-27.md` |
-| Fit-window (3-window spread, §9) | ±15.0 (carried from old) | **±15.0** | ±15.0 | nb09 §9 (w6500_7500 / wR3800_5400_arcmask / wR4000_5400_arcmask) |
-| **Reduction-pass (refined 2026-05-27 post-M10)** | **±3.45** | ±3.45 | n/a | `scripts/run_wide_sigma_e.py --cube {new,headline}_clean_hei`; (Δ between cleaned + He-I + M10-sky-masked cubes)/2 = (269.62−262.72)/2 = 3.45 km/s. Was ±3.86 pre-M10; M10 sky masks tighten the inter-reduction Δ further (sky residuals were reduction-dependent). **Flag: only 2 reductions available; revisit if a 3rd lands.** Audit in `NOTES_nb09e_audit_2026-05-20.md` + `project_nb09e_reduction_systematic.md` |
-| **Quadrature total (symmetric)** | **±17.78** | ±17.99 | ±30.10 | |
-| Asymmetric total (lower / upper) | **−17.92 / +17.65** | −18.10 / +17.88 | — | |
+| Component | Wide arc-masked, NEW `_mtwdo_` + clean + He I + M10 + M11 (headline) | Source |
+|---|---|---|
+| Statistical (pooled 1σ) | **±4.6** (asym −5.16/+4.13) | wild bootstrap N=500 × 3 SPS × 15 degrees on cleaned + He-I + M10-masked NEW cube |
+| **I-shape (10-shape spread, M11)** | **±2.27** | `results/ishape_sweep_wR3800_5400_arcmask_M10/` — peak-to-peak/2 of 10 I-shape posteriors (range 266.83–271.37 km/s) |
+| **F200 spatial mask (peak-to-peak/2, M11)** | **±6.65** | `results/maskweight_sweep_wR3800_5400_arcmask_M10/` — (w00=269.69, w50=261.95, w100=256.39)/2 = 6.65 |
+| Frame (vac/air per SPS, structural) | ±5.0 | `audit_ppxf_methodology.py` audit 1 |
+| Centering (5-center sweep ±0.4″, carried) | ±4.0 | `NOTES_centering_investigation_2026-04-27.md` |
+| **Fit-window (3-window spread, M11)** | **±3.82** | `results/nb09a_wavelength_sweep_M10/` — wR3800_5400_arcmask 269.66, wR4000_5400_arcmask 268.58, w6500_7500 276.22 → peak-to-peak/2 = 3.82. **Dramatic drop from carried ±15** because the cleaned NEW cube has wide/narrow agreement (vs ±15 spread on OLD cube) |
+| **Reduction-pass (M10)** | **±3.45** | half-Δ between cleaned + He-I + M10-sky-masked new and old reductions = (269.62−262.72)/2 = 3.45 km/s |
+| **Quadrature total (symmetric)** | **±11.77** | sqrt(2.27² + 6.65² + 5.0² + 4.0² + 3.82² + 3.45²) |
+| Asymmetric total (lower / upper) | **−11.98 / +11.57** | preserves stat-side skew |
 
-**Flag: I-shape, F200-mask, fit-window components are carried from the OLD-cube pre-clean sweeps.** A rigorous re-derivation on the cleaned + He-I + M10-masked NEW cube (~4 h compute) is recommended as the final paper-prep step. Component magnitudes are *expected* to be similar (same arc, same aperture, same I-weight maps), but this should be verified before final submission.
+**2026-05-27 M11 rigorous re-derivation result:** total sys dropped from ±17.78 → ±11.77 km/s (down 6.0). The fit-window component dropping from ±15 → ±3.82 is the dominant change. The carried ±15 was from pre-clean OLD-cube nb09 §9; the cleaned NEW cube + M10 masks bring the three windows into much closer agreement.
+
+OLD cube cross-check at the same M10 mask configuration (carried components still apply for it, since it's not the headline): σ_e = 262.72 ± 17.99 km/s. Narrow Ca H+K+G cross-check on OLD cube (legacy): σ_e = 267.95 ± 30.10 km/s.
 
 The fit-window systematic (±15 km/s) is still the **dominant residual**.
 The other six components quadrature-sum to ~10.5 km/s. Tightening the

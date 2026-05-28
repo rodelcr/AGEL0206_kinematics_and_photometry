@@ -53,7 +53,7 @@ from scripts.measure_Re import measure_Re_from_profile  # noqa: E402
 # --------------------------------------------------------------------------
 # Configuration
 # --------------------------------------------------------------------------
-IFU_FILE = "Nov17_2025_DESJ0206_RL_combined_icubes_wcs.fits"
+IFU_FILE = "raw_KCWI/New_red/Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits"
 HST_F140W = "../velocity_dispersion_from_IFU/AGEL020613-011417A_F140W_WFC3_cutout_L3.fits"
 HST_F140W_MASK = "../velocity_dispersion_from_IFU/AGEL020613-011417A_F140W_WFC3_cutout_L3_mask.fits"
 HST_F200LP = "../velocity_dispersion_from_IFU/AGEL020613-011417A_F200LP_WFC3_cutout_L3.fits"

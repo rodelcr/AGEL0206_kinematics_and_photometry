@@ -87,7 +87,7 @@ SPS_LAM_RANGE_TEMP = {
     'xsl':    (3500.0, 6000.0),
 }
 
-CACHE_DIR = os.path.join(REPO_ROOT, 'results', 'nb09a_wavelength_sweep')
+CACHE_DIR = os.path.join(REPO_ROOT, 'results', 'nb09a_wavelength_sweep_M10')
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 
@@ -173,7 +173,8 @@ def _apply_bad_pixels_mask(goodpixels, lam_rest, masks=BAD_PIXELS_REST):
 
 
 def _ppxf_one_window(flux, noise, hdr, sps, lam_obs_range, lam_fit_range,
-                     n_boot, seed_offset, arc_mask=False):
+                     n_boot, seed_offset, arc_mask=False,
+                     bad_pix_mask=False, mask_balmer=True):
     inputs = setup_ppxf_inputs_from_spectrum(
         flux, noise, hdr,
         sps_name=sps, z=Z_SYSTEMIC,
@@ -181,10 +182,15 @@ def _ppxf_one_window(flux, noise, hdr, sps, lam_obs_range, lam_fit_range,
         lam_fit_range=lam_fit_range,
         lam_range_temp=SPS_LAM_RANGE_TEMP[sps],
         verbose=False, frame_galaxy='auto',
+        mask_balmer=mask_balmer,
     )
     if arc_mask:
         gp = _apply_arc_mask(inputs['goodpixels'], inputs['lam_gal_rest'])
         inputs['goodpixels'] = gp
+    if bad_pix_mask:
+        inputs['goodpixels'] = _apply_bad_pixels_mask(
+            inputs['goodpixels'], inputs['lam_gal_rest']
+        )
     n_pix = len(inputs['galaxy'])
     n_deg = len(DEGREES)
     V_orig = np.zeros(n_deg); sig_orig = np.zeros(n_deg); chi2_orig = np.zeros(n_deg)
@@ -266,7 +272,9 @@ def main(n_boot=None, only=None):
                                  lam_obs_range=lr_eff, lam_fit_range=lr_eff,
                                  n_boot=nb,
                                  seed_offset=(50_000 + 10_000 * w_idx + 100 * sps_idx),
-                                 arc_mask=arc_mask)
+                                 arc_mask=arc_mask,
+                                 bad_pix_mask=arc_mask,
+                                 mask_balmer=not arc_mask)
             np.savez(cache, **d)
             n_done += 1
             elapsed = time.time() - t0

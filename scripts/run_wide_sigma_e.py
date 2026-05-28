@@ -130,16 +130,24 @@ _R5400_OBS = 5400.0 * (1 + fse.Z_SYSTEMIC)
 LAM_OBS_RANGE = (_R3800_OBS, _R5400_OBS)
 ARC_MASK = True
 
-# Systematic budget carried from the headline. UPDATED 2026-05-27 (M10 full
-# sky-line audit added): the reduction-pass component refined from ±3.86
-# (He-I-only) to ±3.45 (half-Δ between cleaned + He-I-masked + M10-sky-audit
-# headlines: 269.62 - 262.72 = 6.90 → /2 = 3.45). M10 added 9 unmasked OH
-# airglow / sky-residual bands to BAD_PIXELS_REST (all verified non-source
-# via the arc spectrum); shifted σ_e down by ~2 km/s on both cubes and
-# tightened the inter-reduction gap further.
-#   I-shape 1.5 ⊕ mask 3.8 ⊕ frame 5 ⊕ centering 4 ⊕ window 15 ⊕ reduction 3.45
-# Added in quadrature to each side of the asymmetric stat error.
-SYS_QUAD = float(np.sqrt(1.5**2 + 3.8**2 + 5.0**2 + 4.0**2 + 15.0**2 + 3.45**2))  # = 17.16
+# Systematic budget. UPDATED 2026-05-27 (M11 — full rigorous re-derivation
+# of I-shape, F200-mask, and fit-window sweeps on the NEW _mtwdo_ cube
+# with M10 masks). The carried values from the OLD-cube pre-clean sweeps
+# were replaced with cube+mask-matched numbers:
+#   I-shape:     ±1.5 → ±2.27  (10-shape spread on NEW cube + M10)
+#   F200 mask:   ±3.8 → ±6.65  (arc contamination is bigger on NEW cube
+#                                because the cleaned spectrum gives ppxf
+#                                more leverage)
+#   Fit-window:  ±15  → ±3.82  (DRAMATIC drop — w6500_7500/wR3800_5400_
+#                                arcmask/wR4000_5400_arcmask now agree to
+#                                ±4 km/s on the cleaned NEW cube, vs the
+#                                ±15 km/s spread on the OLD cube)
+#   Frame:       ±5.0 (unchanged, structural)
+#   Centering:   ±4.0 (unchanged, HST-derived)
+#   Reduction:   ±3.45 (M10 value, unchanged)
+# Net total sys: ±17.16 → ±10.81 (down 6.4 km/s; window dropping out as the
+# dominant component is the main reason).
+SYS_QUAD = float(np.sqrt(2.27**2 + 6.65**2 + 5.0**2 + 4.0**2 + 3.82**2 + 3.45**2))  # = 10.81
 
 # Reproduce the deterministic seed-offset convention from run_window_sweep
 # (so caches written by THIS script bit-match the ones already on disk).

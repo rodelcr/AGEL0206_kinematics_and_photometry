@@ -39,7 +39,7 @@ The streamlined IFU notebook uses veldis (degree=[4,30]) for the integrated spec
 
 **Primary paper number** — σ_e(<Re) on the NEW `_mtwdo_` reduction, wide arc-masked window ppxf, **with He I 3819 source-emission mask + M10 full sky-line audit (2026-05-27)**:
 
-- **σ_e(<Re) = 269.62 ± 17.78 km/s** (asymmetric −17.92 / +17.65) at `wR3800_5400_arcmask` (rest 3800–5400 Å, Ca H+K through Mg b/Fe5335 + z=1.302 source-emission masks incl. He I 3819 + 35-entry BAD_PIXELS_REST sky/CR catalog) — **paper headline** for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5)
+- **σ_e(<Re) = 269.62 ± 11.77 km/s** (asymmetric −11.98 / +11.57) at `wR3800_5400_arcmask` (rest 3800–5400 Å, Ca H+K through Mg b/Fe5335 + z=1.302 source-emission masks incl. He I 3819 + 35-entry BAD_PIXELS_REST sky/CR catalog) — **paper headline** for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5)
 - Source: `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/wR3800_5400_arcmask_{fsps,emiles,xsl}_T*_N500.npz`. Cube: `raw_KCWI/New_red/Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`.
 - Pipeline: bad-pixel mask (M10-audited, 35 entries — 26 original CR residuals + 9 OH airglow/sky bands added via full sky-noise audit, all verified non-source via arc spectrum) + no-Balmer mask (Hδ, Hγ, Hβ kept in the fit) + ARC_MASKS_REST catalog with He I 3819 source emission added (5237–5253 Å). See `_clean_hei` presets in `scripts/run_wide_sigma_e.py`.
 
@@ -48,14 +48,14 @@ Systematic-budget components on the NEW reduction (post-M10, 2026-05-27):
 | component | ± km/s | notes |
 |-----------|--------|-------|
 | stat (N=500) | 4.6 (asym −5.16/+4.13) | wild-bootstrap pool across FSPS+EMILES+XSL on cleaned + He-I + M10-sky-masked new cube |
-| I-shape (10 shapes × N=250) | 1.5 | carried from old-cube sweep; physical shapes unchanged across reductions |
-| F200 mask (peak-to-peak/2) | 3.8 | carried from old-cube sweep; arc mask geometry unchanged |
-| frame (vac/air, carried) | 5.0 | from prior frame-fix work |
+| I-shape (10 shapes × N=250, **M11**) | **2.27** | **rigorous re-derivation 2026-05-27** on NEW cube + M10 masks; peak-to-peak/2 of 10-shape spread (266.83–271.37). Was ±1.5 carried from old-cube sweep |
+| F200 mask (3 weights × N=500, **M11**) | **6.65** | **rigorous re-derivation 2026-05-27** on NEW cube + M10 masks; (w00−w100)/2 = (269.69−256.39)/2. Bigger than the ±3.8 carried value because the cleaned NEW cube + Balmer-unmasked fit is more sensitive to arc dilution (more signal pixels → more leverage) |
+| frame (vac/air, carried) | 5.0 | from prior frame-fix work; structural choice (per-SPS native frame) |
 | centering (HST WCS, carried) | 4.0 | HST-derived; reduction-independent |
-| fit-window (3 windows from §9) | 15.0 | carried from old-cube sweep; dominant residual |
-| **reduction-pass (refined 2026-05-27 post-M10)** | **3.45** | half-Δ between cleaned + He-I + M10 new and old reductions = (269.62−262.72)/2 = 3.45. Was ±3.86 pre-M10; adding the M10 sky masks tightens the inter-reduction gap further (sky residuals were reduction-dependent). Flag: only 2 reductions; refine if 3rd lands |
-| **TOTAL (symmetric)** | **17.78** | quadrature sum |
-| **TOTAL (asymmetric)** | **−17.92 / +17.65** | preserves stat-side skew |
+| fit-window (3 windows × N=500, **M11**) | **3.82** | **rigorous re-derivation 2026-05-27** on NEW cube + M10 masks. wR3800_5400_arcmask 269.66, wR4000_5400_arcmask 268.58, w6500_7500 276.22 → peak-to-peak/2 = 3.82. **Dramatically smaller than the ±15.0 carried value** because the cleaned + He-I-masked NEW cube agrees across windows to ±4 km/s (vs ±15 on the OLD cube). The narrow w6500_7500 still has large stat error (±30) but its central value sits near the wide-window numbers now |
+| **reduction-pass (refined 2026-05-27 post-M10)** | **3.45** | half-Δ between cleaned + He-I + M10 new and old reductions = (269.62−262.72)/2 = 3.45. Was ±3.86 pre-M10; M10 sky masks tightened the inter-reduction gap further. Flag: only 2 reductions; refine if 3rd lands |
+| **TOTAL (symmetric)** | **11.77** | quadrature sum (was ±17.78 pre-M11; the dominant ±15 fit-window component dropped to ±3.82) |
+| **TOTAL (asymmetric)** | **−11.98 / +11.57** | preserves stat-side skew |
 
 Cross-checks:
 - **OLD cube cleaned + He I + M10 (`--cube headline_clean_hei`)**: σ_e(<Re) = **262.72 ± 17.99 km/s** (asym −18.10/+17.88). 6.90 km/s Δ to the headline → source of the refined ±3.45 reduction-pass systematic.
