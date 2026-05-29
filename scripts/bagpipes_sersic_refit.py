@@ -32,6 +32,38 @@ def mag_to_flam(mags_AB, pivot_AA):
     return flam.value
 
 
+def run_bagpipes_for_mags(mags_AB, pivot_AA, run_name, n_live=400, err_frac=0.1):
+    """Fit Bagpipes to a 4-band AB-mag vector (order F200LP, F140W, F150W2, F322W2)
+    with the nb02 priors and `err_frac` fractional flux errors (0.1 = 10%, default;
+    pass 0.2 for the conservative 20%). Returns the stellar_mass posterior samples.
+    Factored out of main() so callers (e.g. scripts/arc_mask_verification.py,
+    scripts/photometry_systematics.py) can test alternate masks' photometry."""
+    flam = mag_to_flam(mags_AB, pivot_AA)
+    flam_err = err_frac * flam
+    filt_list = [os.path.abspath(p) for p in [
+        "HST_WFC3_UVIS1.F200LP.dat", "HST_WFC3_IR.F140W.dat",
+        "JWST_NIRCam.F150W2.dat", "JWST_NIRCam.F322W2.dat"]]
+    fit_instructions = {
+        "redshift": (0.674, 0.676),
+        "exponential": {"age": (0.1, 15.), "tau": (0.3, 10.),
+                        "massformed": (1., 15.), "metallicity": (0., 2.5)},
+        "dust": {"type": "Calzetti", "Av": (0., 2.)},
+    }
+
+    def load_data(ID):
+        return np.array([flam, flam_err]).T
+
+    galaxy = pipes.galaxy(run_name, load_data, spectrum_exists=False,
+                          filt_list=filt_list, phot_units="ergscma")
+    fit = pipes.fit(galaxy, fit_instructions, run=run_name)
+    try:
+        fit.fit(verbose=False, sampler="multinest", n_live=n_live)
+    except (AttributeError, OSError) as e:
+        print(f"MultiNest unavailable ({e}); using nautilus.")
+        fit.fit(verbose=False, sampler="nautilus", n_live=n_live)
+    return fit.posterior.samples["stellar_mass"]
+
+
 def main():
     data = np.load("results/sersic_total_photometry.npz", allow_pickle=True)
     filter_names = data["filter_names"]

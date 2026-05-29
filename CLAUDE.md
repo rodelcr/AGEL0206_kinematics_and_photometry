@@ -47,7 +47,7 @@ Systematic-budget components on the NEW reduction (post-M10, 2026-05-27):
 
 | component | ± km/s | notes |
 |-----------|--------|-------|
-| stat (N=500) | 4.6 (asym −5.16/+4.13) | wild-bootstrap pool across FSPS+EMILES+XSL on cleaned + He-I + M10-sky-masked new cube |
+| stat (N=500) | 4.6 (asym −5.16/+4.13) | wild-bootstrap pool across FSPS+EMILES+XSL × 15 polynomial degrees on cleaned + He-I + M10-sky-masked new cube. **This pooled width already marginalizes over the SPS-library and polynomial-degree systematics** — between-SPS spread is ±2.04 (FSPS 271.3/EMILES 267.2/XSL 270.4), within-SPS bootstrap ±4.22, quadrature 4.73 ≈ pooled 4.64. SPS collapsed from ~26 km/s (narrow) to ~4 km/s (wide) per J5, so no separate SPS line is needed. **NOT yet folded in:** R_e-source (D7, 16.9 km/s at narrow window) — flagged for a wide-window re-measurement |
 | I-shape (10 shapes × N=250, **M11**) | **2.27** | **rigorous re-derivation 2026-05-27** on NEW cube + M10 masks; peak-to-peak/2 of 10-shape spread (266.83–271.37). Was ±1.5 carried from old-cube sweep |
 | F200 mask (3 weights × N=500, **M11**) | **6.65** | **rigorous re-derivation 2026-05-27** on NEW cube + M10 masks; (w00−w100)/2 = (269.69−256.39)/2. Bigger than the ±3.8 carried value because the cleaned NEW cube + Balmer-unmasked fit is more sensitive to arc dilution (more signal pixels → more leverage) |
 | frame (vac/air, carried) | 5.0 | from prior frame-fix work; structural choice (per-SPS native frame) |
@@ -101,7 +101,51 @@ Historical / superseded:
 Other headlines:
 - Systemic redshift: z = 0.67564 (notebook 04); older results use z = 0.67511
 - Effective radius (F140W + F200LP masked CoG mean): **Re = 2.305" = 16.23 kpc** (paper headline — supersedes older Re = 2.61" IFU-only value)
-- log(M★/M☉) = 11.33 +0.07/−0.09 (notebook 02 Bagpipes)
+- log(M★/M☉) = **11.16 ± 0.08 (stat) +0.31 (sys)** at 10% flux errors [**11.04 ± 0.14 +0.32** at 20%] — NEW headline (2026-05-29) from principled F200LP-located + IR-extended arc masking, raw aperture photometry. One-sided +sys = Sérsic fill-in of deflector light under the arc, reaching log M★ ≈ 11.46. **Supersedes 11.33 +0.07/−0.09** (older expert-aperture, smaller masks — now a mid-range cross-check). See arc-mask section below + `NOTES_photometry_mask_systematics_2026-05-29.md`.
+
+### Arc-mask verification (photometry side, 2026-05-29 — notebook 12)
+
+The hand-painted F200LP arc mask is **reproducible from objective criteria** and the photometry
+headline is **invariant to the masking method**. Two independent selectors in
+`scripts/arc_mask_verification.py` (→ `results/arc_mask_verification.npz`, `arc_mask_bagpipes.npz`,
+`results/figures/arcmask_*.png`): (A) color m_F200LP−m_F140W (arc bluer than the red deflector),
+(B) Sersic-residual (subtract the 2D Sersic deflector model, flag positive excess). Results:
+- F200LP **no-mask is 0.42 mag brighter than expert** (real arc contamination), but the
+  **Sersic-residual mask reproduces expert to +0.016 mag**, R_e to 3%, and **Δlog M★ = +0.034**
+  (≪ ±0.08 posterior). → Sersic-residual is the candidate **standard for F200LP**.
+- An **S/N-regime sweep** (SNR∈{2..20}, k∈{2..8}) quantifies over-masking via the masked-flux
+  fraction from the smooth model: F200LP stays clean (0.03–0.10); **F140W Sersic over-masks**
+  (arc sits on bright IR deflector light) → use the **color method on F140W**.
+- Caveat flagged (not fixed): `measure_Re.hst_Re` hardcodes 0.08″/pix for F200LP (cutout is 0.05″)
+  — ΔR_e between masks cancels, but absolute F200LP R_e from that script is biased. See
+  `NOTES_arc_mask_verification_2026-05-29.md`. **Later TODO:** spectroscopic invariance.
+
+**4-band extension + M★ budget (2026-05-29, `scripts/photometry_systematics.py`, `NOTES_photometry_mask_systematics_2026-05-29.md`):**
+- **Principled recipe:** F200LP locates the arc (best source contrast); reproject its footprint to
+  every band; the deeper IR bands **extend** it (region-grow into 2-component-Sérsic-residual source
+  pixels contiguous with the arc). Deflector model = **2-component (bulge+disk) Sérsic** — single
+  Sérsic under-fits the bright IR galaxy (median residual +1.0) and over-masks 0.2–0.4 mag; do NOT
+  use independent per-band Sérsic masks on F140W/JWST. No PSF (env lacks webbpsf) — flagged.
+- **raw vs filled:** the IR-extended masks are large (F150W2 +9119 px), so **raw photutils is biased
+  LOW and mask-size-dependent** (discards under-arc deflector light), while the **Sérsic fill-in is
+  mask-definition-independent** (per-band vs global agree 0.01 dex). Fill-in correction +0.18–0.96 mag.
+- **M★ budget** (`results/photometry_systematics_Mstar.npz`, fig `Mstar_budget.png`): headline =
+  **raw, one-sided-up systematic**: log M★ = 11.16 ± 0.08 (stat,10%) +0.31 (sys) [11.04 ± 0.14 +0.32
+  at 20%]; fill-in upper reach 11.46/11.36. 10%→20% shifts central ~0.10 dex. **per-band vs global**
+  negligible for filled, large for raw. Scripts: `principled_mask_photometry.py` (single-Sérsic
+  audit), `mask_method_comparison.py` (expert/HST-reproj/Sérsic × raw/filled/total).
+- **Explicit masking-approach systematic on M★ = ±0.16 dex** (`results/Mstar_masking_systematic.npz`,
+  fig `Mstar_masking_systematic.png`): peak-to-peak/2 across all approaches; dominated by under-arc
+  light (raw↔filled ±0.15), mask-definition (per-band↔global) negligible ±0.004, mask-extent 0.18.
+  **TODO:** the analogue masking systematic on σ_e (reproject approaches to IFU, re-run `run_wide_sigma_e.py`).
+- **PSF effect on the fill — quantified (`scripts/psf_fill_model.py`, `results/psf_fill_model.npz`):**
+  PSF-convolved 2-comp Sérsic (Gaussian at instrument FWHM; env lacks webbpsf) shifts the filled mag
+  by **≤0.004 mag** in every band → ΔM★ ≪0.01 dex, negligible. The fill is PSF-robust (arc is outside
+  the PSF core). No longer a flagged unknown.
+- **R_e pixscale fix:** `measure_Re.hst_Re` now reads pix scale from the WCS (F200LP was wrongly
+  0.08″, is 0.05″) → diagnostic F200LP R_e 3.05→1.91″. **Headline R_e=2.305″ unaffected** (from
+  `final_sigma_e.py`, already WCS-correct). Flag: the two CoG algorithms differ (measure_Re 1.91 vs
+  final_sigma_e 2.52 for F200LP) — separate pre-existing methodology gap.
 
 ## Scripts
 

@@ -6,7 +6,7 @@ data sources and masking strategies.
 Sources:
   - IFU white-light (KCWI, 0.30"/spaxel)
   - HST F140W (WFC3/IR, 0.08"/pix)
-  - HST F200LP (WFC3/UVIS, 0.08"/pix)
+  - HST F200LP (WFC3/UVIS, 0.05"/pix)   # cutout scale read from WCS (not hard-coded)
 
 Masking strategies:
   - unmasked: no arc removal
@@ -23,6 +23,7 @@ import os
 import argparse
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_scales
 from astropy.cosmology import FlatLambdaCDM
 from scipy.integrate import cumulative_trapezoid
 from scipy.ndimage import gaussian_filter
@@ -46,7 +47,7 @@ HST_FILES = {
     'F200LP': {
         'image': os.path.join(VDI, 'AGEL020613-011417A_F200LP_WFC3_cutout_L3.fits'),
         'mask': os.path.join(VDI, 'AGEL020613-011417A_F200LP_WFC3_cutout_L3_mask.fits'),
-        'pixscale': 0.08,
+        'pixscale': 0.05,  # F200LP cutout is 0.05"/pix (was wrongly 0.08); hst_Re now reads WCS
     },
 }
 
@@ -164,7 +165,7 @@ def ifu_white_light_Re(cube, hdr, mask_contamination=None,
 # HST R_e
 # ─────────────────────────────────────────────
 
-def hst_Re(band, masking='proper'):
+def hst_Re(band, masking='proper', mask_override=None):
     """
     R_e from an HST image.
 
@@ -176,6 +177,10 @@ def hst_Re(band, masking='proper'):
         'none'   — no masking
         'zeroed' — set masked pixels to 0 (old approach)
         'proper' — exclude masked pixels via ApertureStats mask parameter
+    mask_override : ndarray or None
+        If given, use this boolean mask instead of loading the band's default
+        `_mask.fits`. Used by scripts/arc_mask_verification.py to test the
+        color- and Sersic-residual-derived masks. Must match the image shape.
 
     Returns dict with Re, r_profile, I_profile, method, label
     """
@@ -188,13 +193,23 @@ def hst_Re(band, masking='proper'):
 
     x_c, y_c = wcs.world_to_pixel_values(RA_CENTER, DEC_CENTER)
     x_c, y_c = float(x_c), float(y_c)
-    pscale = info['pixscale']
+    # Read the pixel scale from the WCS, not the HST_FILES literal: the F200LP
+    # cutout is 0.05"/pix (the dict previously hard-coded 0.08 for both bands,
+    # which biased the *absolute* F200LP R_e high by 0.08/0.05 = 1.6x). The
+    # headline R_e (scripts/final_sigma_e.py) already reads pix scale from the
+    # WCS and is unaffected; this only corrects the measure_Re diagnostic.
+    pscale = float(np.abs(proj_plane_pixel_scales(wcs)[0])) * 3600.0
 
-    # Load mask
-    try:
-        mask = fits.getdata(info['mask']).astype(bool)
-    except FileNotFoundError:
-        mask = None
+    # Load mask (override takes precedence over the band's default _mask.fits)
+    if mask_override is not None:
+        mask = np.asarray(mask_override).astype(bool)
+        if mask.shape != img.shape:
+            raise ValueError(f"mask_override shape {mask.shape} != image {img.shape}")
+    else:
+        try:
+            mask = fits.getdata(info['mask']).astype(bool)
+        except FileNotFoundError:
+            mask = None
 
     img_clean = np.nan_to_num(img, nan=0.0)
 
