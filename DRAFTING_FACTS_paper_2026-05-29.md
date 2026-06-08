@@ -354,6 +354,139 @@ source z = 1.302 (spiral), deflector z = 0.67564.
 
 ---
 
+## §2.4 End-to-end procedures (ordered walkthroughs)
+
+*This section spells out the actual step order of each pipeline — what runs, in what sequence, with
+which script — so the Methods section and a referee can reconstruct every headline number. Numeric
+results are the M12 headline (`results/PAPER_VALUES.json`).*
+
+### §2.4.1 Spectroscopic σ_e pipeline — step by step
+
+Driver for the headline: `scripts/run_wide_sigma_e.py --cube new_clean_hei --n_bootstrap 500`
+(calls `final_sigma_e.load_setup` → `extract_aperture_spectrum` → `bootstrap_ppxf` machinery).
+
+1. **Reduction (upstream).** Keck II / KCWI, KCRM red arm, Red-Low grating, Medium slicer, 2×2
+   binning, dithered PA 0/45/90°. The headline cube is the NEW **`_mtwdo_`** reduction
+   (Master-Twilight+Dome hybrid flats, K. R. Gupta), `Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`.
+   The pre-`_mtwdo_` cube is the OLD reduction (second-reduction cross-check). Cube axes
+   `[λ, y, x]`; 0.30″/spaxel; seeing FWHM 1.27″ (`GUIDFWHM`); σ_inst ≈ 12.6 km/s; R ≈ 10000.
+2. **Geometry + R_e.** HST-mean centre = `photutils.centroid_2dg` of the F140W+F200LP cores
+   (offset 0.36″; F200LP pulled by the UV arc, so F140W is the clean bulge centroid), propagated
+   through the KCWI WCS to a sub-pixel IFU centre. R_e = mean of the F140W (2.168″) + F200LP
+   (2.441″) **masked** curves-of-growth = **2.305″** (`final_sigma_e.curve_of_growth`, r_max=6″).
+3. **Spatial arc mask → IFU grid.** The F200LP `_mask.fits` (2512 HST px, arc-only) is reprojected
+   onto the 0.30″ IFU grid with `scipy.ndimage.map_coordinates(order=0)` (nearest-neighbour) →
+   `arc_spax_mask` (~38/184 spaxels inside R_e flagged, ~27% by I-weight).
+4. **I-weighted aperture extraction.** Build the 6500–7500 Å white-light I-map; the R<R_e aperture
+   spectrum = Σ_spaxel cube · w, w = I-weight with arc spaxels **hard-masked (mask_weight=0)** and
+   re-normalised. Spectra are summed (not averaged) so the bootstrap preserves per-spaxel noise.
+   (`extract_aperture_spectrum`, `final_sigma_e.py`.)
+5. **Spectral masking (goodpixels).** (a) **no-Balmer** mask — forbidden lines only ([O II], [O III],
+   [O I], [N II], [S II]); **Hδ, Hγ, Hβ kept** (absorption; M12/nb16 confirmed keep-unmasked).
+   (b) **z=1.302 source-emission** masks `ARC_MASKS_REST` (Mg II, [O II], [Ne III], **He I 3819**) +
+   the O₂ A-band telluric. (c) **`BAD_PIXELS_REST`** = 35 entries (26 CR residuals + 9 M10 OH/sky
+   bands). All in deflector rest-frame Å.
+6. **Per-SPS frame-aware ppxf.** For each of FSPS / EMILES / XSL: match the galaxy frame to the
+   SPS native frame (FSPS=vacuum, EMILES/XSL=air; scalar-median vac↔air via Ciddor 1996), run
+   `ppxf` (Cappellari) with **moments=2**, **additive Legendre `degree` swept 15–29 (15 values)**,
+   `mdegree=0`, over the wide window (rest 3800–5400 Å). Subtract the per-SPS V_sys before pooling.
+7. **Wild-bootstrap errors.** Per (SPS × degree), **N=500** hybrid wild bootstrap
+   (`bootstrap_ppxf.compute_local_residual_scaling`): residuals r = galaxy − bestfit; a rolling
+   **75-pixel** window estimates the local (wavelength-dependent) noise scale s(λ) (clipped to
+   **[0.2, 5.0]**); each iteration applies a **Rademacher** ±1 sign-flip to the locally-rescaled
+   residual, adds it back to the best fit, and re-fits → one σ draw. Seeds are deterministic
+   (`BOOT_SEED=42 + 50000 + 10000·W_IDX + 100·sps_idx + degree_i`) so caches bit-reproduce.
+   joblib `loky`, **BLAS pinned to 1 thread/worker**; N=50 smoke before N=500 production.
+8. **Pool + budget.** Concatenate all σ samples (3 SPS × 15 degrees × 500) → 16/50/84 percentiles
+   = central + asymmetric stat. The pooled width already marginalises SPS + polynomial degree. Add
+   the §2.4.3 systematic components in quadrature → **σ_e = 269.62 −13.45/+13.10 (sym ±13.27) km/s**.
+
+### §2.4.2 Photometry / M⋆ pipeline — step by step
+
+Drivers: `scripts/photometry_systematics.py` (masking + photometry), `bagpipes_sersic_refit.py`
+(SED), orchestrated/displayed in notebook 12. Recipe = **F200LP locates, IR extends, fill-in recovers**.
+
+1. **Locate the arc on F200LP** (best source contrast): a 2D Sérsic deflector model is subtracted
+   and positive residual > 3σ_sky flags arc pixels (`arc_mask_verification.py`). This **objective
+   Sérsic-residual mask reproduces the expert hand mask to 0.016 mag**, R_e to 3% (k=3 is the clean
+   S/N saturation point from a SNR∈{2..20}×k∈{2..8} sweep).
+2. **Reproject the F200LP footprint to every band** (WCS + `map_coordinates`) — reproduces the
+   expert JWST aperture mags to 0.01–0.02 mag. Do **not** fit an independent per-band single Sérsic
+   (under-fits the bright IR galaxy, over-masks 0.2–0.4 mag).
+3. **IR-extend.** In the deeper/sharper JWST bands, region-grow the arc into 2-component-Sérsic
+   residual source pixels **contiguous** with the arc seed (cannot grab the core pedestal or field
+   companions); F150W2 mask grows ~6× vs HST.
+4. **Deflector model = 2-component (bulge+disk) Sérsic** (cuts JWST galaxy-body RMS 3.3–3.5× vs
+   single Sérsic). PSF-convolved fill quantified at ≤0.004 mag (`psf_fill_model.py`) — negligible.
+5. **Two photometry estimators per band/mask:** **raw** `photutils` aperture (masked → discards
+   under-arc deflector light → biased low, mask-size-dependent) vs **Sérsic fill-in** (replace
+   masked pixels with the model → recovers it → mask-definition-independent, per-band vs global
+   agree 0.01 dex). Fill-in correction +0.18–0.96 mag with the large IR-extended masks.
+6. **AB magnitudes** from per-image header zeropoints (never hardcoded): HST `PHOTFLAM/PHOTPLAM`,
+   JWST `PIXAR_SR`. Four bands: F200LP, F140W (HST WFC3), F150W2, F322W2 (JWST NIRCam).
+7. **Bagpipes SED** (`02_streamlined_Bagpipes_SED`): exponential-τ SFH, Calzetti dust (A_V 0–2),
+   free Z (0–2.5 Z☉), z prior (0.674,0.676); **Nautilus** sampler n_live=400, 500-sample posterior.
+   A **10% fractional flux floor** per band covers photon noise + the drizzle pixel-correlation
+   under-estimate (empirical noise ≈1.3–2× CCD-equation); **20%** is run as a conservative variant.
+8. **M⋆ budget** = 8 fits {per-band, global} × {raw, filled} × {10%, 20%} → headline (empirical,
+   raw-central, one-sided +sys, user choice): **log M⋆ = 11.16 +0.32/−0.08 (10%)** [11.04 ± 0.14
+   (20%)], fill-in reach 11.46; explicit masking-approach systematic ±0.16 dex
+   (`Mstar_masking_systematic.npz`).
+
+### §2.4.3 Systematic-audit procedures (how each budget term was measured + the M8→M12 trail)
+
+Every σ_e systematic is a **dedicated sweep** re-using the §2.4.1 machinery, varying ONE axis and
+quoting **peak-to-peak/2** (or half-Δ for two-point axes). All on the headline cube + masks.
+
+- **I-shape (±2.27):** 10 alternative I-weight maps (`run_isource_shape_sweep.py`) × 3 SPS × 15 deg
+  × N (250 in the M11 wide sweep); peak-to-peak/2 of the 10 central σ_e (266.83–271.37).
+- **F200 mask-weight (±6.65):** down-weight the expert arc spaxels at w∈{0,0.5,1} × 3 SPS × N=500;
+  (w00 269.69 − w100 256.39)/2. *(Distinct axis: mask-strength. The mask-**definition** analogue —
+  expert/sersic/perband/global reprojected to the IFU grid, `run_sigma_e_mask_systematic.py`/nb13 —
+  is ±5.85; it overlaps this, so larger-of-two is kept, not added.)*
+- **Fit-window (±3.82):** re-run at 3 windows (wR3800_5400 / wR4000_5400 / w6500_7500) × 3 SPS ×
+  N=500; peak-to-peak/2 (269.66 / 268.58 / 276.22). Collapsed from the carried ±15 on the clean cube.
+- **Frame (±5.0):** structural — vac/air per-SPS native-frame choice (carried from the frame-fix).
+- **Centering (±4.0):** 5 perturbed HST-mean centres (±0.4″ sweep; `NOTES_centering_investigation`).
+- **Reduction-pass (±3.45):** half-Δ between the NEW and OLD cleaned cubes (269.62 vs 262.72); only
+  2 reductions — refine if a 3rd lands.
+- **R_e-source / D7 (±6.13, M12):** re-run at the 4 R_e estimators (mean/F140W/F200LP/CaHK+G,
+  2.168–2.902″; `run_sigma_e_Re_systematic_wide.py`/nb15); full peak-to-peak/2.
+
+**M-series audit trail** (each a TESTS row + cache; identification then decision):
+- **M8 — He I 3819:** a 3-pixel +residual cluster at def-rest 5244–5248 Å = source-rest 3818–3820 Å
+  matches He I 3819.6 at z=1.302; consistent across both reductions → astrophysical, **masked**.
+- **M9 — 5193–5204 Å bump:** +5–7% feature checked against the arc spectrum (not source) and noise
+  spectrum (not sky) → it is the **Mg b LOSVD wing**; masking it drops σ_e 7 km/s → **DO NOT mask**
+  (signal). Same "it's signal" logic as the Hδ decision (M12/nb16).
+- **M10 — sky-line audit:** flag every band with cube `noise_sky` > 2.5× median across the fit
+  window; cross-check each against the arc spectrum to confirm no source counterpart → 9 OH/sky
+  bands added to `BAD_PIXELS_REST` (σ_e 271.87 → 269.62).
+- **M11 — cube-matched re-derivation:** re-run I-shape / mask / window sweeps on the NEW cube + M10
+  masks (carried OLD-cube values replaced) → sys ±17.16 → ±10.81.
+- **M12 (2026-06-08):** fold in R_e-source (±6.13) → sys ±12.43, total **±13.27**; add the
+  masking-approach cross-check (±5.85, not double-counted) and the Hδ decision (keep unmasked).
+
+### §2.4.4 Reproducibility / infrastructure
+
+- **Architecturally-independent estimators** (must not share intermediate state): **§6cum** cumulative
+  I-weighted single-ppxf aperture (the analytic Gültekin path = headline) · **§7** discrete
+  Cappellari (2006) annular spaxel-sum (`run_gultekin_mc`, arc-filtered to R<R_safe) · **nb07e**
+  arc-spectrum subtraction. The three agree at <1σ (267.32 integral vs 256.17 discrete, narrow).
+- **Caching + seed discipline.** Every expensive bootstrap writes a `.npz` keyed by its parameters
+  (`results/<sweep>/<params>_N{N}.npz`); a cached result is **never** re-run. Seeds are deterministic
+  (§2.4.1 step 7) so re-runs bit-reproduce; **N=50 smoke before N=500 production**; joblib with
+  BLAS=1/worker to avoid oversubscription.
+- **Deterministic values registry (single source of truth).** `scripts/paper_values.py` recomputes
+  **every** headline number from the result caches (with per-entry provenance + formula) → emits
+  `results/PAPER_VALUES.json`. The ApJL figures **load** that JSON (no hard-coded literals); the
+  summary docs are validated by `paper_values.py --check <files>`, an anchored, precision-aware
+  **drift linter** (parses only the canonical `σ_e = N ± M` / `log M⋆ = N` statements; dated
+  snapshots carry a `pv-skip-file` marker). Regenerate + verify:
+  `python scripts/paper_values.py && python scripts/paper_values.py --check *.md`.
+
+---
+
 # §3 Results
 
 ## Figure 2 (left panel) — the integrated spectrum + SED
