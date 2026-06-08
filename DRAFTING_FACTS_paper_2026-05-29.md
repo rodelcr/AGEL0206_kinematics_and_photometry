@@ -51,7 +51,7 @@ pointing target.*
 
 | Facility | Inst. / mode | Band(s) | Program (PI) | UT date | Exp. | Pixel scale |
 |---|---|---|---|---|---|---|
-| Keck II | KCWI / KCRM, RL grating, Medium slicer, 2×2 | red 5625–8941 Å | **U204 + K409 + U002** (3-night combine) | 2024-12 → 2025-11 | **~180 min RED on-source** (36 × 300 s) | 0.300″/spaxel |
+| Keck II | KCWI — KCRM red (RL) **+** KCB blue (BL), Medium slicer, 2×2 | RL 5625–8941 Å (σ_e); BL λc 4500 Å | **U204 + K409 + U002** (3-night combine) | 2024-12 → 2025-11 | **≈180 min RED + ≈198 min BLUE** (36 × 300 s RED) | 0.300″/spaxel |
 | HST | WFC3/UVIS | F200LP | **16773 (Glazebrook)** | 2022-07-14 | 600.0 s (NDRIZIM 4) | 0.050″/pix |
 | HST | WFC3/IR | F140W | **16773 (Glazebrook)** | 2022-07-14 | 597.7 s (NDRIZIM 3) | 0.080″/pix |
 | JWST | NIRCam SW, module B | F150W2 (CLEAR) | **05594 (Mahler)** | 2024-08-27 | 1836.0 s | 0.03075″/pix |
@@ -65,17 +65,24 @@ pointing target.*
   cube header (`DATE-OBS` 2025-11-17, `PROGPI` Jones, `XPOSURE` 300 s) describes only the **first
   input frame**, so cite the combine, not the header:
 
-  | Night (UT) | Program (PI) | RED frames |
-  |---|---|---|
-  | 2024 Dec 29 | U204 | 4 × 300 s |
-  | 2025 Aug 30 | K409 (PI TBD) | 12 × 300 s |
-  | 2025 Nov 17 | U002 (Jones) | 20 × 300 s |
+  | Night (UT) | Program (PI) | RED (RL) | BLUE (BL) |
+  |---|---|---|---|
+  | 2024 Dec 29 | U204 | 4 × 300 s | 1 × 1320 s *(excluded by reducer)* |
+  | 2025 Aug 30 | K409 (PI TBD) | 12 × 300 s | 4 × 990 s |
+  | 2025 Nov 17 | U002 (Jones) | 20 × 300 s | 5 × 1320 s |
 
-  → **36 × 300 s = ~180 min RED on-source.** The NEW **`_mtwdo_`** reduction (Master-Twilight + Dome
-  hybrid flats, K. R. Gupta), `Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`; dithered
-  (PA 0°/45°/90°); CR rejection via **astroscrappy** (`fsmode=median`, `psffwhm=2.50`). `OBSERVER` =
-  Glazebrook, Gupta, Jones, Kacprzak, Alcorn, Rhoades, Barone, Tran, Chen, Vasa. *(K409 PI + Aug-30
-  DIMM seeing still TBD for acknowledgements.)*
+  → **36 × 300 s ≈ 180 min RED + ≈ 198 min BLUE on-source.** The NEW **`_mtwdo_`** reduction
+  (Master-Twilight + Dome hybrid flats, K. R. Gupta), `Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`;
+  dithered (PA 0°/45°/90°); CR rejection via **astroscrappy** (`fsmode=median`, `psffwhm=2.50`).
+  `OBSERVER` = Glazebrook, Gupta, Jones, Kacprzak, Alcorn, Rhoades, Barone, Tran, Chen, Vasa.
+  *(K409 PI + Aug-30 DIMM seeing still TBD for acknowledgements.)*
+- **Both KCWI arms recorded simultaneously.** The **red** arm (**KCRM**, RL grating, central λ
+  7150 Å `RCWAVE` — the cube below) is the σ_e dataset. The **blue** arm (**KCWI/KCB**, **BL
+  (Blue-Low)** grating `BGRATNAM`, central λ **4500 Å** `BCWAVE`, **KBlue** filter `BFILTNAM`, N&S
+  off) is the ≈198 min BLUE above; it is **not used for σ_e** (the deflector's Ca H+K…Mg b absorption
+  falls in the red) but supplies the **source-z = 1.302 cross-check** (Fe II UV multiplet; §2.2.2).
+  **The blue combined cube is not in this repo** (only the RL cube) — quote the blue arm from the
+  observing log, not a local file.
 - **Conditions (Nov-17 frame, header-literal):** airmass **1.165** (`AIRMASS`); **guide-star FWHM
   1.271″** (`GUIDFWHM`) — the adopted seeing; parallactic angle 15.6°, rotator 0°. (Per-night
   airmass/seeing for the other two nights not carried in the combined cube.)
