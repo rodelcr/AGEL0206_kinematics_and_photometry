@@ -1,3 +1,5 @@
+<!-- pv-skip-file: dated snapshot — records historical (now-superseded) numbers; current headline in CLAUDE.md / results/PAPER_VALUES.json -->
+
 # Methodology session notes — 2026-04-27
 
 Post-compaction working session focused on documenting the σ_e methodology choices. No new measurements made except a launched no-mask sensitivity test (running in background as of session end).
@@ -8,11 +10,23 @@ Post-compaction working session focused on documenting the σ_e methodology choi
 
 **Earlier error:** I had recorded that the cube used by the σ_e pipeline (`Nov17_2025_DESJ0206_RL_combined_icubes_wcs.fits`, shape 3317×100×100) was the WRONG cube for the paper, and that we needed to re-run on the multi-night `DESJ0206-red_medium_combined.fits` (469 MB, 4269×120×120).
 
-**Correction (per user):** The cube we used IS the final, most-reduced data product. Only its FITS header metadata is mislabeled (`DATE-OBS=2025-11-17`, `PROGNAME=U002`, `PROGPI=Jones` describes only the last stacking pass, not the observation provenance). The headline σ_e numbers stand and do not need re-running.
+**Correction (per user):** The cube we used IS the final, most-reduced data product. Only its FITS header metadata is mislabeled (`DATE-OBS=2025-11-17`, `PROGNAME=U002`, `PROGPI=Jones` describes only the last input frame `kr251117_00129`, not the full input set). The headline σ_e numbers stand and do not need re-running.
 
 **Action taken:** Softened the "WRONG cube" framing in `HANDOVER.md` and `reference_kcwi_data_properties.md` to "metadata mislabeled — cube content is the final reduction; σ_e numbers stand." The 469 MB alternate combine in `raw_KCWI/` was demoted from "must re-run" to "optional sanity-check."
 
-For the paper: cite the multi-night provenance (Aug 29 K409 + Sept 29 K409 + Dec 29 + Nov 17) — do NOT cite the header's Nov 17/U002/Jones.
+### Multi-night provenance — UPDATED 2026-05-26 from the actual Keck observing logs
+
+The earlier paper-cite recommendation here ("Aug 29 K409 + Sept 29 K409 + Dec 29 + Nov 17") was WRONG in two ways: (a) Sept 29 K409 has **zero DESJ0206 entries** in its observing log (verified against `provenance/K409_2025-09-29_UTC.html`) — that night did not contribute; (b) Dec 29 2024 is unconfirmed pending a raw FITS header dump. The verified contributing nights are:
+
+| Night (UT) | Program | PI | DESJ0206 frames | Source / log file |
+|---|---|---|---|---|
+| **2025 Aug 30** | K409 | TBD (not in log header) | 12 RED `kr250830_00090–00101` + 4 BLUE `kb250830_00052–00055` (60 min RED + 66 min BLUE) | local `raw_KCWI/provenance/K409_2025-08-30_UTC.html` ↔ Drive id `1yoH_elZqEsFHPRc6f-XCB98l-7dGJewN` |
+| **2025 Nov 17** | U002 | Jones | 20 RED `kr251117_00129–00148` + 5 BLUE `kb251117_00087–00091` (90 min RED + 110 min BLUE) | Drive `NightLog_KCWI_2025-11-17.pdf` id `1HVNoH2CSAc214b_PieBQ_UkeEasVl6q4` |
+| 2024 Dec 29 | TBD | (Yuguang Chen reduction) | 4 RED `kr241229_00092–00095` per local `dec29_2024_rl8000.list` — **NOT independently confirmed as DESJ0206 pointings**; no machine-readable Drive log (only 44 MB image-only PDF id `16zWO8yaCIvRtoCGenNTndvB7dYdrCkMH`) | (raw frames on Yuguang Chen's machine at `~/obs/2024dec29/`; alignment QA PNGs in Drive id `1ELcTQiXV9m04Y8sA9st3OlpsNk7LE0D7`) |
+
+Observers on both verified nights include **the user (Cordova)** along with Glazebrook, Jones, Kacprzak, Tran, Vasan G C, Alcorn; Nov 17 also includes Gupta (= Kaustubh, the data reducer), Rhoades, Chen, Barone. RL grating central wavelengths differ between nights (Aug 30: 7400 Å; Nov 17: 7150 Å); both rebinned onto a common 1.0 Å/pix grid spanning 5625–8941 Å by the kcwiRedux pipeline.
+
+**For the paper:** cite the multi-night provenance as **K409 (Aug 30 UT) + U002 (Nov 17 UT)** with the Dec 29 2024 contribution **explicitly flagged as pending verification**. Do NOT cite Sept 29 K409 — it had no DESJ0206 entries. See `reference_kcwi_data_properties.md` (updated 2026-05-26) for the full inventory and Drive IDs.
 
 ---
 

@@ -29,8 +29,8 @@ relation.
   extract σ_e inside R<R_e via cumulative-aperture I-weighted fitting
   — the literature-standard definition (Cappellari+ 2006 eq. 1, used
   in KH13, Greene+ 2020, SAURON/ATLAS3D/MaNGA).
-- **Headline result.** σ_e(<R_e) = 268 ± 32 km/s; combined with
-  M★ = 2.2 × 10¹¹ M☉ (Bagpipes SED on HST WFC3 + JWST NIRCam
+- **Headline result.** σ_e(<R_e) = 269.62 ± 13.27 km/s; combined with
+  M★ = 1.4 × 10¹¹ M☉ (log M★/M☉ = 11.16; Bagpipes SED on HST WFC3 + JWST NIRCam
   photometry) this places AGEL0206 cleanly on the M•–σ and M•–M★
   scaling relations and provides an independent strong-lens-side
   σ-aperture constraint for cosmographic uses.
@@ -38,12 +38,12 @@ relation.
 ## 3. Headline numbers (paper-ready)
 
 ```
-σ_e(<R_e)            = 268 ± 32 km/s     (paper headline)
+σ_e(<R_e)            = 269.62 ± 13.27 km/s  (paper headline; asym −13.45/+13.10)
 σ_e(<R_e/2)          = 224 ± 18 km/s     (gradient diagnostic)
 
 R_e                  = 2.305″ = 16.23 kpc   (HST F140W+F200LP CoG mean)
-log(M★/M☉)           = 11.33 +0.07/−0.09  (Bagpipes SED, aperture)
-log(M★/M☉) Sersic    = 11.40 +0.11/−0.15  (Sersic-total cross-check)
+log(M★/M☉)           = 11.16 +0.32/−0.08  (principled IR-extended masking, 10%)
+log(M★/M☉) [20% err] = 11.04 ± 0.14       (fill-in reach 11.46; supersedes 11.33)
 
 z_deflector          = 0.67564          (line fit — Ca H+K, [O II], etc.)
 z_source             = 1.302

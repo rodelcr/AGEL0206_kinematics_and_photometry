@@ -1,3 +1,5 @@
+<!-- pv-skip-file: dated snapshot — records historical (now-superseded) numbers; current headline in CLAUDE.md / results/PAPER_VALUES.json -->
+
 # NOTES — nb09 frame fix + final σ_e production
 **Date:** 2026-04-28
 **Author session:** Claude + Rodrigo

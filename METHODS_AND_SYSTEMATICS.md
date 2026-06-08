@@ -1,6 +1,13 @@
 # Methods and Systematics — AGEL0206 σ_e ApJL paper
 
-**Last updated:** 2026-05-18
+**Last updated:** 2026-05-18 (narrative); **headline refreshed 2026-06-08.**
+
+> **⚠ CURRENT HEADLINE (2026-06-08, post-M12) — authoritative source `results/PAPER_VALUES.json`:**
+> **σ_e(<R_e) = 269.62 ± 13.27 km/s** (asym −13.45/+13.10) · **log M★/M☉ = 11.16 +0.32/−0.08** ·
+> **R_e = 2.305″ = 16.23 kpc** · z_defl = 0.67564 · z_src = 1.302.
+> The narrative BODY below predates the M8–M12 mask/systematic audits and prints earlier values
+> (254.85 / 268.98, total ±18) in prose — those are HISTORICAL. For current numbers read this banner,
+> `CLAUDE.md`, or `DRAFTING_FACTS_paper_2026-05-29.md`; all are emitted by `scripts/paper_values.py`.
 
 This document is a single-pass narrative of the spectroscopic
 (σ_e) and photometric (R_e, M★) pipelines used for the AGEL J020613−011417
@@ -247,7 +254,7 @@ in play, and the headline moved to the wider one during May 2026.
 `w6500_7500` = obs 6500–7500 Å = **rest 3879–4476 Å** at z = 0.67564.
 Anchored on Ca H+K and the G-band. This is the window used by the older
 nb07c §6cum pipeline (now retained as the **method cross-check**).
-927 good pixels. σ_e(<R_e) = 267.95 ± 30.10 km/s.
+927 good pixels. σ_e(<R_e) = 267.95 ± 30.10 km/s. <!-- pv-skip: narrow-window method cross-check, not the headline -->
 
 ### Wide arc-masked window (current paper headline)
 
@@ -811,14 +818,15 @@ note the Sersic-total as a +16% sensitivity check.
 ## III.1 Final tabulated systematics
 
 ```
-σ_e(<R_e)            = 268.98 ± 18.08 km/s  (paper headline, NEW _mtwdo_
+σ_e(<R_e)            = 269.62 ± 13.27 km/s  (paper headline, NEW _mtwdo_
                                               reduction, wide arc-masked window,
-                                              bad-pixel + no-Balmer-mask
-                                              production pipeline, symmetric
-                                              quadrature)
-                     = 268.98 -18.19 / +17.98 km/s  (asymmetric form: stat
-                                              -5.47/+4.73 from pooled
-                                              bootstrap + sys ±17.35 each side;
+                                              + He I 3819 (M8) + M10 sky audit
+                                              + M11 systematic re-derivation
+                                              + M12 R_e-source fold-in,
+                                              symmetric quadrature)
+                     = 269.62 -13.45 / +13.10 km/s  (asymmetric form: stat
+                                              -5.16/+4.13 from pooled
+                                              bootstrap + sys ±12.43 each side;
                                               used in Fig 2 title + Fig 3
                                               error bar)
                        260.44 ± 18.13 km/s  (OLD reduction CLEAN, wide arc-masked,
@@ -826,13 +834,17 @@ note the Sersic-total as a +16% sensitivity check.
                        265.76 ± 17.87 km/s  (NEW reduction LEGACY un-cleaned, ref)
                        254.85 ± 17.87 km/s  (OLD reduction LEGACY un-cleaned, ref)
                        267.95 ± 30.10 km/s  (narrow Ca H+K+G, OLD cube X-check)
-σ_e budget (WIDE)    = stat ±5.1 ⊕ Ishape ±1.5 ⊕ mask ±3.8
-                       ⊕ frame ±5 ⊕ centering ±4 ⊕ window ±15
-                       ⊕ reduction ±4.27  (refined post-clean 2026-05-26)
+σ_e budget (WIDE,M12)= stat ±4.6 ⊕ Ishape ±2.27 ⊕ mask ±6.65
+                       ⊕ frame ±5 ⊕ centering ±4 ⊕ window ±3.82
+                       ⊕ reduction ±3.45 ⊕ R_e-source ±6.13
+                       (M11 cube-matched re-derivation + M12 D7 fold-in;
+                        sys ±12.43, total ±13.27)
 
-R_e                  = 2.305″ = 16.23 kpc  (HST F140W+F200LP CoG mean)
-log(M★/M☉)           = 11.33 +0.07 / −0.09  (Bagpipes aperture, headline)
-                       11.40 +0.11 / −0.15  (Sersic-total, cross-check)
+R_e                  = 2.305″ = 16.23 kpc  (HST F140W+F200LP CoG mean;
+                        FLAG A3c: raw CoG non-convergent, method sys ±0.08″)
+log(M★/M☉)           = 11.16 +0.32 / −0.08  (principled IR-extended masking, 10%;
+                        supersedes 11.33 aperture)
+                       11.04 ± 0.14         (20% flux err; fill-in reach 11.46)
 
 z_deflector          = 0.67564                (NIST air rest λ, nb04)
 z_source             = 1.302                  (AGEL DR2; cross-checked via

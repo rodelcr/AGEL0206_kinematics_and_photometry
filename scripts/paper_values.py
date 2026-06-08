@@ -254,11 +254,18 @@ def check(files, reg, tol=0.05):
         return abs(float(stated_str) - round(regval, nd)) > max(tol, 0.5 * 10 ** (-nd))
 
     issues = 0
+    n_checked = 0
     for f in files:
         try:
             lines = Path(f).read_text().splitlines()
         except Exception:
             continue
+        # File-level exemption: dated/superseded snapshots carry a
+        # `<!-- pv-skip-file -->` marker near the top — their bodies record
+        # historically-correct (now-old) numbers and must NOT be "fixed".
+        if any('pv-skip-file' in ln for ln in lines[:25]):
+            continue
+        n_checked += 1
         for ln_no, line in enumerate(lines, 1):
             if skip.search(line):
                 continue
@@ -270,7 +277,8 @@ def check(files, reg, tol=0.05):
                                   f'{regval:.2f} (Δ={float(m.group(gi))-regval:+.2f})')
                             issues += 1
     status = 'OK — all headline statements match the registry' if issues == 0 else f'{issues} MISMATCH(es)'
-    print(f'check: {status}  ({len(files)} file(s))')
+    skipped = len(files) - n_checked
+    print(f'check: {status}  ({n_checked} live file(s) checked, {skipped} pv-skip-file exempt)')
     return issues
 
 
@@ -282,11 +290,14 @@ def main():
     reg = build()
     out = RESULTS / 'PAPER_VALUES.json'
     out.write_text(json.dumps(reg, indent=2))
-    if not args.quiet:
+    # In --check mode, default to quiet (suppress the table) so the file list
+    # after --check is never ambiguous with the table output.
+    checking = args.check is not None
+    if not args.quiet and not checking:
         print_table(reg)
         print(f'\n→ wrote {out}')
-    if args.check is not None:
-        print('\n── drift check ──')
+    if checking:
+        print('── drift check ──')
         check(args.check, reg)
 
 

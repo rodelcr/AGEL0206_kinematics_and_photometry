@@ -1,3 +1,5 @@
+<!-- pv-skip-file: dated snapshot — records historical (now-superseded) numbers; current headline in CLAUDE.md / results/PAPER_VALUES.json -->
+
 # Centering investigation — 2026-04-27
 
 Triggered by user noticing the cyan + (deflector center) appeared off-center from the IFU brightness in the §6cum-nomask diagnostic figure. This note captures the investigation, findings, candidate centers tested, and σ_e sensitivity to center choice.

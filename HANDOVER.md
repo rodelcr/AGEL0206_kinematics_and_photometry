@@ -1,15 +1,18 @@
+<!-- pv-skip-file: dated snapshot — records historical (now-superseded) numbers; current headline in CLAUDE.md / results/PAPER_VALUES.json -->
+
 # HANDOVER — AGEL0206 ApJL σ_e analysis (last updated 2026-04-27)
 
-> **This file is now superseded.** The frame-aware nb09 pipeline (Apr 28-29
-> 2026) is the production path. **Read `TESTS_AND_DIAGNOSTICS.md` first**
-> for the complete test catalog and current headline number.
+> **This file is now superseded.** The frame-aware nb09 pipeline + the M8–M12
+> mask/systematic audits (2026-04 → 2026-06) are the production path. **Read
+> `CLAUDE.md` / `DRAFTING_FACTS_paper_2026-05-29.md` first** (current headline;
+> all numbers from `results/PAPER_VALUES.json` via `scripts/paper_values.py`).
 >
-> | Then | Now (2026-04-29) |
+> | Then (2026-04, nb07c) | Now (2026-06-08, M12) |
 > |---|---|
-> | σ_e(<R_e) = 267.32 ± 24 km/s | **σ_e(<R_e) = 268 ± 32 km/s** (frame-aware, full systematic budget) |
-> | nb07c (pre-frame-fix) | `notebooks/09_final_sigma_e_paper.ipynb` |
+> | σ_e(<R_e) = 267.32 ± 24 km/s | **σ_e(<R_e) = 269.62 ± 13.27 km/s** (asym −13.45/+13.10; wide arc-masked, full M12 budget) |
+> | nb07c (pre-frame-fix) | `notebooks/09_final_sigma_e_paper.ipynb` + nb13–16 |
 >
-> The discussion below is preserved for the audit trail.
+> The discussion below is preserved for the audit trail (numbers are 2026-04 historical).
 
 ---
 
@@ -39,14 +42,16 @@ Per-SPS spread at R_e: FSPS 253 / EMILES 268 / XSL 280 (spread 27 km/s, captured
 
 **The cube we used IS the final, most-reduced data product** — `Nov17_2025_DESJ0206_RL_combined_icubes_wcs.fits` (253 MB, shape 3317×100×100, symlinked from `../velocity_dispersion_from_IFU/`). The σ_e numbers above are correct and do NOT need re-running.
 
-**However, the FITS header metadata is mislabeled.** The headers say `DATE-OBS=2025-11-17`, `PROGNAME=U002`, `PROGPI=Jones`, suggesting a single Nov 17 frame, but the actual data combines multiple nights — at minimum:
+**However, the FITS header metadata describes only the first input frame** (`kr251117_00129`), not the full input set. The actual data combines **two confirmed AGEL collaboration nights plus a possible third** — verified 2026-05-26 against the Keck observing logs:
 
-- **Aug 29 2025 HST = Aug 30 2025 UTC** (Program K409, frames `kr250830_00091`–`00100+` at PAs 0°/45°/90°) — the canonical observing night per user
-- Sept 29 2025 (Program K409)
-- Dec 29 2024 (frames `kr241229_00092`–`00095`)
-- Nov 17 2025 (Program U002 — only the most recent stacking pass, hence the header date)
+- **Aug 29 2025 HST = Aug 30 2025 UTC** (Program K409): 12 RED `kr250830_00090–00101` + 4 BLUE `kb250830_00052–00055`. Confirmed via local `provenance/K409_2025-08-30_UTC.html` (Drive id `1yoH_elZqEsFHPRc6f-XCB98l-7dGJewN`). Observers: Alcorn, **Cordova**, Glazebrook, Gonzalez-Lopezlira, Jones, Kacprzak, Tran, Vasan G C.
+- **Nov 16–17 2025 HST = Nov 17 2025 UTC** (Program U002, PI Jones): 20 RED `kr251117_00129–00148` + 5 BLUE `kb251117_00087–00091`. Confirmed via Drive `NightLog_KCWI_2025-11-17.pdf` (id `1HVNoH2CSAc214b_PieBQ_UkeEasVl6q4`). Observers: Alcorn, Barone, Chen, **Cordova**, Glazebrook, Gupta (=Kaustubh), Jones, Kacprzak, Rhoades, Tran, Vasan G C.
+- ~~Sept 29 2025 (Program K409)~~ — verified **zero DESJ0206 entries** in `K409_2025-09-29_UTC.html`. Earlier note was wrong. Do not cite.
+- Dec 29 2024 (frames `kr241229_00092`–`00095`) — **NOT independently confirmed as DESJ0206 pointings**. Only artefacts: local `dec29_2024_rl8000.list` stack-list, alignment QA PNGs in Drive's DESJ0206/kcwi_align/ folder (Drive id `1ELcTQiXV9m04Y8sA9st3OlpsNk7LE0D7`), and a 44 MB image-only PDF written log (Drive id `16zWO8yaCIvRtoCGenNTndvB7dYdrCkMH`) that the OCR can't read. **Pending raw-FITS header dump** from Yuguang Chen's machine (`~/obs/2024dec29/kred/redux/kskywizard/`).
 
-**For the paper, do NOT cite Nov 17 / U002 / Jones from the header** — that's a stacking-pass artifact, not the observation provenance. Cite the multi-night combine including Aug 29 K409 as the canonical night.
+Total confirmed on-source: ≈ **170 min RED + 176 min BLUE** over Aug 30 + Nov 17.
+
+**For the paper, cite K409 (Aug 30 UT) + U002 (Nov 17 UT) as the two confirmed nights**, and flag Dec 29 as pending. Do NOT cite Sept 29 K409 or the header's Nov 17/U002/Jones as the sole provenance.
 
 A separate, larger combine (`DESJ0206-red_medium_combined.fits`, 469 MB, shape 4269×120×120, 5384–9652 Å) was discovered in the shared Google Drive and copied locally to `raw_KCWI/`. This may be a more recent reduction with wider FoV/wavelength coverage, but **we did not re-run on it** because the cube we have is already the validated final product. The local copy + provenance files are kept as a reference:
 
@@ -69,8 +74,8 @@ The raw `.fits` frames (`kr250830_*.fits`, `kb250830_*.fits`) are NOT in the sha
 ### Open paper-writing questions
 
 1. **PI of K409** (NOT Jones — that was U002 on Nov 17 only). Look up Keck program archive.
-2. **Total on-source exposure** — enumerate from each night's log: ≥ 10 frames × 300 s on Aug 29 alone, plus Sept 29 + Dec 29 + Nov 17.
-3. **Aug 29 night seeing** — extract from `provenance/K409_2025-08-30_UTC.html` header.
+2. **Total on-source exposure** — **VERIFIED 2026-05-26**: 12 RED × 300 s + 4 BLUE × 990 s on Aug 30 (K409) + 20 RED × 300 s + 5 BLUE × 1320 s on Nov 17 (U002) = 170 min RED + 176 min BLUE. Add ~20 min RED if Dec 29 is confirmed.
+3. **Aug 29 night seeing** — airmass 1.07–1.08 verified from log; per-night DIMM seeing still to extract from log header.
 4. **Whether to also use the BLUE arm** — Mg b 5170 Å falls at observed λ ≈ 8660 Å (rest 5170 × 1.6756 = 8666 Å). BLUE cube ends at 5872 Å so Mg b is NOT in BLUE for z=0.676 — it's in RED. So BLUE is mostly redundant for σ; might still be useful for [O II] check on z.
 5. **Should we re-run on the 469 MB alternate reduction** for sanity? Quick check (re-point symlink, re-run nb07c at N=500, ~1h) — but optional, not blocking.
 
@@ -136,7 +141,7 @@ e3937c2 Build σ_e Gültekin pipeline (nb06, nb07/a/b/c/d, nb07e-skeleton)
 ## 6. Suggested next steps (priority order)
 
 1. **Get K409 PI + total exposure** from Keck program archive or PI contact. Update CLAUDE.md and memory boilerplate so the paper cites the multi-night provenance, not the mislabeled Nov 17 / U002 / Jones header.
-2. **Extract per-night seeing** from K409 logs (Aug 29 + Sept 29) and Nov 17 + Dec 29 frame headers.
+2. **Extract per-night seeing** from K409 Aug 30 log header and Nov 17 frame headers (Sept 29 K409 had no DESJ0206 frames — skip). Dec 29 2024 verification (raw-FITS header dump or written-log OCR) still needed before paper submission.
 3. **Paper draft** — use updated boilerplate from `reference_kcwi_data_properties.md` once §1 questions are resolved. Headline σ_e numbers stand.
 4. (Optional) Re-run nb07c at N=500 on the 469 MB alternate reduction `raw_KCWI/red/DESJ0206-red_medium_combined.fits` as a sanity check. Re-point symlink + re-extract spectra (~1h). Not blocking — only do if the alternate reduction is judged to be the canonical paper product.
 5. **Decide cube symlink convention** — keep current `Nov17_2025_*` filename (misleading but stable) or rename to `DESJ0206_RL_combined.fits`.

@@ -1,14 +1,21 @@
+<!-- pv-skip-file: dated snapshot — records historical (now-superseded) numbers; current headline in CLAUDE.md / results/PAPER_VALUES.json -->
+
 # HANDOFF — AGEL0206 project state & remaining work — 2026-06-08
+
+> **⚠ SUPERSEDED LATER THE SAME DAY (M12).** This is the *morning* remaining-work audit. The Tier-1/2
+> tasks below were then executed → **current headline σ_e = 269.62 ± 13.27 km/s** (R_e-source ±6.13
+> folded in). See **`HANDOFF_systematics_registry_2026-06-08.md`** for the closeout + the
+> `scripts/paper_values.py` registry. The σ_e number in this file's body (±11.77) is pre-M12.
 
 General audit of what's done and what's left, across the whole ApJL effort (kinematics +
 photometry + drafting + figures). Supersedes the stale `project_roadmap` memory (dated 2026-05-11,
 which still shows the pre-M8/M10/M11 σ_e and pre-principled M★). For the most recent work arc see
 `HANDOFF_photometry_masking_Mstar_2026-05-29.md`.
 
-## Current headline numbers (authoritative, 2026-06-08)
+## Current headline numbers (as of the morning audit — σ_e since revised to ±13.27 by M12)
 
 - **σ_e(<R_e) = 269.62 ± 11.77 km/s** (asym −11.98 / +11.57) — wide arc-masked, NEW `_mtwdo_`
-  reduction, He I + M10 sky masks, M11 budget. [unchanged since 2026-05-27]
+  reduction, He I + M10 sky masks, M11 budget. **[pre-M12; now ±13.27 — see banner above]**
 - **log(M⋆/M☉) = 11.16 ± 0.08 (stat) +0.31 (sys)** at 10% flux errors [11.04 ± 0.14 +0.32 at 20%]
   — NEW principled arc masking (F200LP-located + IR-extended, raw aperture), one-sided +sys =
   under-arc light (fill-in reach 11.46). Explicit masking systematic ±0.16 dex. [2026-05-29]
