@@ -433,39 +433,29 @@ Drivers: `scripts/photometry_systematics.py` (masking + photometry), `bagpipes_s
    (20%)], fill-in reach 11.46; explicit masking-approach systematic ±0.16 dex
    (`Mstar_masking_systematic.npz`).
 
-### §2.4.3 Systematic-audit procedures (how each budget term was measured + the M8→M12 trail)
+### §2.4.3 Systematic-audit procedures (how each budget term was measured)
 
-Every σ_e systematic is a **dedicated sweep** re-using the §2.4.1 machinery, varying ONE axis and
-quoting **peak-to-peak/2** (or half-Δ for two-point axes). All on the headline cube + masks.
+Each σ_e systematic is a **dedicated sweep** re-using the §2.4.1 machinery, varying ONE axis and
+quoting **peak-to-peak/2** (or half-Δ for two-point axes), all on the headline cube + masks:
 
 - **I-shape (±2.27):** 10 alternative I-weight maps (`run_isource_shape_sweep.py`) × 3 SPS × 15 deg
-  × N (250 in the M11 wide sweep); peak-to-peak/2 of the 10 central σ_e (266.83–271.37).
-- **F200 mask-weight (±6.65):** down-weight the expert arc spaxels at w∈{0,0.5,1} × 3 SPS × N=500;
-  (w00 269.69 − w100 256.39)/2. *(Distinct axis: mask-strength. The mask-**definition** analogue —
-  expert/sersic/perband/global reprojected to the IFU grid, `run_sigma_e_mask_systematic.py`/nb13 —
-  is ±5.85; it overlaps this, so larger-of-two is kept, not added.)*
-- **Fit-window (±3.82):** re-run at 3 windows (wR3800_5400 / wR4000_5400 / w6500_7500) × 3 SPS ×
-  N=500; peak-to-peak/2 (269.66 / 268.58 / 276.22). Collapsed from the carried ±15 on the clean cube.
-- **Frame (±5.0):** structural — vac/air per-SPS native-frame choice (carried from the frame-fix).
+  × N=250; peak-to-peak/2 of the 10 central σ_e (266.83–271.37).
+- **F200 mask-weight (±6.65):** down-weight the arc spaxels at w∈{0,0.5,1} × 3 SPS × N=500;
+  (w00 269.69 − w100 256.39)/2. *(This is the mask-**strength** axis. The mask-**definition** axis —
+  expert/sersic/perband/global reprojected to the IFU grid, `run_sigma_e_mask_systematic.py` — gives
+  ±5.85, which overlaps this; larger-of-two is kept, not added.)*
+- **Fit-window (±3.82):** 3 windows (wR3800_5400 / wR4000_5400 / w6500_7500) × 3 SPS × N=500;
+  peak-to-peak/2 (269.66 / 268.58 / 276.22).
+- **Frame (±5.0):** structural — vac/air per-SPS native-frame choice.
 - **Centering (±4.0):** 5 perturbed HST-mean centres (±0.4″ sweep; `NOTES_centering_investigation`).
-- **Reduction-pass (±3.45):** half-Δ between the NEW and OLD cleaned cubes (269.62 vs 262.72); only
-  2 reductions — refine if a 3rd lands.
-- **R_e-source / D7 (±6.13, M12):** re-run at the 4 R_e estimators (mean/F140W/F200LP/CaHK+G,
-  2.168–2.902″; `run_sigma_e_Re_systematic_wide.py`/nb15); full peak-to-peak/2.
+- **Reduction-pass (±3.45):** half-Δ between the NEW and OLD cleaned cubes (269.62 vs 262.72); 2
+  reductions only — refine if a 3rd lands.
+- **R_e-source / D7 (±6.13):** the 4 R_e estimators (mean/F140W/F200LP/CaHK+G, 2.168–2.902″;
+  `run_sigma_e_Re_systematic_wide.py`); full peak-to-peak/2.
 
-**M-series audit trail** (each a TESTS row + cache; identification then decision):
-- **M8 — He I 3819:** a 3-pixel +residual cluster at def-rest 5244–5248 Å = source-rest 3818–3820 Å
-  matches He I 3819.6 at z=1.302; consistent across both reductions → astrophysical, **masked**.
-- **M9 — 5193–5204 Å bump:** +5–7% feature checked against the arc spectrum (not source) and noise
-  spectrum (not sky) → it is the **Mg b LOSVD wing**; masking it drops σ_e 7 km/s → **DO NOT mask**
-  (signal). Same "it's signal" logic as the Hδ decision (M12/nb16).
-- **M10 — sky-line audit:** flag every band with cube `noise_sky` > 2.5× median across the fit
-  window; cross-check each against the arc spectrum to confirm no source counterpart → 9 OH/sky
-  bands added to `BAD_PIXELS_REST` (σ_e 271.87 → 269.62).
-- **M11 — cube-matched re-derivation:** re-run I-shape / mask / window sweeps on the NEW cube + M10
-  masks (carried OLD-cube values replaced) → sys ±17.16 → ±10.81.
-- **M12 (2026-06-08):** fold in R_e-source (±6.13) → sys ±12.43, total **±13.27**; add the
-  masking-approach cross-check (±5.85, not double-counted) and the Hδ decision (keep unmasked).
+Quote the budget table (§3.1) as the result; the iterative history that *led* to this masking +
+component set is the **internal audit trail (M8→M12)** at the end of this document — not for the
+manuscript Methods section.
 
 ### §2.4.4 Reproducibility / infrastructure
 
@@ -678,3 +668,35 @@ foundational papers simply not yet added to Zotero, flagged so the .bib can be c
 7. "We do not account for peculiar velocities" needs to be written in (G3 — true, just add it).
 8. Source-z (1.302) error bar + its cache are a `[TBD]` placeholder.
 9. K409 (Aug-30) PI and per-night DIMM seeing still TBD for acknowledgements.
+
+---
+
+# Internal appendix — σ_e measurement audit trail (M8→M12) — NOT for the manuscript
+
+*This is the iterative history of how the final §2.4.3 masking + systematic-component set was reached.
+The Methods section should present the **final** procedure (§2.4) and the budget (§3.1), not this
+trail. Kept here as internal provenance / referee-rebuttal backup. Each step is also a `TESTS` row
+with its own cache.*
+
+- **M8 — He I 3819 (added as a source-emission mask).** A 3-pixel positive-residual cluster at
+  def-rest 5244–5248 Å = source-rest 3818–3820 Å matches He I 3819.6 from the z=1.302 source;
+  consistent across both reductions → astrophysical, not a CR. Masked. σ_e (NEW) 268.98 → 271.87.
+- **M9 — 5193–5204 Å bump (deliberately NOT masked).** A +5–7% feature; checked against the arc
+  spectrum (no source counterpart) and the noise spectrum (no sky counterpart) → it is the **Mg b
+  LOSVD wing** (signal). Smoke-masking it drops σ_e by 7 km/s → **DO NOT mask.** (Same "it's signal,
+  not contamination" logic later applied to Hδ in M12.)
+- **M10 — full sky-line audit.** Flag every band with cube `noise_sky` > 2.5× median across the fit
+  window, and cross-check each against the arc spectrum to confirm no source counterpart → 9 OH/sky
+  bands added to `BAD_PIXELS_REST` (26 → 35 entries). σ_e (NEW) 271.87 → 269.62.
+- **M11 — cube-matched systematic re-derivation.** Re-ran the I-shape / mask-weight / fit-window
+  sweeps on the NEW cube + M10 masks (replacing carried OLD-cube values). The fit-window term
+  collapsed ±15 → ±3.82 on the cleaned cube; total sys ±17.16 → ±10.81 (total ±11.77).
+- **M12 (2026-06-08) — R_e-source fold-in + two cross-checks.** Folded the wide-window R_e-source
+  systematic (±6.13) into the budget → sys ±12.43, **total ±13.27**. Added the arc-mask-**definition**
+  cross-check (±5.85; overlaps the F200-mask term, not double-counted) and resolved the Hδ open item
+  (**keep unmasked** — well-fit, masking it discards LOSVD information). Central σ_e 269.62 unchanged
+  across M10→M12; only the error grew.
+
+**Net effect of the trail:** central σ_e settled at 269.62 km/s by M10 and has not moved since; the
+error bar evolved ±17.78 (pre-M11) → ±11.77 (M11) → ±13.27 (M12). The mask set (He I + 35-entry
+sky/CR + no-Balmer) and the 7-component budget that the final §2.4 procedure uses are the M12 result.
