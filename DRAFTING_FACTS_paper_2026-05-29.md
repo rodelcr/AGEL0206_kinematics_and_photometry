@@ -51,25 +51,34 @@ pointing target.*
 
 | Facility | Inst. / mode | Band(s) | Program (PI) | UT date | Exp. | Pixel scale |
 |---|---|---|---|---|---|---|
-| Keck II | KCWI / KCRM, RL grating, Medium slicer, 2×2 | red 5625–8941 Å | **U002 (Jones)** | 2025-11-17 | 300 s/frame, dithered combine | 0.300″/spaxel |
+| Keck II | KCWI / KCRM, RL grating, Medium slicer, 2×2 | red 5625–8941 Å | **U204 + K409 + U002** (3-night combine) | 2024-12 → 2025-11 | **~180 min RED on-source** (36 × 300 s) | 0.300″/spaxel |
 | HST | WFC3/UVIS | F200LP | **16773 (Glazebrook)** | 2022-07-14 | 600.0 s (NDRIZIM 4) | 0.050″/pix |
 | HST | WFC3/IR | F140W | **16773 (Glazebrook)** | 2022-07-14 | 597.7 s (NDRIZIM 3) | 0.080″/pix |
-| JWST | NIRCam SW, module B | F150W2 (CLEAR) | **05594 (Mahler)** | 2024-08-27 | 1836.0 s | 0.0308″/pix |
-| JWST | NIRCam LW, module B | F322W2 (CLEAR) | **05594 (Mahler)** | 2024-08-27 | 1836.0 s | 0.0630″/pix |
+| JWST | NIRCam SW, module B | F150W2 (CLEAR) | **05594 (Mahler)** | 2024-08-27 | 1836.0 s | 0.03075″/pix |
+| JWST | NIRCam LW, module B | F322W2 (CLEAR) | **05594 (Mahler)** | 2024-08-27 | 1836.0 s | 0.06301″/pix |
 
 ### §1.1 Keck/KCWI IFU spectroscopy (the σ_e data)
 
 - **Keck II / KCWI**, KCRM **red** arm, **RL (Red-Low)** grating (`RGRATNAM`), **Medium** slicer
   (`IFUNAM`), **2×2** binning (`BINNING`/`CCDSUM`); nod-and-shuffle **off** (`RNASNAM='Open'`).
-- **Program U002, PI Jones** (`PROGID`/`PROGPI`); `OBSERVER` = Glazebrook, Gupta, Jones, Kacprzak,
-  Alcorn, Rhoades, Barone, Tran, Chen, Vasa. **UT 2025-11-17** (`DATE-OBS`).
-- **Per-frame exposure 300.0 s** (`XPOSURE`/`TTIME`); the headline cube is a **dithered multi-frame
-  combine** (PA 0°/45°/90°) — the NEW **`_mtwdo_`** reduction (Master-Twilight + Dome hybrid flats,
-  K. R. Gupta), `Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`. CR rejection via
-  **astroscrappy** (`fsmode=median`, `psffwhm=2.50`). Total on-source = 300 s × N_frames (combine
-  list not carried in the cube header).
-- **Conditions:** airmass **1.165** (`AIRMASS`); **guide-star FWHM 1.271″** (`GUIDFWHM`) — this is
-  the adopted seeing; parallactic angle 15.6°, rotator 0°.
+- **The headline cube is a 3-NIGHT, 3-PROGRAM combine** (see §2.2.1), NOT a single dataset — the
+  cube header (`DATE-OBS` 2025-11-17, `PROGPI` Jones, `XPOSURE` 300 s) describes only the **first
+  input frame**, so cite the combine, not the header:
+
+  | Night (UT) | Program (PI) | RED frames |
+  |---|---|---|
+  | 2024 Dec 29 | U204 | 4 × 300 s |
+  | 2025 Aug 30 | K409 (PI TBD) | 12 × 300 s |
+  | 2025 Nov 17 | U002 (Jones) | 20 × 300 s |
+
+  → **36 × 300 s = ~180 min RED on-source.** The NEW **`_mtwdo_`** reduction (Master-Twilight + Dome
+  hybrid flats, K. R. Gupta), `Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`; dithered
+  (PA 0°/45°/90°); CR rejection via **astroscrappy** (`fsmode=median`, `psffwhm=2.50`). `OBSERVER` =
+  Glazebrook, Gupta, Jones, Kacprzak, Alcorn, Rhoades, Barone, Tran, Chen, Vasa. *(K409 PI + Aug-30
+  DIMM seeing still TBD for acknowledgements.)*
+- **Conditions (Nov-17 frame, header-literal):** airmass **1.165** (`AIRMASS`); **guide-star FWHM
+  1.271″** (`GUIDFWHM`) — the adopted seeing; parallactic angle 15.6°, rotator 0°. (Per-night
+  airmass/seeing for the other two nights not carried in the combined cube.)
 - **Cube:** 100 × 100 spaxels × 3317 λ-pixels; **0.300″/spaxel** (square; from WCS), **30″ × 30″**
   FOV; wavelength **5625–8941 Å** at **1.0 Å/pix** (`CRVAL3`/`CD3_3`), red central λ 7150 Å
   (`RCWAVE`). Spectral resolution **R ≈ 10000** at the fit band → **σ_inst ≈ 12.6 km/s** (well below
@@ -96,9 +105,9 @@ pointing target.*
   sits in it). Both bands **UT 2024-08-27** (`DATE-BEG` 06:02–06:40), NIRCam **module B**, units
   **MJy/sr** (i2d), NINTS 1 / NGROUPS 4.
 - **F150W2** (SHORT channel, CLEAR pupil): `EFFEXPTM`/`XPOSURE` **1836.0 s**; `PIXAR_SR` =
-  2.2222×10⁻¹⁴ sr → **0.0308″/pix** (PIXAR_A2 = 9.454×10⁻⁴ ″²) → **ZP_AB = 28.033**.
+  2.2222×10⁻¹⁴ sr → **0.03075″/pix** (PIXAR_A2 = 9.454×10⁻⁴ ″²) → **ZP_AB = 28.033**.
 - **F322W2** (LONG channel, CLEAR pupil): `EFFEXPTM`/`XPOSURE` **1836.0 s**; `PIXAR_SR` =
-  9.3307×10⁻¹⁴ sr → **0.0630″/pix** (PIXAR_A2 = 3.970×10⁻³ ″²) → **ZP_AB = 26.475**.
+  9.3307×10⁻¹⁴ sr → **0.06301″/pix** (PIXAR_A2 = 3.970×10⁻³ ″²) → **ZP_AB = 26.475**.
 - JWST AB from area: `ZP_AB = −6.10 − 2.5·log10(PIXAR_SR)`. No PAM correction (drizzled/resampled).
 
 ---
@@ -173,9 +182,9 @@ reproduce the arc selection), validated + applied to all four bands.
   reason production is preferred.)
 - **Superseded prior value:** IFU white-light R_e = 2.61″ (nb05/06 era) — superseded because the
   HST-based 2.305″ has the F140W+F200LP arc masks built in. A Ca H+K+G depth-map gives 2.866″.
-- **R_e as a σ_e systematic (test D7):** four R_e definitions shift narrow-window σ_e by up to
-  **16.9 km/s** (σ_e rises monotonically with R_e). **FLAG: this component is currently held
-  OUTSIDE the formal wide-window budget — flagged for a wide-window re-measurement.** [CLAUDE.md]
+- **R_e as a σ_e systematic (test D7):** four R_e definitions shift σ_e (rises monotonically with
+  R_e). Re-measured at the wide window (M12, nb15): spread **±6.13 km/s**, now **folded into the
+  formal budget** (§3.1, §2.4.3); the narrow-window 16.9 km/s figure is superseded. [CLAUDE.md]
 
 ### §2.1.3 Measuring Fluxes
 
@@ -491,8 +500,9 @@ Drivers: `scripts/photometry_systematics.py` (masking + photometry), `bagpipes_s
    A **10% fractional flux floor** per band covers photon noise + the drizzle pixel-correlation
    under-estimate (empirical noise ≈1.3–2× CCD-equation); **20%** is run as a conservative variant.
 8. **M⋆ budget** = 8 fits {per-band, global} × {raw, filled} × {10%, 20%} → headline (empirical,
-   raw-central, one-sided +sys, user choice): **log M⋆ = 11.16 +0.32/−0.08 (10%)** [11.04 ± 0.14
-   (20%)], fill-in reach 11.46; explicit masking-approach systematic ±0.16 dex
+   raw-central, one-sided +sys, user choice): **log M⋆ = 11.16 ± 0.08 (stat) +0.31 (sys) at 10%**
+   [11.04 ± 0.14 at 20%], fill-in reach 11.46 (the asymmetric form used in the figures is
+   +0.32/−0.08, the stat⊕sys quadrature); explicit masking-approach systematic ±0.16 dex
    (`Mstar_masking_systematic.npz`).
 
 ### §2.4.3 Systematic-audit procedures (how each budget term was measured)
@@ -575,9 +585,10 @@ manuscript Methods section.
 | **TOTAL (sym)** | **13.27** | quadrature |
 | **TOTAL (asym)** | **−13.45 / +13.10** | preserves stat skew |
 
-- **No separate SPS line** is folded in: the SPS-library spread **collapsed from ~26 km/s (narrow:
-  FSPS 253.0 < EMILES 267.5 < XSL 279.7) to ~4 km/s (wide)** — a key argument for the wide window;
-  it now sits inside the pooled stat width.
+- **No separate SPS line** is folded in: the SPS-library spread **collapsed from ~26 km/s at the
+  narrow window** (FSPS 253.0 < EMILES 267.5 < XSL 279.7) **to ~4 km/s at the wide window** (FSPS
+  271.3 / EMILES 267.2 / XSL 270.4; `PAPER_VALUES.json:per_sps_p50`) — a key argument for the wide
+  window; it now sits inside the pooled stat width (between-SPS ±2.04).
 - Quadrature is deliberately conservative (components not strictly independent).
 - **R_e-source systematic IS now folded in (±6.13, M12 2026-06-08):** re-measured at the wide window
   (nb15) and included in the budget above — the narrow-window ±16.9 is superseded. The full
