@@ -41,6 +41,68 @@ D_A = 1452 Mpc at z = 0.67564. [reference_hst_jwst_data_properties.md]
 
 ---
 
+# §1 Data and observations
+
+*All values below are read directly from the FITS headers of the analysis files (verified
+2026-06-08), not from memory. Target: **AGEL J020613−011417** = DES J0206−0114, ICRS
+RA = 31.55611°, Dec = −1.23817° (HST `RA_TARG`/`DEC_TARG`); deflector z = 0.67564, source z = 1.302.
+The field is the massive cluster **ACT-CL J0206.2−0114** (ACT DR5, Hilton et al. 2021) — the JWST
+pointing target.*
+
+| Facility | Inst. / mode | Band(s) | Program (PI) | UT date | Exp. | Pixel scale |
+|---|---|---|---|---|---|---|
+| Keck II | KCWI / KCRM, RL grating, Medium slicer, 2×2 | red 5625–8941 Å | **U002 (Jones)** | 2025-11-17 | 300 s/frame, dithered combine | 0.300″/spaxel |
+| HST | WFC3/UVIS | F200LP | **16773 (Glazebrook)** | 2022-07-14 | 600.0 s (NDRIZIM 4) | 0.050″/pix |
+| HST | WFC3/IR | F140W | **16773 (Glazebrook)** | 2022-07-14 | 597.7 s (NDRIZIM 3) | 0.080″/pix |
+| JWST | NIRCam SW, module B | F150W2 (CLEAR) | **05594 (Mahler)** | 2024-08-27 | 1836.0 s | 0.0308″/pix |
+| JWST | NIRCam LW, module B | F322W2 (CLEAR) | **05594 (Mahler)** | 2024-08-27 | 1836.0 s | 0.0630″/pix |
+
+### §1.1 Keck/KCWI IFU spectroscopy (the σ_e data)
+
+- **Keck II / KCWI**, KCRM **red** arm, **RL (Red-Low)** grating (`RGRATNAM`), **Medium** slicer
+  (`IFUNAM`), **2×2** binning (`BINNING`/`CCDSUM`); nod-and-shuffle **off** (`RNASNAM='Open'`).
+- **Program U002, PI Jones** (`PROGID`/`PROGPI`); `OBSERVER` = Glazebrook, Gupta, Jones, Kacprzak,
+  Alcorn, Rhoades, Barone, Tran, Chen, Vasa. **UT 2025-11-17** (`DATE-OBS`).
+- **Per-frame exposure 300.0 s** (`XPOSURE`/`TTIME`); the headline cube is a **dithered multi-frame
+  combine** (PA 0°/45°/90°) — the NEW **`_mtwdo_`** reduction (Master-Twilight + Dome hybrid flats,
+  K. R. Gupta), `Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`. CR rejection via
+  **astroscrappy** (`fsmode=median`, `psffwhm=2.50`). Total on-source = 300 s × N_frames (combine
+  list not carried in the cube header).
+- **Conditions:** airmass **1.165** (`AIRMASS`); **guide-star FWHM 1.271″** (`GUIDFWHM`) — this is
+  the adopted seeing; parallactic angle 15.6°, rotator 0°.
+- **Cube:** 100 × 100 spaxels × 3317 λ-pixels; **0.300″/spaxel** (square; from WCS), **30″ × 30″**
+  FOV; wavelength **5625–8941 Å** at **1.0 Å/pix** (`CRVAL3`/`CD3_3`), red central λ 7150 Å
+  (`RCWAVE`). Spectral resolution **R ≈ 10000** at the fit band → **σ_inst ≈ 12.6 km/s** (well below
+  σ_e ≈ 270; the LSF is carried into ppxf). [reference_kcwi_data_properties.md]
+- Pointing `RA`/`DEC` = 02:06:13.38 / −01:14:20.8; target `TARGRA`/`TARGDEC` = 02:06:13.58 / −01:14:19.8.
+
+### §1.2 HST/WFC3 imaging (F200LP, F140W)
+
+- **Program 16773, PI Karl Glazebrook** (`PROPOSID`/`PR_INV_*`); `TARGNAME` = DESJ0206-0114; both
+  bands **UT 2022-07-14** (`EXPSTART` MJD 59774.30–59774.31), ORIENTAT 111.9°, drizzled, units
+  **ELECTRONS/S**.
+- **F200LP** — WFC3/**UVIS**, aperture UVIS2: EXPTIME **600.0 s**, NDRIZIM 4, NCOMBINE 2, drizzle
+  scale **0.050″/pix**; `PHOTFLAM` = 5.1851×10⁻²⁰, `PHOTPLAM` = 4923.48 Å → **ZP_AB = 27.344**.
+- **F140W** — WFC3/**IR**: EXPTIME **597.7 s**, NDRIZIM 3, NCOMBINE 3, drizzle scale **0.080″/pix**;
+  `PHOTFLAM` = 1.4829×10⁻²⁰, `PHOTPLAM` = 13922.91 Å → **ZP_AB = 26.446**.
+- AB zeropoints are recomputed per-image from `PHOTFLAM`/`PHOTPLAM` (never hardcoded);
+  `ZP_AB = −2.5·log10(PHOTFLAM) − 21.10 − 5·log10(PHOTPLAM) + 18.6921`. **Drizzle pixel correlation:**
+  empirical noise ≈1.3–2× the CCD-equation value → motivates the 10% flux floor (§2.1.4).
+
+### §1.3 JWST/NIRCam imaging (F150W2, F322W2)
+
+- **Program 05594** — *"JWST Cluster SLICE — Strong Lensing and Cluster Evolution"*, **PI Guillaume
+  Mahler** (SURVEY category); `TARGPROP` = ACT-CL_J0206.2−0114 (the cluster field; the deflector
+  sits in it). Both bands **UT 2024-08-27** (`DATE-BEG` 06:02–06:40), NIRCam **module B**, units
+  **MJy/sr** (i2d), NINTS 1 / NGROUPS 4.
+- **F150W2** (SHORT channel, CLEAR pupil): `EFFEXPTM`/`XPOSURE` **1836.0 s**; `PIXAR_SR` =
+  2.2222×10⁻¹⁴ sr → **0.0308″/pix** (PIXAR_A2 = 9.454×10⁻⁴ ″²) → **ZP_AB = 28.033**.
+- **F322W2** (LONG channel, CLEAR pupil): `EFFEXPTM`/`XPOSURE` **1836.0 s**; `PIXAR_SR` =
+  9.3307×10⁻¹⁴ sr → **0.0630″/pix** (PIXAR_A2 = 3.970×10⁻³ ″²) → **ZP_AB = 26.475**.
+- JWST AB from area: `ZP_AB = −6.10 − 2.5·log10(PIXAR_SR)`. No PAM correction (drizzled/resampled).
+
+---
+
 # §2 Methods
 
 ## §2.1 Photometric Analysis
