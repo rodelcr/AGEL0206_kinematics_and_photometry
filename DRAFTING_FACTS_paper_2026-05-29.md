@@ -24,9 +24,9 @@ elsewhere before drafting those paragraphs:
   in any methods doc. It is a true statement about our analysis (we use the line-fit systemic z
   directly) — just add it; nothing to reconcile.
 
-**Headline numbers (current, 2026-05-27, post-M11):**
+**Headline numbers (current, 2026-06-08, post-M12; emitted by `scripts/paper_values.py` → `results/PAPER_VALUES.json`):**
 
-- σ_e(<R_e) = **269.62 ± 11.77 km/s** (asym −11.98 / +11.57); often rounded **270 ± 12 km/s**.
+- σ_e(<R_e) = **269.62 ± 13.27 km/s** (asym −13.45 / +13.10); often rounded **270 ± 13 km/s**. **2026-06-08: was ±11.77; the D7 R_e-source systematic (±6.13) was folded into the budget (M12, Task 5, nb15).**
 - log(M⋆/M☉) = **11.16 ± 0.08 (stat) +0.31 (sys)** at 10% flux errors [**11.04 ± 0.14 (stat) +0.32 (sys)** at 20%] — **NEW principled arc masking** (F200LP-located + IR-extended, raw aperture). The one-sided +sys is the Sérsic fill-in of deflector light hidden under the arc, reaching log M⋆ ≈ 11.46. **Supersedes 11.33 +0.07/−0.09** (older expert-aperture value, smaller masks; now a mid-range cross-check). See §2.1.1b / §3.2 and `NOTES_photometry_mask_systematics_2026-05-29.md`.
 - R_e = **2.305″ = 16.23 kpc**.
 - z_deflector = **0.67564**; z_source = **1.302**.
@@ -36,8 +36,8 @@ D_A = 1452 Mpc at z = 0.67564. [reference_hst_jwst_data_properties.md]
 
 > **Staleness warning:** the *body* of `METHODS_AND_SYSTEMATICS.md` (dated 2026-05-18) still
 > prints pre-M11 numbers (254.85 / 268.98, total ±18) in its narrative prose. Its own §0 table
-> and `CLAUDE.md` (2026-05-27) carry the current headline 269.62 ± 11.77. Always quote the
-> current value.
+> and `CLAUDE.md` carry the current headline **269.62 ± 13.27** (post-M12, 2026-06-08). Always
+> quote the current value (canonical source: `results/PAPER_VALUES.json`).
 
 ---
 
@@ -346,7 +346,7 @@ source z = 1.302 (spiral), deflector z = 0.67564.
 
 ## §3.1 Velocity Dispersion Measurement
 
-- **Headline: σ_e(<R_e) = 269.62 ± 11.77 km/s** (asym −11.98/+11.57), via the Gültekin (2009)
+- **Headline: σ_e(<R_e) = 269.62 ± 13.27 km/s** (asym −13.45/+13.10), via the Gültekin (2009)
   luminosity-weighted formalism evaluated with the Cappellari ppxf implementation on the
   I(r)-weighted R<R_e aperture spectrum, plus the wild-bootstrap error pool.
 - **Reproduce:** `scripts/run_wide_sigma_e.py --cube new_clean_hei --n_bootstrap 500`.
@@ -355,19 +355,20 @@ source z = 1.302 (spiral), deflector z = 0.67564.
 **R_e measurement and checks** (for the §3.1 paragraph): R_e = 2.305″ = 16.23 kpc, the F140W (2.168″)
 + F200LP (2.441″) masked-CoG mean; supersedes IFU-only 2.61″; masked CoG removes arc/companion bias.
 
-**Systematic error budget (post-M11, 2026-05-27):**
+**Systematic error budget (post-M12, 2026-06-08; computed by `scripts/paper_values.py`):**
 
 | Component | ± km/s | Why |
 |---|---|---|
 | stat (N=500) | 4.6 (−5.16/+4.13) | wild-bootstrap pool over 3 SPS × 15 degrees; already marginalizes SPS (between-SPS ±2.04) + degree spread |
 | I-shape (10 shapes) | 2.27 | peak-to-peak/2 of 10 I-weight-map shapes (266.83–271.37) |
-| F200 mask (3 weights) | 6.65 | (w00 269.69 − w100 256.39)/2; cleaned cube has more signal pixels → more arc-dilution leverage |
+| F200 mask (3 weights) | 6.65 | (w00 269.69 − w100 256.39)/2; cleaned cube has more signal pixels → more arc-dilution leverage. (Arc-mask-*definition* cross-check ±5.85 overlaps this, not added — M12/nb13) |
 | frame (vac/air) | 5.0 | structural per-SPS native-frame choice |
 | centering (HST WCS) | 4.0 | 5-center ±0.4″ sweep; reduction-independent |
 | fit-window (3 windows) | 3.82 | wR3800_5400 269.66 / wR4000_5400 268.58 / w6500_7500 276.22; **dropped from carried ±15** on the cleaned cube |
 | reduction-pass | 3.45 | (269.62 − 262.72)/2, NEW vs OLD cleaned cube; **only 2 reductions — refine if a 3rd lands** |
-| **TOTAL (sym)** | **11.77** | quadrature |
-| **TOTAL (asym)** | **−11.98 / +11.57** | preserves stat skew |
+| **R_e-source (D7 wide)** | **6.13** | **NEW M12 (2026-06-08, nb15):** peak-to-peak/2 over 4 R_e estimators (mean 2.305″/F140W 2.168″/F200LP 2.441″/CaHK+G 2.902″ → 269.62/267.44/272.44/279.69). User chose full spread; CaHK+G's +10 is the rising σ(R) gradient. Light-family-only = ±2.50 |
+| **TOTAL (sym)** | **13.27** | quadrature |
+| **TOTAL (asym)** | **−13.45 / +13.10** | preserves stat skew |
 
 - **No separate SPS line** is folded in: the SPS-library spread **collapsed from ~26 km/s (narrow:
   FSPS 253.0 < EMILES 267.5 < XSL 279.7) to ~4 km/s (wide)** — a key argument for the wide window;
@@ -388,7 +389,8 @@ then the spectrum (mask ±6.65, frame ±5.0, window ±3.82, reduction ±3.45, ce
 - Narrow Ca H+K + G window (nb09d): 267.95 ± 30.10 — headline within ~2 km/s.
 
 **Headline evolution** (mask-audit arc): 268.98 (clean) → 271.87 (+He I, M8) → 269.62 (+M10 sky audit)
-→ ±11.77 (M11 re-derivation). He I pushes σ up ~2.9, the 9 sky bands pull it down ~2.2 (near-cancel).
+→ ±11.77 (M11 re-derivation) → **±13.27 (M12, +R_e-source ±6.13, 2026-06-08)**. He I pushes σ up ~2.9,
+the 9 sky bands pull it down ~2.2 (near-cancel); central value 269.62 stable across M10→M12 (only the error grew).
 
 **Compare with Greene (2016/2020) and KH13 choices:** σ_e(<R_e) here uses the Cappellari et al. 2006
 eq. 1 luminosity-weighted single-aperture definition, exactly as adopted by Kormendy & Ho 2013
@@ -458,11 +460,17 @@ spaxels at S/N≥5, σ ∈ [144, 251] km/s (median 201), declining with R, no co
 
 # Flagged open items (carry into drafting)
 
-1. R_e-source systematic (±16.9 km/s) NOT folded into the wide-window budget — wide re-measurement pending.
+1. ~~R_e-source systematic not folded in~~ **RESOLVED 2026-06-08 (M12, nb15):** re-measured at the
+   wide window (±6.13) and folded into the budget → headline ±11.77 → **±13.27**.
 2. Reduction-pass ±3.45 rests on only 2 reductions — refine if a 3rd lands.
-3. Hδ may still need targeted masking (TODO in `bootstrap_ppxf.py`).
-4. Asymmetric-error tables: older 4-corner/M10 tables print −17.92/+17.65 (pre-M11); current is
-   −11.98/+11.57 (±11.77). Quote the M11 value.
+3. ~~Hδ may still need targeted masking~~ **RESOLVED 2026-06-08 (M12, nb16):** decision = **keep
+   unmasked** (Hδ is well-fit, not a contaminant; masking it would discard LOSVD information).
+   TODO in `bootstrap_ppxf.py` closed.
+3b. **NEW (A3c, nb14):** raw CoG R_e is r_max-non-convergent; headline 2.305″ is the top of a
+   2.1–2.5″ family (**R_e method systematic ±0.08″**), not folded into σ_e/M★ — flagged for a decision.
+4. Asymmetric-error tables: older 4-corner/M10 tables print −17.92/+17.65 (pre-M11), M11 was
+   −11.98/+11.57 (±11.77); **current (M12) is −13.45/+13.10 (±13.27). Quote the M12 value**
+   (canonical: `results/PAPER_VALUES.json`).
 5. No X-ray / quiescent data in repo (G2). 6. No lens-model content in repo (G1).
 7. "We do not account for peculiar velocities" needs to be written in (G3 — true, just add it).
 8. Source-z (1.302) error bar + its cache are a `[TBD]` placeholder.

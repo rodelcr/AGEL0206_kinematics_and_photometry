@@ -70,7 +70,8 @@ SPS_NATIVE_FRAME = {'fsps': 'vacuum', 'emiles': 'air', 'xsl': 'air'}
 
 def _prep_spectrum_for_ppxf(flux_native, noise_native, hdr, sps_name, z,
                             lam_obs_range, lam_range_temp, verbose=True,
-                            frame_galaxy='auto'):
+                            frame_galaxy='auto', lam_fit_range=None,
+                            mask_balmer=True):
     """Shared internals for setup_ppxf_inputs{,_from_spectrum}.
 
     Given a 1-D flux and noise on the KCWI cube's native (vacuum, observed)
@@ -118,8 +119,12 @@ def _prep_spectrum_for_ppxf(flux_native, noise_native, hdr, sps_name, z,
     noise_int = np.interp(log_lam_new, log_lam, noise_int)
     lam_int = np.exp(log_lam_new)
 
-    # Final wavelength mask after rebinning
-    mask_fit = (lam_int >= 6000.0) & (lam_int <= 7500.0)
+    # Final wavelength mask after rebinning. Defaults to the historical
+    # (6000, 7500) Å inner clamp; pass `lam_fit_range=(...)` to override
+    # (used by nb09a wavelength-window sensitivity sweep).
+    if lam_fit_range is None:
+        lam_fit_range = (6000.0, 7500.0)
+    mask_fit = (lam_int >= lam_fit_range[0]) & (lam_int <= lam_fit_range[1])
     lam_int = lam_int[mask_fit]
     flux_int = flux_int[mask_fit]
     noise_int = noise_int[mask_fit]
@@ -161,7 +166,14 @@ def _prep_spectrum_for_ppxf(flux_native, noise_native, hdr, sps_name, z,
 
     fwhm_gal_dict = {"lam": lam_gal_rest, "fwhm": fwhm_gal_rest}
     sps = lib.sps_lib(filename, velscale, fwhm_gal_dict, lam_range=list(lam_range_temp))
-    goodpixels = util.determine_goodpixels(np.log(lam_gal_rest), list(lam_range_temp))
+    # 2026-05-26: mask_balmer=False uses our custom no-Balmer mask (forbidden
+    # lines only; keeps Hδ, Hγ, Hβ in the fit because they're absorption-
+    # dominated in this passive deflector). mask_balmer=True (default)
+    # preserves the legacy ppxf behaviour for backward compatibility.
+    if mask_balmer:
+        goodpixels = util.determine_goodpixels(np.log(lam_gal_rest), list(lam_range_temp))
+    else:
+        goodpixels = _determine_goodpixels_no_balmer(np.log(lam_gal_rest), list(lam_range_temp))
 
     if verbose:
         print(f"  Templates: {sps_name} ({len(sps.templates.T)} templates)")
@@ -227,10 +239,54 @@ def setup_ppxf_inputs(ifu_file, sps_name='fsps', z=DEFAULT_Z,
                                    lam_obs_range, lam_range_temp)
 
 
+def _determine_goodpixels_no_balmer(ln_lam, lam_range_temp, redshift=0, width=800):
+    """Drop-in replacement for ppxf.ppxf_util.determine_goodpixels that does
+    NOT mask the Balmer absorption lines (Hδ, Hγ, Hβ, Hα). Used when the
+    `mask_balmer=False` flag is passed to setup_ppxf_inputs_from_spectrum.
+
+    For our passive elliptical deflector, the Balmer lines are absorption-
+    dominated, not emission, and masking them throws away ~120 stellar
+    absorption pixels in the wide arc-masked window. We keep masking the
+    truly forbidden lines ([OII], [OIII], [NII], [SII], [OI]) which would
+    only be present if there were unexpected gas emission.
+    """
+    lines = np.array([
+        3726.03, 3728.82,   # [OII] — keep masked (forbidden)
+        4958.92, 5006.84,   # [OIII] — keep masked (forbidden)
+        6300.30,            # [OI]   — keep masked (forbidden)
+        6548.03, 6583.41,   # [NII]  — keep masked (forbidden)
+        6716.47, 6730.85,   # [SII]  — keep masked (forbidden)
+        # Balmer lines (Hδ 4101, Hγ 4340, Hβ 4861, Hα 6563) DELIBERATELY OMITTED:
+        # they're absorption in the deflector and contribute to the LOSVD fit.
+        #
+        # RESOLVED 2026-06-08 (Task 6, notebook 16, scripts/run_sigma_e_hdelta_test.py):
+        # DECISION = (a) keep all Balmer (incl. Hδ) UNMASKED. Two diagnostics on the
+        # headline pipeline: (1) local-MAD shows Hδ is NOT an outlier — max|resid/noise|
+        # at Hδ = 0.44 vs global 99th-pct 0.81, i.e. the templates model the Hδ
+        # absorption well (no contamination to remove); (2) masking Hδ shifts σ_e UP
+        # by +6.4 (±800) / +7.6 (±300) km/s — that is the INFORMATION CONTENT of a
+        # σ-constraining absorption line being discarded, not a contamination
+        # correction (the M9 "it's signal, do NOT mask" pattern). The ~7 km/s lever is
+        # a flagged higher-order-Balmer template-fidelity sensitivity (bounded by the
+        # clean residual + 3-SPS pooling), NOT a two-sided budget systematic — we keep
+        # Hδ. So: include Hδ in the fit alongside Hγ + Hβ.
+    ])
+    dv = np.full_like(lines, width)
+    c = 299792.458
+    flag = False
+    for line, dvj in zip(lines, dv):
+        flag |= (ln_lam > np.log(line*(1 + redshift)) - dvj/c) \
+            & (ln_lam < np.log(line*(1 + redshift)) + dvj/c)
+    flag |= ln_lam > np.log(lam_range_temp[1]*(1 + redshift)) - 900/c
+    flag |= ln_lam < np.log(lam_range_temp[0]*(1 + redshift)) + 900/c
+    return np.flatnonzero(~flag)
+
+
 def setup_ppxf_inputs_from_spectrum(flux, noise, hdr, sps_name='fsps', z=DEFAULT_Z,
                                     lam_obs_range=DEFAULT_LAM_OBS_RANGE,
                                     lam_range_temp=DEFAULT_LAM_RANGE_TEMP,
-                                    verbose=True, frame_galaxy='auto'):
+                                    verbose=True, frame_galaxy='auto',
+                                    lam_fit_range=None, mask_balmer=True):
     """
     Build a ppxf_inputs dict from a pre-extracted 1-D spectrum.
 
@@ -269,7 +325,9 @@ def setup_ppxf_inputs_from_spectrum(flux, noise, hdr, sps_name='fsps', z=DEFAULT
         print(f"Setting up ppxf inputs for {sps_name} from user-supplied spectrum...")
     return _prep_spectrum_for_ppxf(flux, noise, hdr, sps_name, z,
                                    lam_obs_range, lam_range_temp, verbose=verbose,
-                                   frame_galaxy=frame_galaxy)
+                                   frame_galaxy=frame_galaxy,
+                                   lam_fit_range=lam_fit_range,
+                                   mask_balmer=mask_balmer)
 
 
 # =============================================================================

@@ -145,9 +145,17 @@ ARC_MASK = True
 #   Frame:       ±5.0 (unchanged, structural)
 #   Centering:   ±4.0 (unchanged, HST-derived)
 #   Reduction:   ±3.45 (M10 value, unchanged)
-# Net total sys: ±17.16 → ±10.81 (down 6.4 km/s; window dropping out as the
-# dominant component is the main reason).
-SYS_QUAD = float(np.sqrt(2.27**2 + 6.65**2 + 5.0**2 + 4.0**2 + 3.82**2 + 3.45**2))  # = 10.81
+# 2026-06-08 (Task 5, notebook 15, scripts/run_sigma_e_Re_systematic_wide.py):
+#   R_e-source:  ±6.13 ADDED — wide-window re-measurement of the D7 R_e-source
+#                systematic (was 16.9 km/s = ±8.45 at the narrow window, and
+#                NEVER folded into the wide budget). Full peak-to-peak/2 across
+#                the 4 R_e estimators (mean 2.305"/F140W 2.168"/F200LP 2.441"/
+#                CaHK+G 2.902"). User decision 2026-06-08: fold the FULL spread.
+# 2026-06-08 NOTE: the σ_e masking-approach systematic (Task 1, notebook 13,
+#   ±5.85) is NOT a separate line — it overlaps the F200-mask term (±6.65);
+#   larger-of-two = 6.65 is kept (no double-count).
+# Net total sys: ±10.81 → ±12.43 (R_e-source folded in).
+SYS_QUAD = float(np.sqrt(2.27**2 + 6.65**2 + 5.0**2 + 4.0**2 + 3.82**2 + 3.45**2 + 6.13**2))  # = 12.43
 
 # Reproduce the deterministic seed-offset convention from run_window_sweep
 # (so caches written by THIS script bit-match the ones already on disk).

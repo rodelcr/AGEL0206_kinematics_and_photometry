@@ -165,7 +165,7 @@ def ifu_white_light_Re(cube, hdr, mask_contamination=None,
 # HST R_e
 # ─────────────────────────────────────────────
 
-def hst_Re(band, masking='proper', mask_override=None):
+def hst_Re(band, masking='proper', mask_override=None, r_max_arcsec=6.0):
     """
     R_e from an HST image.
 
@@ -181,6 +181,15 @@ def hst_Re(band, masking='proper', mask_override=None):
         If given, use this boolean mask instead of loading the band's default
         `_mask.fits`. Used by scripts/arc_mask_verification.py to test the
         color- and Sersic-residual-derived masks. Must match the image shape.
+    r_max_arcsec : float
+        Outer radius of the curve-of-growth integration, in arcsec. Default
+        6.0" so this diagnostic RECONCILES with the headline R_e from
+        `final_sigma_e.curve_of_growth` (which integrates to 6.0"). The old
+        hard-coded `arange(1, 80, 1)` px cap = 4.0" at F200LP truncated the
+        CoG early and biased R_e LOW (F200LP 1.91" vs the headline 2.44");
+        with r_max matched the two algorithms agree to <0.04" (notebook 14,
+        2026-06-08). NOTE: a raw (sky-unsubtracted) CoG R_e is r_max-sensitive
+        and does NOT converge — see notebook 14 for the R_e systematic.
 
     Returns dict with Re, r_profile, I_profile, method, label
     """
@@ -229,8 +238,10 @@ def hst_Re(band, masking='proper', mask_override=None):
     else:
         raise ValueError(f"Unknown masking: {masking}")
 
-    # Radial profile
-    r_edges = np.arange(1, 80, 1)  # pixels
+    # Radial profile. r_max_arcsec sets the outer integration radius (default
+    # 6.0" to reconcile with final_sigma_e.curve_of_growth — see docstring).
+    r_max_px = int(round(r_max_arcsec / pscale))
+    r_edges = np.arange(1, r_max_px, 1)  # pixels
     r_prof, I_prof = [], []
     for j in range(len(r_edges) - 1):
         aper = CircularAnnulus((x_c, y_c), r_in=r_edges[j], r_out=r_edges[j + 1])

@@ -1,0 +1,73 @@
+% Header include for TESTS_AND_DIAGNOSTICS pandoc -> xelatex build.
+% Goal: prevent overlapping text in wide tables.
+
+\usepackage{array}
+\usepackage{etoolbox}
+
+% Tighter column padding so long cells don't overflow
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+
+% Shrink table fonts so wide rows fit the page
+\AtBeginEnvironment{longtable}{\footnotesize}
+\AtBeginEnvironment{tabular}{\footnotesize}
+\AtBeginEnvironment{tabularx}{\footnotesize}
+
+% Allow URLs / inline code to break across lines
+\usepackage{xurl}
+\renewcommand{\UrlBreaks}{\do\/\do\-\do\_\do\.\do\=}
+
+% pandoc's `inline code` becomes \texttt{...} — long paths overflow
+% table columns. The Lua filter .pandoc_break_paths.lua rewrites
+% these as \BreakablePath{...} with \discretionary{}{}{} break
+% opportunities already inserted after / _ - . — so we only need to
+% set tt-family and allow sloppy line breaking.
+\newcommand{\BreakablePath}[1]{{\ttfamily\sloppy #1}}
+
+% --- Symbol fallback for glyphs missing from STIX Two Text -----------------
+% STIX Two Text lacks several common math/symbol glyphs in the OT:scri
+% feature set we render with (→, ≤, ≥, ∈, ≈, ↔, ★). Map each one to its
+% counterpart in STIX Two Math, which has the full set.
+\usepackage{newunicodechar}
+\newfontfamily\stixfallback{STIX Two Math}[Scale=MatchLowercase]
+\newcommand{\fb}[1]{{\stixfallback #1}}
+
+\newunicodechar{→}{\fb{→}}
+\newunicodechar{←}{\fb{←}}
+\newunicodechar{↔}{\fb{↔}}
+\newunicodechar{≤}{\fb{≤}}
+\newunicodechar{≥}{\fb{≥}}
+\newunicodechar{∈}{\fb{∈}}
+\newunicodechar{≈}{\fb{≈}}
+\newunicodechar{★}{\fb{★}}
+\newunicodechar{⊕}{\fb{⊕}}
+\newunicodechar{σ}{\fb{σ}}
+\newunicodechar{Σ}{\fb{Σ}}
+\newunicodechar{Δ}{\fb{Δ}}
+\newunicodechar{α}{\fb{α}}
+\newunicodechar{β}{\fb{β}}
+\newunicodechar{γ}{\fb{γ}}
+\newunicodechar{δ}{\fb{δ}}
+\newunicodechar{ε}{\fb{ε}}
+\newunicodechar{η}{\fb{η}}
+\newunicodechar{λ}{\fb{λ}}
+\newunicodechar{μ}{\fb{μ}}
+\newunicodechar{π}{\fb{π}}
+\newunicodechar{ρ}{\fb{ρ}}
+\newunicodechar{τ}{\fb{τ}}
+\newunicodechar{φ}{\fb{φ}}
+\newunicodechar{χ}{\fb{χ}}
+\newunicodechar{²}{\fb{²}}
+\newunicodechar{³}{\fb{³}}
+\newunicodechar{ω}{\fb{ω}}
+\newunicodechar{Ω}{\fb{Ω}}
+\newunicodechar{∝}{\fb{∝}}
+\newunicodechar{√}{\fb{√}}
+\newunicodechar{∞}{\fb{∞}}
+\newunicodechar{±}{\fb{±}}
+\newunicodechar{×}{\fb{×}}
+\newunicodechar{÷}{\fb{÷}}
+\newunicodechar{−}{\fb{−}}
+\newunicodechar{☉}{\fb{☉}}
+\newunicodechar{✓}{\fb{✓}}
+\newunicodechar{⚠}{\fb{⚠}}

@@ -39,7 +39,7 @@ The streamlined IFU notebook uses veldis (degree=[4,30]) for the integrated spec
 
 **Primary paper number** — σ_e(<Re) on the NEW `_mtwdo_` reduction, wide arc-masked window ppxf, **with He I 3819 source-emission mask + M10 full sky-line audit (2026-05-27)**:
 
-- **σ_e(<Re) = 269.62 ± 11.77 km/s** (asymmetric −11.98 / +11.57) at `wR3800_5400_arcmask` (rest 3800–5400 Å, Ca H+K through Mg b/Fe5335 + z=1.302 source-emission masks incl. He I 3819 + 35-entry BAD_PIXELS_REST sky/CR catalog) — **paper headline** for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5)
+- **σ_e(<Re) = 269.62 ± 13.27 km/s** (asymmetric −13.45 / +13.10) at `wR3800_5400_arcmask` (rest 3800–5400 Å, Ca H+K through Mg b/Fe5335 + z=1.302 source-emission masks incl. He I 3819 + 35-entry BAD_PIXELS_REST sky/CR catalog) — **paper headline** for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5). **2026-06-08: was ±11.77; the D7 R_e-source systematic (±6.13) was folded into the budget (Task 5, nb15).** All numbers in this block are emitted by `scripts/paper_values.py` → `results/PAPER_VALUES.json` (single source of truth — do not hand-edit)
 - Source: `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/wR3800_5400_arcmask_{fsps,emiles,xsl}_T*_N500.npz`. Cube: `raw_KCWI/New_red/Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`.
 - Pipeline: bad-pixel mask (M10-audited, 35 entries — 26 original CR residuals + 9 OH airglow/sky bands added via full sky-noise audit, all verified non-source via arc spectrum) + no-Balmer mask (Hδ, Hγ, Hβ kept in the fit) + ARC_MASKS_REST catalog with He I 3819 source emission added (5237–5253 Å). See `_clean_hei` presets in `scripts/run_wide_sigma_e.py`.
 
@@ -47,15 +47,18 @@ Systematic-budget components on the NEW reduction (post-M10, 2026-05-27):
 
 | component | ± km/s | notes |
 |-----------|--------|-------|
-| stat (N=500) | 4.6 (asym −5.16/+4.13) | wild-bootstrap pool across FSPS+EMILES+XSL × 15 polynomial degrees on cleaned + He-I + M10-sky-masked new cube. **This pooled width already marginalizes over the SPS-library and polynomial-degree systematics** — between-SPS spread is ±2.04 (FSPS 271.3/EMILES 267.2/XSL 270.4), within-SPS bootstrap ±4.22, quadrature 4.73 ≈ pooled 4.64. SPS collapsed from ~26 km/s (narrow) to ~4 km/s (wide) per J5, so no separate SPS line is needed. **NOT yet folded in:** R_e-source (D7, 16.9 km/s at narrow window) — flagged for a wide-window re-measurement |
+| stat (N=500) | 4.6 (asym −5.16/+4.13) | wild-bootstrap pool across FSPS+EMILES+XSL × 15 polynomial degrees on cleaned + He-I + M10-sky-masked new cube. **This pooled width already marginalizes over the SPS-library and polynomial-degree systematics** — between-SPS spread is ±2.04 (FSPS 271.3/EMILES 267.2/XSL 270.4), within-SPS bootstrap ±4.22, quadrature 4.73 ≈ pooled 4.64. SPS collapsed from ~26 km/s (narrow) to ~4 km/s (wide) per J5, so no separate SPS line is needed |
 | I-shape (10 shapes × N=250, **M11**) | **2.27** | **rigorous re-derivation 2026-05-27** on NEW cube + M10 masks; peak-to-peak/2 of 10-shape spread (266.83–271.37). Was ±1.5 carried from old-cube sweep |
 | F200 mask (3 weights × N=500, **M11**) | **6.65** | **rigorous re-derivation 2026-05-27** on NEW cube + M10 masks; (w00−w100)/2 = (269.69−256.39)/2. Bigger than the ±3.8 carried value because the cleaned NEW cube + Balmer-unmasked fit is more sensitive to arc dilution (more signal pixels → more leverage) |
 | frame (vac/air, carried) | 5.0 | from prior frame-fix work; structural choice (per-SPS native frame) |
 | centering (HST WCS, carried) | 4.0 | HST-derived; reduction-independent |
 | fit-window (3 windows × N=500, **M11**) | **3.82** | **rigorous re-derivation 2026-05-27** on NEW cube + M10 masks. wR3800_5400_arcmask 269.66, wR4000_5400_arcmask 268.58, w6500_7500 276.22 → peak-to-peak/2 = 3.82. **Dramatically smaller than the ±15.0 carried value** because the cleaned + He-I-masked NEW cube agrees across windows to ±4 km/s (vs ±15 on the OLD cube). The narrow w6500_7500 still has large stat error (±30) but its central value sits near the wide-window numbers now |
 | **reduction-pass (refined 2026-05-27 post-M10)** | **3.45** | half-Δ between cleaned + He-I + M10 new and old reductions = (269.62−262.72)/2 = 3.45. Was ±3.86 pre-M10; M10 sky masks tightened the inter-reduction gap further. Flag: only 2 reductions; refine if 3rd lands |
-| **TOTAL (symmetric)** | **11.77** | quadrature sum (was ±17.78 pre-M11; the dominant ±15 fit-window component dropped to ±3.82) |
-| **TOTAL (asymmetric)** | **−11.98 / +11.57** | preserves stat-side skew |
+| **R_e-source (D7 wide, 4 estimators × N=500, 2026-06-08)** | **6.13** | **NEW — Task 5, nb15, `scripts/run_sigma_e_Re_systematic_wide.py`.** Wide-window re-measurement of D7 (was ±8.45 at narrow, never folded in). Full peak-to-peak/2 across mean 2.305"(269.62)/F140W 2.168"(267.44)/F200LP 2.441"(272.44)/CaHK+G 2.902"(279.69). User decision 2026-06-08: fold the FULL spread (CaHK+G's +10 km/s at 2.90" reflects the rising σ(R) gradient). Light-R_e-family-only spread is ±2.50 (reported as a cross-check) |
+| **TOTAL (symmetric)** | **13.27** | quadrature sum (was ±11.77 pre-R_e-source; R_e-source ±6.13 folded in 2026-06-08). Computed by `scripts/paper_values.py` |
+| **TOTAL (asymmetric)** | **−13.45 / +13.10** | preserves stat-side skew |
+
+> **σ_e arc-masking-approach cross-check (Task 1, nb13, 2026-06-08):** the masking-*definition* systematic (expert/sersic/perband/global reprojected to the IFU grid) = **±5.85 km/s** — the spectroscopic analogue of the M★ ±0.16 dex term. It **overlaps the F200-mask w-sweep term (±6.65)** and is NOT added separately (larger-of-two = 6.65 kept). σ_e robust to arc-mask definition at this level. `scripts/run_sigma_e_mask_systematic.py`.
 
 Cross-checks:
 - **OLD cube cleaned + He I + M10 (`--cube headline_clean_hei`)**: σ_e(<Re) = **262.72 ± 17.99 km/s** (asym −18.10/+17.88). 6.90 km/s Δ to the headline → source of the refined ±3.45 reduction-pass systematic.
