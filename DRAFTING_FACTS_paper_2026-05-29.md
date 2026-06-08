@@ -293,13 +293,33 @@ reproduce the arc selection), validated + applied to all four bands.
 
 **σ_e definition & wavelength window**
 
-- **σ_e definition** (Gültekin et al. 2009; Kormendy & Ho 2013 eq. 3; Greene et al. 2020 ARA&A;
-  2D IFU form Cappellari et al. 2006 eq. 1):
+- **σ_e definition — analytic (Gültekin) and discrete (Cappellari) forms are the SAME quantity.**
+  (Gültekin et al. 2009 eq. 1; Kormendy & Ho 2013 eq. 3; 2D-IFU form Cappellari et al. 2006 eq. 1.)
+  - **Analytic / luminosity-weighted integral** (Gültekin 1D longslit, generalised to 2D — the 2πr
+    is the axisymmetric area element dA = 2πr dr):
 
-  $$\sigma_e^2 = \frac{\int_0^{R_e} (V^2 + \sigma^2)\, I(r)\, dr}{\int_0^{R_e} I(r)\, dr}.$$
+    $$\sigma_e^2 = \frac{\int_0^{R_e} (V^2 + \sigma^2)\, I(r)\, 2\pi r\, dr}{\int_0^{R_e} I(r)\, 2\pi r\, dr}.$$
+  - **Discrete Cappellari (2006) eq. 1 spaxel/bin sum** — the *same* moment evaluated over spaxels
+    (or Voronoi bins) n, with $F_n$ = the I-band flux (luminosity weight) of spaxel n; the 2πr factor
+    is captured implicitly because the number of spaxels per annulus scales with area:
 
-  The **headline path is the cumulative I-weighted single-ppxf fit** on the R<R_e aperture spectrum
-  (preserves LOSVD shape; matches what KH13/Greene+20 compute), not the discrete annular sum.
+    $$\sigma_e^2 = \frac{\sum_{n:\, R_n \le R_e} F_n\,[(V_n - V_\mathrm{sys})^2 + \sigma_n^2]}{\sum_{n:\, R_n \le R_e} F_n}.$$
+
+    This is the form SAURON IV / ATLAS3D III / MaNGA-DAP (Westfall+2019) use on Voronoi bins.
+- **These two forms are equivalent and BOTH are already implemented and cross-checked in this project**
+  (do not re-derive): the **analytic integral is the headline path** — the cumulative I-weighted
+  single-ppxf fit on the R<R_e aperture spectrum (preserves LOSVD shape; what KH13/Greene+20 compute) —
+  and the **discrete Cappellari/Gültekin spaxel-sum is the §7 / nb07c annular implementation**
+  (`run_gultekin_mc`, F_j = Σ I over each unmasked annulus). The two agree at **<1σ**: integral
+  (§6cum, narrow) 267.32 ± 24 vs discrete annular (§7, arc-filtered to R<R_safe=3R_e/4) 256.17 −13.0/+12.7.
+  Full implementation + subtleties in `reference_gultekin_implementation.md`.
+- **Why the integral path is the headline** (not the discrete sum): the discrete spaxel-sum is (i)
+  per-spaxel-S/N-limited and (ii) sensitive to arc contamination in the outer spaxels — an *unfiltered*
+  discrete sum over the resolved PowerBins out to ~3.4″ is dominated by the z=1.302 arc (outer bins
+  carry σ ≳ 300–440 km/s, V swings of ±150–270; the σ_e blows up to ~350). The I-weighted aperture
+  auto-suppresses the arc (bright deflector core dominates the weight) and avoids the S/N floor, so it
+  implements the same Cappellari definition robustly. The discrete §7 sum is therefore arc-filtered to
+  R<R_safe and used only as the architecture-independent cross-check / for the σ(R) profile.
 - **Standard wavelength range (headline): rest 3800–5400 Å** (`wR3800_5400_arcmask`) — Ca H+K through
   Mg b / Fe5270 / Fe5335; 2161 good pixels (~2.6× the narrow window). The fit is constrained by the
   highest-S/N features — **Ca H, Ca K, G-band** (3800–4400) — and is **consistent across windows**.
@@ -374,8 +394,10 @@ source z = 1.302 (spiral), deflector z = 0.67564.
   FSPS 253.0 < EMILES 267.5 < XSL 279.7) to ~4 km/s (wide)** — a key argument for the wide window;
   it now sits inside the pooled stat width.
 - Quadrature is deliberately conservative (components not strictly independent).
-- **FLAG: R_e-source systematic (±16.9 km/s at narrow window) is NOT yet folded in** — flagged for a
-  wide-window re-measurement.
+- **R_e-source systematic IS now folded in (±6.13, M12 2026-06-08):** re-measured at the wide window
+  (nb15) and included in the budget above — the narrow-window ±16.9 is superseded. The full
+  4-estimator spread was adopted (user decision); the CaHK+G 2.90″ estimator drives it (+10 km/s =
+  rising σ(R), see below), while the light-R_e family alone gives ±2.50.
 
 **Systematics paragraph order** (per outline): first R_e and I(r) (I-shape ±2.27, R_e-source flagged),
 then the spectrum (mask ±6.65, frame ±5.0, window ±3.82, reduction ±3.45, centering ±4.0).
@@ -450,13 +472,61 @@ spaxels at S/N≥5, σ ∈ [144, 251] km/s (median 201), declining with R, no co
 - **ppxf:** Cappellari & Emsellem (2004); Cappellari (2017, MNRAS 466, 798); Cappellari (2023).
 - **σ_e aperture definition:** Cappellari et al. (2006, MNRAS 366, 1126) eq. 1;
   **Gültekin et al. (2009)** eq. 1; **Kormendy & Ho (2013, ARA&A 51, 511)** eq. 3 (scatter 0.29 dex);
-  **Greene, Strader & Ho (2020, ARA&A 58, 257)** fig. 5; Saglia et al. (2016).
+  **Greene, Strader & Ho (2020, ARA&A 58, 257)** fig. 5 **[⚠ AUDIT FLAG — see below]**; Saglia et al. (2016).
 - **z=0 IFS calibration:** Cappellari et al. (2013, ATLAS3D XV & XX); Krajnović et al. (2013, XVII);
   Zhu et al. (2024, MaNGA DynPop III).
 - **Mass–size / analogs:** van der Wel et al. (2014); Mowla et al. (2019); Ge et al. (2021);
-  Sonnenfeld et al. (2015, SL2S V).
+  Sonnenfeld et al. (2015, SL2S V) **[⚠ AUDIT FLAG — see below]**.
 - **Vacuum↔air:** Ciddor (1996). **Wide-window precedent:** Bezanson et al. (2018); van der Wel et al. (2021).
 - **Source-z catalog:** AGEL DR2 (Carleton et al., in prep). **Cluster:** Hilton et al. (2021, ACT DR5).
+
+# Citation audit + referee challenges (2026-06-08)
+
+**Citation audit** (vs the user's Zotero library; "not in library" ≠ fabricated — most are real
+foundational papers simply not yet added to Zotero, flagged so the .bib can be completed):
+
+- **Verified in-library, metadata exact:** Cappellari (2017, MNRAS 466, 798) ✓; Kormendy & Ho
+  (2013, ARA&A 51, 511) ✓; Greene, Strader & Ho (2020, ARA&A 58, 257) ✓ *(metadata only — see flag)*;
+  Hilton et al. (2021, ApJS 253, 3 = ACT SZ-cluster catalog) ✓; Cappellari (2023, MNRAS 526, 3273) ✓.
+  Also in-library and relevant: **McConnell & Ma (2013)** — a massive-BH M•–σ / M•–M_bulge anchor.
+- **⚠ FLAG 1 — Greene, Strader & Ho (2020, ARA&A 58, 257):** bibliographic metadata is CORRECT, but
+  this review is titled **"Intermediate-Mass Black Holes."** It does provide M•–σ / M•–M★ relations
+  (legitimately citable as a *comparison* relation, as Fig. 4 uses it), but for a ~10⁹ M☉ SMBH the
+  *primary* anchors should be KH13 / McConnell & Ma 2013 / Saglia+2016, with Greene+20 as one of the
+  overplotted comparison relations. **ACTION: verify the "fig. 5" number** (the scaling-relation
+  figure in Greene+20 may not be fig. 5) and ensure the text frames it as a comparison, not the
+  primary massive-BH relation. *(Not a fabrication — a framing/figure-number check.)*
+- **⚠ FLAG 2 — Sonnenfeld "SL2S V" (2015):** the library contains SL2S **IV** (Sonnenfeld et al.
+  **2013**, ApJ 777, 98), not paper **V** (2015, ApJ 800, 94). **ACTION: decide which you mean** and
+  either correct to "IV (2013)" or add the 2015 V paper to Zotero. Do not let the 2013 record stand
+  in for a 2015 citation.
+- **⚠ FLAG 3 — Bezanson et al. (2018):** no Bezanson-first-author 2018 item in the library. If you
+  mean the LEGA-C velocity-dispersion paper (Bezanson et al. 2018, ApJ 858, 60), **add it** / verify.
+- **To add to Zotero before the .bib is complete** (real papers, just absent; metadata NOT
+  independently verified here — confirm on add): Cappellari & Emsellem (2004), Cappellari et al.
+  (2006, SAURON IV), Gültekin et al. (2009), Saglia et al. (2016), Cappellari et al. (2013, ATLAS3D),
+  Krajnović et al. (2013), Zhu et al. (2024, MaNGA DynPop III), van der Wel et al. (2014),
+  Mowla et al. (2019), Ge et al. (2021), Ciddor (1996), van der Wel et al. (2021, LEGA-C DR3).
+
+**Referee challenges to the current doc** (anticipate / address in drafting):
+
+1. **R_e is not converged (A3c, nb14).** The headline R_e = 2.305″ is a *raw* curve-of-growth at
+   r_max=6″; the CoG never flattens (no sky pedestal subtraction), so R_e climbs with r_max and sits
+   at the top of a 2.1–2.5″ method family (sky-sub 2.14″, Sérsic 2.18″). **Strongest soft spot.** A
+   referee will ask for a Sérsic / sky-subtracted / PSF-deconvolved R_e. Currently flagged, not fixed.
+   Knock-on: R_e sets both the σ_e aperture and (weakly) M★.
+2. **R_e-source budget term uses the FULL 4-estimator spread (±6.13).** Including the CaHK+G 2.90″
+   estimator — which is larger than the light-R_e family and whose +10 km/s is the rising-σ(R)
+   gradient — arguably conflates aperture-uncertainty with σ(R)-physics. Defensible (conservative),
+   but a referee could argue for the light-family ±2.50 (→ ±12.0 total). Documented both ways.
+3. **Rising outer σ(r) attributed to arc dilution.** The claim "σ(r) should decrease; any rise is the
+   z=1.302 arc" is the right physical call, but it is *also* what lets us drop the high-σ outer bins;
+   make the arc-contamination evidence explicit (EW / continuum-dilution diagnostic, nb07e) so it does
+   not read as motivated reasoning.
+4. **He I 3819 source-emission mask** rests on a 3-pixel residual cluster — defensible (consistent
+   across reductions, matches z=1.302), but small; a referee may probe it. The M8/M9/M10 audit trail
+   covers this.
+5. **σ_inst = 12.6 km/s vs σ_e ≈ 270:** well-resolved, not a challenge — but state the LSF treatment.
 
 # Flagged open items (carry into drafting)
 
