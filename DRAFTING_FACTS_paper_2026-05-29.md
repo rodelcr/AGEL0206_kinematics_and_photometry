@@ -1,8 +1,8 @@
 ---
 title: "AGEL J020613−011417 — Drafting Fact Sheet for the Methods & Results Sections"
-subtitle: "Facts, decisions, and provenance keyed to the paper outline (2026-05-29)"
+subtitle: "Facts, decisions, and provenance keyed to the paper outline — last revised 2026-06-08 (post-M12)"
 author: "Compiled for R. Córdova Rosado from project notes, memory, METHODS_AND_SYSTEMATICS.md, and TESTS_AND_DIAGNOSTICS.md"
-date: "2026-05-29"
+date: "2026-06-08"
 ---
 
 # How to use this document
@@ -185,8 +185,9 @@ reproduce the arc selection), validated + applied to all four bands.
 - **Do NOT confuse with `scripts/measure_Re.py`** → `results/Re_measurements.npz`. That script
   uses the image-geometric center and produces **10 variants** (3 sources × 4 masking strategies:
   `unmasked`, `zeroed`, `proper`, `PSF-convolved`); its "proper-mask" mean (2.633″) is **not the
-  headline** — early-reference only. (It also hardcodes pixscale=0.08 for both HST bands, another
-  reason production is preferred.)
+  headline** — early-reference only. (`measure_Re.hst_Re` previously hardcoded pixscale=0.08 for
+  both bands; **fixed 2026-06-08 (A3c/nb14) to read the WCS pixscale + `r_max_arcsec=6.0`, now
+  reconciling with the production CoG to <0.04″** — but `final_sigma_e` remains the headline path.)
 - **Superseded prior value:** IFU white-light R_e = 2.61″ (nb05/06 era) — superseded because the
   HST-based 2.305″ has the F140W+F200LP arc masks built in. A Ca H+K+G depth-map gives 2.866″.
 - **R_e as a σ_e systematic (test D7):** four R_e definitions shift σ_e (rises monotonically with
@@ -356,12 +357,18 @@ reproduce the arc selection), validated + applied to all four bands.
 - **Emission-line handling (sigma clipping / removing emission lines):**
   - Custom **no-Balmer goodpixels** (`_determine_goodpixels_no_balmer`): masks only the forbidden
     lines ([O II], [O III], [O I], [N II], [S II]) and **keeps Hδ, Hγ, Hβ IN the fit** (they are
-    absorption in this passive deflector; masking them discards ~120 stellar pixels). **TODO flag:**
-    Hδ may still need targeted masking — open item.
+    absorption in this passive deflector; masking them discards ~120 stellar pixels). **Hδ: keep
+    unmasked — RESOLVED (M12/nb16):** Hδ is well-fit (local-MAD not an outlier), and masking it
+    shifts σ_e by +6–8 km/s = LOSVD *information*, not contamination (the M9 "it's signal" pattern);
+    the `bootstrap_ppxf.py` TODO is closed.
   - **z = 1.302 source-emission masks** (`ARC_MASKS_REST`, mapped by (1+z_s)/(1+z_l)=1.374):
     Mg II 2796/2803 (def-rest 3835–3855 Å), [O II] 3727/3729 (5115–5135), [Ne III] 3869 (5260–5340),
-    **He I 3819** (5237–5253, added 2026-05-27 as test M8). Plus an O₂ A-band telluric residual at
-    def-rest 4525–4545 (not source — confirmed 2026-05-18).
+    **He I 3819** (5237–5253, added 2026-05-27 as test M8).
+  - **Tellurics — handled by masking, not correction.** One band is masked: the **O₂ A-band
+    leading-edge residual** at **obs 7593–7626 Å = def-rest 4525–4545 Å** (`ARC_MASKS_REST`).
+    Confirmed telluric, not z=1.302 source, on 2026-05-18 by the same-observed-λ test (the spike sits
+    at the *same obs λ* in the deflector aperture, the sky box, and a 4–8″ off-deflector spectrum). No
+    full telluric correction is applied; the M10 OH/sky bands (below) catch sky-emission residuals.
   - **M10 sky-line audit:** bad-pixel catalog `BAD_PIXELS_REST` = 35 entries (26 CR residuals +
     9 OH airglow/sky bands), all verified non-source via the arc spectrum.
 - **Wild bootstrap errors:** hybrid **Rademacher sign-flip × local-residual scaling** (75-pixel
@@ -464,6 +471,14 @@ Driver for the headline: `scripts/run_wide_sigma_e.py --cube new_clean_hei --n_b
    (b) **z=1.302 source-emission** masks `ARC_MASKS_REST` (Mg II, [O II], [Ne III], **He I 3819**) +
    the O₂ A-band telluric. (c) **`BAD_PIXELS_REST`** = 35 entries (26 CR residuals + 9 M10 OH/sky
    bands). All in deflector rest-frame Å.
+   - **Outlier rejection / sigma-clipping decision:** ppxf's in-fit **`clean=False`** — `clean=True`
+     rejects 0 pixels here (the KCWI noise array is overestimated vs the actual residual scatter), so
+     it is inert. Instead, cosmic-ray/bad pixels are flagged by a **3σ local-MAD clip** (rolling
+     75-pixel window, |residual|/local-MAD > 3σ) on the canonical residuals → 52 CR-like spikes,
+     curated into the 26 CR entries of `BAD_PIXELS_REST`; the 9 M10 sky bands were flagged separately
+     at >2.5× median sky-noise. **Caveats (carried as a stated sensitivity, not a budget term):** the
+     3σ threshold is not strongly motivated vs alternatives, and cleaning shifts σ_e by only +1.4 km/s
+     (below stat 1σ); the same pixels replicate the shift on the OLD cube (M6) → real CR residuals.
 6. **Per-SPS frame-aware ppxf.** For each of FSPS / EMILES / XSL: match the galaxy frame to the
    SPS native frame (FSPS=vacuum, EMILES/XSL=air; scalar-median vac↔air via Ciddor 1996), run
    `ppxf` (Cappellari) with **moments=2**, **additive Legendre `degree` swept 15–29 (15 values)**,
