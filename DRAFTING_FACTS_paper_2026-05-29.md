@@ -141,9 +141,10 @@ reproduce the arc selection), validated + applied to all four bands.
 
 - **Locator = F200LP** (highest contrast on the blue z=1.302 source). Two independent objective
   selectors reproduce the F200LP hand mask: (i) a color cut m_F200LP−m_F140W (arc bluer than the
-  red deflector); (ii) a **Sérsic-residual** mask (subtract a 2D deflector model, flag positive
-  excess > 3σ_sky). On F200LP the Sérsic-residual mask reproduces the expert photometry to
-  **0.016 mag**, R_e to 3%.
+  red deflector); (ii) a **Sérsic-residual** mask (subtract a 2D deflector model, flag pixels whose
+  positive residual exceeds **k·σ_sky**, where **k is the detection threshold in units of the sky
+  noise σ_sky** and σ_sky is the robust background scatter; we adopt **k = 3**). On F200LP the
+  Sérsic-residual mask reproduces the expert photometry to **0.016 mag**, R_e to 3%.
 - **Transfer to other bands by reprojecting the F200LP footprint** (WCS + `map_coordinates`).
   Reproduces the expert JWST aperture mags to **0.01–0.02 mag**. Do **NOT** use an independent
   per-band Sérsic-residual mask on F140W/JWST — a single Sérsic under-fits the bright extended
@@ -500,9 +501,13 @@ Drivers: `scripts/photometry_systematics.py` (masking + photometry), `bagpipes_s
 (SED), orchestrated/displayed in notebook 12. Recipe = **F200LP locates, IR extends, fill-in recovers**.
 
 1. **Locate the arc on F200LP** (best source contrast): a 2D Sérsic deflector model is subtracted
-   and positive residual > 3σ_sky flags arc pixels (`arc_mask_verification.py`). This **objective
-   Sérsic-residual mask reproduces the expert hand mask to 0.016 mag**, R_e to 3% (k=3 is the clean
-   S/N saturation point from a SNR∈{2..20}×k∈{2..8} sweep).
+   and a pixel is flagged as arc where its positive residual exceeds **k·σ_sky** — i.e. **k is the
+   detection threshold in units of the sky noise σ_sky** (so k=3 means residual > 3σ_sky), with a
+   parallel S/N floor (the pixel's own S/N > SNR_thresh). We adopt **k = 3**
+   (`arc_mask_verification.py`): this **objective Sérsic-residual mask reproduces the expert hand mask
+   to 0.016 mag**, R_e to 3%. **k = 3 is the clean saturation point** of a 2-D sweep over the two
+   thresholds (SNR_thresh ∈ {2..20} × k ∈ {2..8}) — below k≈3 it grabs noise, above it the masked-flux
+   fraction stops changing.
 2. **Reproject the F200LP footprint to every band** (WCS + `map_coordinates`) — reproduces the
    expert JWST aperture mags to 0.01–0.02 mag. Do **not** fit an independent per-band single Sérsic
    (under-fits the bright IR galaxy, over-masks 0.2–0.4 mag).
