@@ -567,8 +567,15 @@ reproduce the arc selection), validated + applied to all four bands.
   $$S_e(\lambda) \;=\; \sum_{n:\, r_n < R_e} w_n\, S_n(\lambda), \qquad
     w_n = \frac{I_n}{\sum_{m:\, r_m < R_e} I_m}, \qquad w_n \equiv 0 \ \text{for arc-masked spaxels (mask\_weight=0)},$$
 
-  where $S_n(\lambda)$ is the spaxel spectrum and $I_n$ its 6500–7500 Å white-light flux (the luminosity
-  weight). pPXF then fits a **single Gaussian LOSVD** (`moments=2`) to $S_e(\lambda)$,
+  where $S_n(\lambda)$ is the spaxel spectrum and $I_n$ its 6500–7500 Å observed-band IFU flux (the
+  luminosity weight). **The choice of weight map $I_n$ is itself a budgeted systematic — the "I-shape"
+  term (±2.27 km/s; §2.4.3, `run_isource_shape_sweep.py`).** Holding the spaxel selection fixed, we
+  re-measure σ_e with **10 alternative weight maps** — (1) the headline 6500–7500 Å IFU band, (2) full
+  IFU white-light, (3–4) HST F140W / F200LP reprojected (raw), (5–6) the same arc-masked, (7–8) their
+  1-D curve-of-growth annular means, (9–10) their 2-D Sérsic-model fits — and take peak-to-peak/2 of the
+  spread (266.83–271.37 km/s on the NEW cube + M10). So $I_n$ = IFU white-light is the *headline* choice,
+  not an assumption: σ_e moves ≤±2.27 km/s across this whole family of luminosity weightings.
+  pPXF then fits a **single Gaussian LOSVD** (`moments=2`) to $S_e(\lambda)$,
 
   $$S_e(\lambda) \;\approx\; \Big[\textstyle\sum_k a_k\, T_k(\lambda)\Big] \otimes \mathcal{G}(v;\,V,\sigma)
     \;+\; \text{(additive Legendre poly, deg 15–29)},$$
