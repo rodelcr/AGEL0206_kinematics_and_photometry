@@ -743,6 +743,15 @@ manuscript Methods section.
 
 ## §3.1 Velocity Dispersion Measurement
 
+- **Final redshifts (to quote in Results).** The deflector systemic redshift from **Gaussian line
+  fits** (6 absorption features, §2.2.2) is **z = 0.67564 ± 0.00033**, in agreement with the
+  independent **ppxf stellar-kinematic** redshift **z = 0.67555 ± 0.00002** (V_sys = −16 ± 4 km/s
+  relative to the line-fit value; pooled over FSPS+EMILES+XSL on the headline R_e=2.097″ aperture).
+  The 16 km/s line-fit↔ppxf offset is well within the ±59 km/s line-fit uncertainty (and the ppxf
+  formal ±4 km/s carries an additional ~±5 km/s per-SPS frame systematic). **We adopt z = 0.67564**
+  (the line-fit value supersedes AGEL DR2 z = 0.67511). The lensed-**source** redshift is
+  **z = 1.30263 ± 0.00003** (red-cube [O II] λλ3726,3729 doublet). [§2.2.2; `scripts/redshift_verify.py`,
+  `run_sigma_e_Re_grid.py`]
 - **Headline: σ_e(<R_e) = 267.31 ± 12.79 km/s** (asym −12.98/+12.61), via the Gültekin (2009)
   luminosity-weighted formalism evaluated with the Cappellari ppxf implementation on the
   I(r)-weighted R<R_e aperture spectrum (R_e = 2.097″ best-mask CoG), plus the wild-bootstrap
