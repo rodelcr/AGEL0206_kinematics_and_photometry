@@ -85,6 +85,29 @@ def sersic_total_flux_numeric(fit, box_pix=400, n_grid=2001):
     return float(np.sum(fit(xx_eval, yy_eval)))
 
 
+def moment_seed(sub, weights, cx, cy, pix_scale, rmax_arcsec):
+    """Flux-weighted second-moment estimate of (ellip, theta) for a Sérsic-fit seed.
+
+    Standard SExtractor/GALFIT/statmorph-style pre-estimation: it puts the LevMar fit
+    in the elliptical basin (a low-ellip init otherwise rails into the spurious circular
+    minimum). The moment ellipticity is biased low (the round bright core dominates the
+    flux weighting), so it is a SEED only — the Sérsic fit refines it. Returns
+    (ellip0 ∈ [0,0.7], theta0 rad). Falls back to (0.2, 0.0) if the window is empty."""
+    yy, xx = np.mgrid[:sub.shape[0], :sub.shape[1]]
+    r = np.hypot(xx - cx, yy - cy) * pix_scale
+    f = np.clip(sub, 0, None) * weights * (r < rmax_arcsec)
+    tot = f.sum()
+    if tot <= 0:
+        return 0.2, 0.0
+    Mxx = (f * (xx - cx) ** 2).sum() / tot
+    Myy = (f * (yy - cy) ** 2).sum() / tot
+    Mxy = (f * (xx - cx) * (yy - cy)).sum() / tot
+    theta = 0.5 * np.arctan2(2 * Mxy, Mxx - Myy)
+    s, d = Mxx + Myy, np.hypot(Mxx - Myy, 2 * Mxy)
+    ba = np.sqrt(max((s - d) / 2, 1e-6) / max((s + d) / 2, 1e-6))
+    return float(np.clip(1 - ba, 0.0, 0.7)), float(theta)
+
+
 def fit_sersic2d(img, mask, center, r_eff_init_arcsec, box_arcsec, pix_scale):
     """Sersic2D fit with sky subtraction and flux-weighted least squares.
 
@@ -136,23 +159,38 @@ def fit_sersic2d(img, mask, center, r_eff_init_arcsec, box_arcsec, pix_scale):
     r_eff_max_pix = r_eff_pix * 2.0  # up to 2 × R_e_init = 4.6"
     amp_init = peak * 0.05  # roughly I(r_eff) for n≈3 (b_n exp ≈ 0.05)
 
-    sersic_init = Sersic2D(
-        amplitude=amp_init, r_eff=r_eff_pix * 0.6, n=3.0,
-        x_0=cx_box, y_0=cy_box, ellip=0.15, theta=0.0,
-        bounds={"n": (0.5, 6.0),
-                "r_eff": (r_eff_min_pix, r_eff_max_pix),
-                "ellip": (0.0, 0.7),
-                "amplitude": (peak * 1e-3, peak * 1.5),
-                "x_0": (cx_box - 3, cx_box + 3),
-                "y_0": (cy_box - 3, cy_box + 3)},
-    )
+    _bounds = {"n": (0.5, 6.0),
+               "r_eff": (r_eff_min_pix, r_eff_max_pix),
+               "ellip": (0.0, 0.7),
+               "amplitude": (peak * 1e-3, peak * 1.5),
+               "x_0": (cx_box - 3, cx_box + 3),
+               "y_0": (cy_box - 3, cy_box + 3)}
 
     # Plain unmasked weight, on the SKY-SUBTRACTED data. Sky is now ≈0 so the
     # fitter doesn't drown the bright deflector signal in sky pixels.
     weights = (~sub_mask).astype(float)
 
-    fitter = LevMarLSQFitter()
-    fit = fitter(sersic_init, xx, yy, sub, weights=weights, maxiter=500)
+    # MULTI-START — the single-Sérsic χ² has a spurious CIRCULAR local minimum (ellip→0)
+    # alongside the true elliptical one; a low-ellip init rails into the circular trap
+    # (b/a=1 for all bands), under-reporting the deflector shape AND biasing the total
+    # flux via the (1-ellip) factor. Seed from flux-weighted 2nd moments (SExtractor/GALFIT
+    # style), plus a boosted-ellip start (escape the circular basin) and a circular fallback
+    # (faint bands may genuinely prefer it); keep the lowest weighted-residual fit.
+    # (2026-06-11; was a single ellip=0.15 start.)
+    e_mom, th_mom = moment_seed(sub, weights, cx_box, cy_box, pix_scale, 1.5 * r_eff_init_arcsec)
+    starts = ([(e_mom, th_mom)]                                   # moment seed
+              + [(0.4, t) for t in np.linspace(0, np.pi, 6, endpoint=False)]  # PA grid
+              + [(0.0, 0.0)])                                     # circular fallback
+    best_fit, best_rss = None, np.inf
+    for e0, th0 in starts:
+        sersic_init = Sersic2D(amplitude=amp_init, r_eff=r_eff_pix * 0.6, n=3.0,
+                               x_0=cx_box, y_0=cy_box, ellip=min(e0, 0.69), theta=th0,
+                               bounds=_bounds)
+        cand = LevMarLSQFitter()(sersic_init, xx, yy, sub, weights=weights, maxiter=1500)
+        rss = float(np.sum((weights * (sub - cand(xx, yy))) ** 2))
+        if rss < best_rss:
+            best_fit, best_rss = cand, rss
+    fit = best_fit
 
     # Residual statistics on unmasked pixels (sky-subtracted scale)
     model = fit(xx, yy)

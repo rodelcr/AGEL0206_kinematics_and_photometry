@@ -1,8 +1,11 @@
 """Summary figure for nb08: aperture vs Sersic-total photometry → M★ comparison.
 
 Two panels:
-  A. Photometry comparison — F_lambda vs wavelength for both choices
-  B. log(M★) posterior overlay (aperture from nb02, Sersic from nb08)
+  A. SED comparison — for BOTH photometry choices: the best-fit Bagpipes model
+     spectrum (line + 16-84 band), the MEASURED photometry (points + errorbars),
+     and the filter-convolved MODEL photometry (open squares at the filter pivots).
+  B. log(M★) posterior overlay (aperture vs Sersic-total).
+All SED/photometry arrays come from results/bagpipes_sersic_refit.npz.
 """
 
 import os
@@ -16,38 +19,50 @@ sys.path.insert(0, REPO)
 os.chdir(REPO)
 
 
+def _plot_sed(ax, s, prefix, color, label, mum_lo=0.35, mum_hi=5.0):
+    """Overlay one choice: model spectrum band + line, measured photometry (filled,
+    errorbars), filter-convolved model photometry (open squares)."""
+    wav = s[f"{prefix}_wav_obs"] / 1e4                       # μm (observed)
+    sel = (wav > mum_lo) & (wav < mum_hi)
+    ax.fill_between(wav[sel], s[f"{prefix}_spec_p16"][sel], s[f"{prefix}_spec_p84"][sel],
+                    color=color, alpha=0.18, lw=0)
+    ax.plot(wav[sel], s[f"{prefix}_spec_p50"][sel], "-", color=color, lw=1.2, alpha=0.9,
+            label=f"{label}: model SED")
+    eff = s["eff_wavs"] / 1e4
+    # measured photometry (what was fed to the fit) — filled, with errorbars
+    ax.errorbar(eff, s[f"{prefix}_flam"], yerr=s[f"{prefix}_flam_err"], fmt="o",
+                color=color, ms=8, capsize=3, lw=1.3, mec="k", mew=0.6, zorder=5,
+                label=f"{label}: measured phot")
+    # filter-convolved model photometry — open squares
+    ax.plot(eff, s[f"{prefix}_model_phot_p50"], "s", mfc="none", mec=color, mew=1.6,
+            ms=12, zorder=6, label=f"{label}: model phot (filter-conv.)")
+
+
 def main():
     s = np.load("results/bagpipes_sersic_refit.npz", allow_pickle=True)
-    p = np.load("results/sersic_total_photometry.npz", allow_pickle=True)
-    ap = np.load("results/bagpipes_sed_results.npz", allow_pickle=True)
 
     fig = plt.figure(figsize=(14, 6))
     gs = fig.add_gridspec(1, 2, width_ratios=[1.2, 1], wspace=0.30)
 
-    # Panel A: photometry comparison
+    # Panel A: SED + measured + filter-convolved model photometry, both choices
     axA = fig.add_subplot(gs[0, 0])
-    pivot = s["pivot_AA"]
-    flam_ap = s["flam_aperture"]
-    flam_se = s["flam_sersic"]
-    axA.plot(pivot / 1e4, flam_ap, "o-", color="C0", ms=10, lw=1.5,
-             label="aperture (nb02 headline)")
-    axA.plot(pivot / 1e4, flam_se, "s-", color="C3", ms=10, lw=1.5,
-             label="Sersic-total (nb08)")
+    _plot_sed(axA, s, "ap", "C0", "aperture (masked, not filled)")
+    _plot_sed(axA, s, "ser", "C3", "Sersic-total")
     for i, name in enumerate(s["filter_names"]):
         d = s["mag_sersic"][i] - s["mag_aperture"][i]
         axA.annotate(f"{str(name)}\nΔ={d:+.2f}",
-                     (pivot[i] / 1e4, flam_se[i]),
-                     textcoords="offset points", xytext=(8, 5), fontsize=9)
+                     (s["eff_wavs"][i] / 1e4, s["ser_flam"][i]),
+                     textcoords="offset points", xytext=(6, 8), fontsize=8)
     axA.set_yscale("log")
-    axA.set_xlabel("Wavelength [μm]")
+    axA.set_xlabel("Observed wavelength [μm]")
     axA.set_ylabel(r"F$_\lambda$ [erg/s/cm²/Å]")
-    axA.set_title("AGEL0206 deflector photometry — aperture vs Sersic-total")
-    axA.legend(loc="lower right")
+    axA.set_title("AGEL0206 deflector SED — aperture (empirical) vs Sersic-total")
+    axA.legend(loc="lower center", fontsize=8, ncol=2)
     axA.grid(alpha=0.3)
 
     # Panel B: M★ posterior overlay
     axB = fig.add_subplot(gs[0, 1])
-    M_ap = ap["stellar_mass"]
+    M_ap = s["log_M_aperture_samples"]
     M_se = s["log_M_sersic_samples"]
 
     bins = np.linspace(min(M_ap.min(), M_se.min()) - 0.05,

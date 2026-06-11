@@ -198,11 +198,15 @@ from scripts.bootstrap_ppxf_parallel import run_bootstrap_single_degree_parallel
 - Should be quoted as a sensitivity in the paper, with 267 ± 24 as fiducial
 - See `NOTES_methodology_2026-04-27.md` and the diagnostic figure `results/figures/nb07c_s6cum_nomask_diagnostic.png`
 
-### KCWI cube provenance — RESOLVED
-- The cube used (`Nov17_2025_DESJ0206_RL_combined_icubes_wcs.fits`, 253 MB, 3317×100×100) IS the final reduced product. Only its FITS headers are mislabeled (DATE-OBS=2025-11-17, PROGNAME=U002, PROGPI=Jones describes only the last stacking pass)
-- Multi-night data: Aug 29 2025 K409 (canonical) + Sept 29 K409 + Dec 29 2024 + Nov 17 U002
-- For the paper, cite the multi-night provenance, not the header
-- See `HANDOVER.md` and `~/.claude/.../memory/reference_kcwi_data_properties.md`
+### KCWI cube provenance — RESOLVED (updated 2026-05-26 against the Keck observing logs)
+- The cube used (`Nov17_2025_DESJ0206_RL_combined_icubes_wcs.fits`, 253 MB, 3317×100×100) IS the final reduced product. Only its FITS headers are mislabeled (`DATE-OBS=2025-11-17`, `PROGNAME=U002`, `PROGPI=Jones` describes only the first input frame `kr251117_00129`, not the full input set)
+- **Multi-night data — verified 2026-05-26 against Keck observing logs:**
+  - **K409 UT 2025 Aug 30**: 12 RED `kr250830_00090–00101` + 4 BLUE `kb250830_00052–00055` (60 + 66 min)
+  - **U002 UT 2025 Nov 17 (PI Jones)**: 20 RED `kr251117_00129–00148` + 5 BLUE `kb251117_00087–00091` (90 + 110 min)
+  - Dec 29 2024 (frames `kr241229_00092–00095`): **NOT independently verified as DESJ0206**; pending raw-FITS header dump
+  - ~~Sept 29 2025 K409~~ has zero DESJ0206 entries — earlier note was wrong; do not cite
+- For the paper, cite the **K409 + U002** multi-night provenance and flag Dec 29 as pending; do NOT cite Sept 29 K409 or the header's lone Nov 17/U002/Jones
+- See `HANDOVER.md`, `NOTES_methodology_2026-04-27.md`, and `~/.claude/.../memory/reference_kcwi_data_properties.md`
 
 ### PSF-aware mask comparison — STILL TODO (separate from I(r) sweep)
 - nb06 used `spaxel_contam = gaussian_filter(HST_mask, sigma=PSF_HST_pix) > 0.15` — a KCWI-seeing-broadened mask

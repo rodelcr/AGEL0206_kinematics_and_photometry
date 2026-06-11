@@ -178,20 +178,34 @@ def build_all_shapes(state):
         yy_s, xx_s = np.mgrid[:sub.shape[0], :sub.shape[1]]
         r_eff_pix = r_eff_init / pix_scale
         amp_init = float(np.nanpercentile(sub[~sub_mask], 98)) if (~sub_mask).any() else 1.0
-        sersic_init = Sersic2D(
-            amplitude=amp_init, r_eff=r_eff_pix, n=2.0,
-            x_0=xc - x1, y_0=yc - y1, ellip=0.2, theta=0.0,
-            bounds={"n": (0.3, 8.0), "r_eff": (r_eff_pix*0.3, r_eff_pix*3),
-                    "ellip": (0.0, 0.95), "amplitude": (1e-4, 1e4)},
-        )
         weights = (~sub_mask).astype(float)
-        try:
-            fit = LevMarLSQFitter()(sersic_init, xx_s, yy_s, np.nan_to_num(sub),
-                                     weights=weights, maxiter=300)
-        except Exception as e:
-            print(f"  Sersic fit failed for shape {center}: {e}")
-            fit = sersic_init
-        return fit, (x1, y1)
+        best_fit = None
+        best_chi2 = np.inf
+        for n_init, ellip_init in ((2.0, 0.2), (1.5, 0.05), (3.5, 0.2)):
+            init = Sersic2D(
+                amplitude=amp_init, r_eff=r_eff_pix, n=n_init,
+                x_0=xc - x1, y_0=yc - y1, ellip=ellip_init, theta=0.0,
+                bounds={"n": (1.0, 6.0), "r_eff": (r_eff_pix*0.5, r_eff_pix*2.0),
+                        "ellip": (0.0, 0.6), "amplitude": (1e-4, 1e4)},
+            )
+            try:
+                cand = LevMarLSQFitter()(init, xx_s, yy_s, np.nan_to_num(sub),
+                                          weights=weights, maxiter=500)
+                model = cand(xx_s, yy_s)
+                chi2 = float(np.sum(((np.nan_to_num(sub) - model) * weights)**2))
+                if chi2 < best_chi2:
+                    best_chi2 = chi2
+                    best_fit = cand
+            except Exception as e:
+                print(f"  Sersic fit failed for n_init={n_init}: {e}")
+        if best_fit is None:
+            print(f"  Sersic fit failed for all n_init at center {center}; "
+                  f"falling back to fixed n=2 init")
+            best_fit = Sersic2D(
+                amplitude=amp_init, r_eff=r_eff_pix, n=2.0,
+                x_0=xc - x1, y_0=yc - y1, ellip=0.2, theta=0.0,
+            )
+        return best_fit, (x1, y1)
 
     fit_f140, off_f140 = fit_sersic2d(img_f140, mask_f140, (xc_f140, yc_f140), R_E, 6.0, pix_f140)
     fit_f200, off_f200 = fit_sersic2d(img_f200, mask_f200, (xc_f200, yc_f200), R_E, 6.0, pix_f200)

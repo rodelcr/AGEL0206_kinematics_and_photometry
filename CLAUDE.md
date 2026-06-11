@@ -39,8 +39,8 @@ The streamlined IFU notebook uses veldis (degree=[4,30]) for the integrated spec
 
 **Primary paper number** — σ_e(<Re) on the NEW `_mtwdo_` reduction, wide arc-masked window ppxf, **with He I 3819 source-emission mask + M10 full sky-line audit (2026-05-27)**:
 
-- **σ_e(<Re) = 269.62 ± 13.27 km/s** (asymmetric −13.45 / +13.10) at `wR3800_5400_arcmask` (rest 3800–5400 Å, Ca H+K through Mg b/Fe5335 + z=1.302 source-emission masks incl. He I 3819 + 35-entry BAD_PIXELS_REST sky/CR catalog) — **paper headline** for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5). **2026-06-08: was ±11.77; the D7 R_e-source systematic (±6.13) was folded into the budget (Task 5, nb15).** All numbers in this block are emitted by `scripts/paper_values.py` → `results/PAPER_VALUES.json` (single source of truth — do not hand-edit)
-- Source: `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/wR3800_5400_arcmask_{fsps,emiles,xsl}_T*_N500.npz`. Cube: `raw_KCWI/New_red/Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`.
+- **σ_e(<Re) = 267.31 ± 12.79 km/s** (asymmetric −12.98 / +12.61) at `wR3800_5400_arcmask` (rest 3800–5400 Å, Ca H+K through Mg b/Fe5335 + z=1.302 source-emission masks incl. He I 3819 + 35-entry BAD_PIXELS_REST sky/CR catalog), measured at the **best-mask R_e = 2.097″ aperture** — **paper headline** for the M•–σ relation (Kormendy & Ho 2013 eq. 3, Greene+2020 fig. 5). **2026-06-11 "best mask throughout": adopting the best-mask R_e=2.097″ (was the expert-mask 2.305″) moved σ_e from 269.62 down 2.3 km/s along the rising σ(R) profile; the R_e-source systematic was re-derived on the best-mask CoG family (±5.13, was ±6.13).** All numbers in this block are emitted by `scripts/paper_values.py` → `results/PAPER_VALUES.json` (single source of truth — do not hand-edit)
+- Source (headline aperture): `results/run_wide_sigma_e/resys_best_mean/wR3800_5400_arcmask_{fsps,emiles,xsl}_T*_N500.npz` (R_e=2.097″), produced by `scripts/run_sigma_e_Re_grid.py --n_bootstrap 500` (which also emits the R_e-source systematic, `results/sigma_e_Re_grid_N500.npz`). Same pipeline as `run_wide_sigma_e.py --cube new_clean_hei`, only the aperture r_max differs. Cube: `raw_KCWI/New_red/Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`.
 - Pipeline: bad-pixel mask (M10-audited, 35 entries — 26 original CR residuals + 9 OH airglow/sky bands added via full sky-noise audit, all verified non-source via arc spectrum) + no-Balmer mask (Hδ, Hγ, Hβ kept in the fit) + ARC_MASKS_REST catalog with He I 3819 source emission added (5237–5253 Å). See `_clean_hei` presets in `scripts/run_wide_sigma_e.py`.
 
 Systematic-budget components on the NEW reduction (post-M10, 2026-05-27):
@@ -54,18 +54,18 @@ Systematic-budget components on the NEW reduction (post-M10, 2026-05-27):
 | centering (HST WCS, carried) | 4.0 | HST-derived; reduction-independent |
 | fit-window (3 windows × N=500, **M11**) | **3.82** | **rigorous re-derivation 2026-05-27** on NEW cube + M10 masks. wR3800_5400_arcmask 269.66, wR4000_5400_arcmask 268.58, w6500_7500 276.22 → peak-to-peak/2 = 3.82. **Dramatically smaller than the ±15.0 carried value** because the cleaned + He-I-masked NEW cube agrees across windows to ±4 km/s (vs ±15 on the OLD cube). The narrow w6500_7500 still has large stat error (±30) but its central value sits near the wide-window numbers now |
 | **reduction-pass (refined 2026-05-27 post-M10)** | **3.45** | half-Δ between cleaned + He-I + M10 new and old reductions = (269.62−262.72)/2 = 3.45. Was ±3.86 pre-M10; M10 sky masks tightened the inter-reduction gap further. Flag: only 2 reductions; refine if 3rd lands |
-| **R_e-source (D7 wide, 4 estimators × N=500, 2026-06-08)** | **6.13** | **NEW — Task 5, nb15, `scripts/run_sigma_e_Re_systematic_wide.py`.** Wide-window re-measurement of D7 (was ±8.45 at narrow, never folded in). Full peak-to-peak/2 across mean 2.305"(269.62)/F140W 2.168"(267.44)/F200LP 2.441"(272.44)/CaHK+G 2.902"(279.69). User decision 2026-06-08: fold the FULL spread (CaHK+G's +10 km/s at 2.90" reflects the rising σ(R) gradient). Light-R_e-family-only spread is ±2.50 (reported as a cross-check) |
-| **TOTAL (symmetric)** | **13.27** | quadrature sum (was ±11.77 pre-R_e-source; R_e-source ±6.13 folded in 2026-06-08). Computed by `scripts/paper_values.py` |
-| **TOTAL (asymmetric)** | **−13.45 / +13.10** | preserves stat-side skew |
+| **R_e-source (best-mask CoG family × N=500, 2026-06-11)** | **5.13** | **Re-derived for "best mask throughout" — `scripts/run_sigma_e_Re_grid.py`, `results/sigma_e_Re_grid_N500.npz`.** 7-point σ_e-vs-R_e grid bracketing the new 2.097″ headline. **ADOPTED = best-mask CoG family only**: peak-to-peak/2 across best_F140W 1.912″(259.73)/best_mean 2.097″(267.31)/best_F200LP 2.281″(269.99) = (269.99−259.73)/2. CaHK+G 2.902″(279.69) and the full-grid spread (±9.98, incl. CaHK) are **cross-checks, NOT folded** (CaHK+G is a different I-map definition at 2.90″, not an error on the photometric R_e). User decision 2026-06-11. |
+| **TOTAL (symmetric)** | **12.79** | quadrature sum (R_e-source ±5.13). Computed by `scripts/paper_values.py` |
+| **TOTAL (asymmetric)** | **−12.98 / +12.61** | preserves stat-side skew |
 
-> **σ_e arc-masking-approach cross-check (Task 1, nb13, 2026-06-08):** the masking-*definition* systematic (expert/sersic/perband/global reprojected to the IFU grid) = **±5.85 km/s** — the spectroscopic analogue of the M★ ±0.16 dex term. It **overlaps the F200-mask w-sweep term (±6.65)** and is NOT added separately (larger-of-two = 6.65 kept). σ_e robust to arc-mask definition at this level. `scripts/run_sigma_e_mask_systematic.py`.
+> **σ_e arc-masking-approach cross-check (Task 1, nb13, 2026-06-08):** the masking-*definition* systematic (expert/sersic/perband/global reprojected to the IFU grid) = **±4.58 km/s** — the spectroscopic analogue of the M★ ±0.09 dex masking term. It **overlaps the F200-mask w-sweep term (±6.65)** and is NOT added separately (larger-of-two = 6.65 kept). σ_e robust to arc-mask definition at this level. `scripts/run_sigma_e_mask_systematic.py`.
 
 Cross-checks:
 - **OLD cube cleaned + He I + M10 (`--cube headline_clean_hei`)**: σ_e(<Re) = **262.72 ± 17.99 km/s** (asym −18.10/+17.88). 6.90 km/s Δ to the headline → source of the refined ±3.45 reduction-pass systematic.
 - **Pre-M10 cross-checks (cleaned + He I only)**: NEW cube 271.87 (now −2.25 above headline), OLD cube 264.16. Δ = +7.71 km/s. Adding M10 sky masks shrinks the gap to +6.90.
 - **Pre-He-I cross-checks (clean only)**: NEW 268.98, OLD 260.44, Δ = +8.54.
 - **Legacy (un-cleaned, no He I, no M10)**: NEW 265.76, OLD 254.85, Δ = +10.91. Full cleanup brings the cubes ~4 km/s closer together.
-- **OLD cube narrow Ca H+K + G** (notebook 09d): σ_e(<Re) = 267.95 ± 30.10 km/s at `w6500_7500`. The cleaned + He-I + M10 NEW headline (269.62) is within 2 km/s of this narrow-window value.
+- **OLD cube narrow Ca H+K + G** (notebook 09d): σ_e(<Re) = 267.95 ± 30.10 km/s at `w6500_7500`. The cleaned + He-I + M10 NEW headline (267.31, R_e=2.097″) is within ~1 km/s of this narrow-window value. (At the old R_e=2.305″ the same pipeline gives 269.62 — both bracket the narrow-window number.)
 - **M9 (DO NOT MASK)**: visible +5-7% bump at def-rest 5193–5204 Å is the Mg b LOSVD wing (NOT source emission per arc spectrum, NOT sky residual per noise spectrum). Smoke-masking it drops σ_e by 7 km/s (largest single mask effect) → it's signal, not contamination. Documented to avoid future second-guessing.
 
 Hδ may still need targeted masking — flagged for revisit; see `METHODS_AND_SYSTEMATICS.md` Part III.5 item #0 and the inline TODO in `scripts/bootstrap_ppxf.py:_determine_goodpixels_no_balmer`.
@@ -103,8 +103,8 @@ Historical / superseded:
 
 Other headlines:
 - Systemic redshift: z = 0.67564 (notebook 04); older results use z = 0.67511
-- Effective radius (F140W + F200LP masked CoG mean): **Re = 2.305" = 16.23 kpc** (paper headline — supersedes older Re = 2.61" IFU-only value)
-- log(M★/M☉) = **11.16 ± 0.08 (stat) +0.31 (sys)** at 10% flux errors [**11.04 ± 0.14 +0.32** at 20%] — NEW headline (2026-05-29) from principled F200LP-located + IR-extended arc masking, raw aperture photometry. One-sided +sys = Sérsic fill-in of deflector light under the arc, reaching log M★ ≈ 11.46. **Supersedes 11.33 +0.07/−0.09** (older expert-aperture, smaller masks — now a mid-range cross-check). See arc-mask section below + `NOTES_photometry_mask_systematics_2026-05-29.md`.
+- Effective radius (F140W + F200LP **best-mask** CoG mean): **Re = 2.097" = 14.76 kpc** — **NEW headline (2026-06-11 "best mask throughout")**, the self-consistent best-mask (single-Sérsic + color/morph gate + WCS reg) curve-of-growth. **photutils-validated to ±0.002″** (`scripts/validate_Re_photutils.py`: our azimuthal-fill CoG reproduced by photutils `RadialProfile`; a naive masked aperture-sum biases +0.25–0.41″ high). Method systematic ±0.100″ (raw CoG 2.097 / sky-sub 1.922 / Sérsic r_eff 1.897; `scripts/Re_bestmask_reconciliation.py`, `results/Re_cog_reconciliation_bestmask.npz`). The HST 2-R_e companion mask is empty (companions only in deep JWST), so it doesn't enter R_e — global color/morph mask alone gives 2.097″ (fixed point). **Supersedes 2.305″ (expert mask)** and the older 2.61″ IFU-only value. `scripts/re_mask_sensitivity.py`.
+- log(M★/M☉) = **11.47 +0.09/−0.14** (aperture-corrected total, **matched 2 R_e = 4.19″ aperture** at R_e=2.097″, 10% floor) — total-light stellar mass; **R_e-robust** (total converges across 1/2/2.5 R_e at 11.49/11.47/11.47 — unchanged by the 2.305→2.097″ R_e adoption). **Matched 2 R_e elliptical aperture** (same physical region all 4 bands), single-component Sérsic deflector (**multi-start elliptical fit, b/a≈0.80–0.86, recovered 2026-06-11 — the fitter had railed to circular; M★ unchanged**), color/morph-gated WCS-registered arc mask + **companion masking**, corrected to total by adding the Sérsic model's beyond-aperture light (GAMA/Taylor+2011 `fluxscale`). **5 estimators reported** (empirical→model, at 2 R_e): raw **11.18** (empirical lower bound) · raw+apcorr **11.35** (most-empirical total) · filled **11.36** · **total 11.47 (headline)** · Sérsic-total **11.40**. **Sérsic-only systematic budget = ±0.19 dex** (mask-dominated ±0.125; `scripts/sersic_total_systematic.py`). **Low-M★ tail = age–dust–M/L outshining degeneracy** (all 5 estimators incl. raw; NOT the Sérsic default; `scripts/validate_sersic_fitter_synthetic.py` validates the fitter vs astropy Sersic2D). **Sérsic params per band: `scripts/sersic_parameter_table.py` (b/a 0.80–0.86, PA 4–11°, n 1.2–1.6).** **5% floor sensitivity** (`results/aperture_floor5_check.npz`): total 5%=11.49 vs 10%=11.47, Δ=+0.02 — 10% kept. **True flux errors 0.03–1.6%** (10% is a systematic floor, not the measurement error). Method refs: Taylor+2011, Sonnenfeld+2013, Graham&Driver2005. **Apcorr chain validated vs established codes (2026-06-11, `scripts/validate_apcorr_established.py`):** b_n approx ≤0.05% (vs exact gammaincinv), Sérsic total-flux formula ≤0.03% (vs render-to-20R_e), enclosed-light vs analytic incomplete-gamma (Graham&Driver05) Δ≤0.0007, empirical `F_raw` vs photutils `EllipticalAperture(exact)` ≤0.09%, sum(model_full) cutout-truncation ≤0.19% (≤0.002 mag) — no production bug. **Supersedes 11.36** (per-band-mismatched apertures) and 11.16+0.31 (2-comp over-masked). Emitted by `scripts/paper_values.py` → `results/PAPER_VALUES.json` (single source of truth — do not hand-edit). Scripts: `aperture_matched_photometry.py`, `aperture_2re_companions.py`, `sersic_total_systematic.py`. See DRAFTING_FACTS §3.2 + `HANDOFF_photometry_aperture_overhaul_2026-06-10.md`.
 
 ### Arc-mask verification (photometry side, 2026-05-29 — notebook 12)
 
@@ -123,32 +123,49 @@ headline is **invariant to the masking method**. Two independent selectors in
   — ΔR_e between masks cancels, but absolute F200LP R_e from that script is biased. See
   `NOTES_arc_mask_verification_2026-05-29.md`. **Later TODO:** spectroscopic invariance.
 
-**4-band extension + M★ budget (2026-05-29, `scripts/photometry_systematics.py`, `NOTES_photometry_mask_systematics_2026-05-29.md`):**
+**4-band extension + M★ budget (UPDATED 2026-06-10, `scripts/photometry_systematics.py` + `scripts/mstar_masking_budget.py`; DRAFTING_FACTS §2.1.1b):**
 - **Principled recipe:** F200LP locates the arc (best source contrast); reproject its footprint to
-  every band; the deeper IR bands **extend** it (region-grow into 2-component-Sérsic-residual source
-  pixels contiguous with the arc). Deflector model = **2-component (bulge+disk) Sérsic** — single
-  Sérsic under-fits the bright IR galaxy (median residual +1.0) and over-masks 0.2–0.4 mag; do NOT
-  use independent per-band Sérsic masks on F140W/JWST. No PSF (env lacks webbpsf) — flagged.
-- **raw vs filled:** the IR-extended masks are large (F150W2 +9119 px), so **raw photutils is biased
-  LOW and mask-size-dependent** (discards under-arc deflector light), while the **Sérsic fill-in is
-  mask-definition-independent** (per-band vs global agree 0.01 dex). Fill-in correction +0.18–0.96 mag.
-- **M★ budget** (`results/photometry_systematics_Mstar.npz`, fig `Mstar_budget.png`): headline =
-  **raw, one-sided-up systematic**: log M★ = 11.16 ± 0.08 (stat,10%) +0.31 (sys) [11.04 ± 0.14 +0.32
-  at 20%]; fill-in upper reach 11.46/11.36. 10%→20% shifts central ~0.10 dex. **per-band vs global**
-  negligible for filled, large for raw. Scripts: `principled_mask_photometry.py` (single-Sérsic
-  audit), `mask_method_comparison.py` (expert/HST-reproj/Sérsic × raw/filled/total).
-- **Explicit masking-approach systematic on M★ = ±0.16 dex** (`results/Mstar_masking_systematic.npz`,
-  fig `Mstar_masking_systematic.png`): peak-to-peak/2 across all approaches; dominated by under-arc
-  light (raw↔filled ±0.15), mask-definition (per-band↔global) negligible ±0.004, mask-extent 0.18.
-  **TODO:** the analogue masking systematic on σ_e (reproject approaches to IFU, re-run `run_wide_sigma_e.py`).
+  every band; the deeper IR bands **extend** it via region-grow (contiguous with the arc seed, R<5″),
+  band-specifically gated. Deflector model = **single-component Sérsic** (per user 2026-06-10 — the
+  elliptical's physically-motivated profile, NOT bulge+disk; the 2-comp was a kludge to tame
+  residual-only growth). **Fit gotcha:** `Sersic2D.amplitude` is I(r_eff) not the peak — init
+  ~peak·exp(−b_n), bound to (peak·1e-3, peak·1.5), else LevMar collapses to ≈0 (→ whole galaxy reads
+  as residual → catastrophic over-masking). No PSF (env lacks webbpsf).
+- **Band-specific IR-extension gate (grow_extension):**
+  - **HST (F200LP, F140W) — COLOR GATE:** pixel must be **bluer** than the deflector core by ≥0.5 mag
+    in F200LP−F140W (`DCOLOR`), k=3 residual. Blue z=1.302 source vs red passive deflector; robust
+    where HST has S/N. (Validated color method A.)
+  - **Deep JWST (F150W2, F322W2) — MORPHOLOGY GUARD:** pixel must be **source-dominated**, `resid >
+    MORPH_FRAC·model` (excess beats the single-Sérsic model → OUTSIDE the Sérsic-dominated region),
+    lower k=2 (`K_EXT_JWST`). NO HST color required → captures the **diffuse** arc emission HST is too
+    shallow to color-confirm (user catch 2026-06-10). Since the single Sérsic captures 66–87% of the
+    deflector flux, `resid>model` rejects the body while admitting the diffuse source — verified: raw
+    mag stable, 0 unmasked >8σ src in aperture, core<0.4″ never masked. F150W2 IR-ext 1049→5288 px.
+- **Rationale:** residual-only growth (old 2-comp recipe) sweeps the RED galaxy body + companions in.
+  Both gates make the mask a property of the *source* (HST color / JWST source-dominance), not the
+  imperfect single-Sérsic residual.
+- **WCS registration (NEW):** raw reprojection leaves a **0.09–0.18″ HST↔JWST/IR offset** (JWST i2d
+  GWCS vs FITS-header WCS); fixed by cross-correlating the reprojected F200LP arc + color layers to
+  each band (`photometry_systematics.register_shift`) → residual 0.00″. After it, **no unmasked >8σ
+  source falls inside the photometry aperture**. Do NOT anchor on the F200LP centroid (arc-biased).
+- **raw vs filled:** color-gated masks are tighter than the old 2-comp (F150W2 7698 vs 15768 px). Raw
+  (empirical, masked) is the **adopted central**; the single-Sérsic fill-in (−0.19 to −0.28 mag) is
+  carried as the one-sided +sys. Scripts: `mask_attempts_comparison.py` (the 3-attempt evolution figure).
+- **M★ budget** (`results/photometry_systematics_Mstar.npz`, via `mstar_masking_budget.py`): headline =
+  **raw, one-sided-up**: log M★ = 11.36 ± 0.08 (stat,10%) +0.14 (sys) [11.26 ± 0.14 +0.18 at 20%];
+  fill reach 11.47/11.38. Central = validated expert hand-mask (11.33).
+- **Explicit masking-approach systematic on M★ = ±0.086 dex** (10%: ±0.086, 20%: ±0.087;
+  `results/Mstar_masking_systematic.npz`): under-arc (raw↔filled) ±0.059, mask-def (per-band↔global)
+  ±0.028. **Was ±0.16 under the over-masked 2-comp recipe.** σ_e analogue done (nb13, ±4.58, subdominant).
 - **PSF effect on the fill — quantified (`scripts/psf_fill_model.py`, `results/psf_fill_model.npz`):**
   PSF-convolved 2-comp Sérsic (Gaussian at instrument FWHM; env lacks webbpsf) shifts the filled mag
   by **≤0.004 mag** in every band → ΔM★ ≪0.01 dex, negligible. The fill is PSF-robust (arc is outside
   the PSF core). No longer a flagged unknown.
 - **R_e pixscale fix:** `measure_Re.hst_Re` now reads pix scale from the WCS (F200LP was wrongly
-  0.08″, is 0.05″) → diagnostic F200LP R_e 3.05→1.91″. **Headline R_e=2.305″ unaffected** (from
-  `final_sigma_e.py`, already WCS-correct). Flag: the two CoG algorithms differ (measure_Re 1.91 vs
-  final_sigma_e 2.52 for F200LP) — separate pre-existing methodology gap.
+  0.08″, is 0.05″) → diagnostic F200LP R_e 3.05→1.91″. The headline R_e (now 2.097″, best mask)
+  comes from `final_sigma_e.curve_of_growth`, which is WCS-correct and **photutils-validated to
+  ±0.002″** (2026-06-11). Flag: the two CoG algorithms still differ (measure_Re vs final_sigma_e
+  for F200LP) — separate pre-existing methodology gap; the headline uses final_sigma_e's.
 
 ## Scripts
 

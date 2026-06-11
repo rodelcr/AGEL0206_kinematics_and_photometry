@@ -32,36 +32,70 @@ def mag_to_flam(mags_AB, pivot_AA):
     return flam.value
 
 
+FILT_LIST = ["HST_WFC3_UVIS1.F200LP.dat", "HST_WFC3_IR.F140W.dat",
+             "JWST_NIRCam.F150W2.dat", "JWST_NIRCam.F322W2.dat"]
+FIT_INSTRUCTIONS = {
+    "redshift": (0.674, 0.676),
+    "exponential": {"age": (0.1, 15.), "tau": (0.3, 10.),
+                    "massformed": (1., 15.), "metallicity": (0., 2.5)},
+    "dust": {"type": "Calzetti", "Av": (0., 2.)},
+}
+
+
 def run_bagpipes_for_mags(mags_AB, pivot_AA, run_name, n_live=400, err_frac=0.1):
     """Fit Bagpipes to a 4-band AB-mag vector (order F200LP, F140W, F150W2, F322W2)
     with the nb02 priors and `err_frac` fractional flux errors (0.1 = 10%, default;
     pass 0.2 for the conservative 20%). Returns the stellar_mass posterior samples.
     Factored out of main() so callers (e.g. scripts/arc_mask_verification.py,
     scripts/photometry_systematics.py) can test alternate masks' photometry."""
+    return fit_and_extract(mags_AB, pivot_AA, run_name,
+                           n_live=n_live, err_frac=err_frac)["stellar_mass"]
+
+
+def fit_and_extract(mags_AB, pivot_AA, run_name, n_live=400, err_frac=0.1):
+    """Fit (or reload cached) Bagpipes and return a dict with the stellar-mass
+    posterior AND the best-fit model SED + filter-convolved model photometry, so a
+    caller can plot the measured points, the model spectrum, and the model photometry
+    together. Keys:
+        stellar_mass            : (n,) log10(M*/Msun) samples
+        flam, flam_err          : (4,) measured F_lambda + error fed to the fit
+        eff_wavs                : (4,) observed-frame filter effective wavelengths [AA]
+        model_phot_p16/50/84    : (4,) filter-convolved MODEL photometry percentiles
+        wav_obs                 : (nwav,) observed-frame model wavelength grid [AA]
+        spec_p16/50/84          : (nwav,) model spectrum F_lambda percentiles
+        z_p50                   : median redshift
+    """
     flam = mag_to_flam(mags_AB, pivot_AA)
     flam_err = err_frac * flam
-    filt_list = [os.path.abspath(p) for p in [
-        "HST_WFC3_UVIS1.F200LP.dat", "HST_WFC3_IR.F140W.dat",
-        "JWST_NIRCam.F150W2.dat", "JWST_NIRCam.F322W2.dat"]]
-    fit_instructions = {
-        "redshift": (0.674, 0.676),
-        "exponential": {"age": (0.1, 15.), "tau": (0.3, 10.),
-                        "massformed": (1., 15.), "metallicity": (0., 2.5)},
-        "dust": {"type": "Calzetti", "Av": (0., 2.)},
-    }
+    filt_list = [os.path.abspath(p) for p in FILT_LIST]
 
     def load_data(ID):
         return np.array([flam, flam_err]).T
 
     galaxy = pipes.galaxy(run_name, load_data, spectrum_exists=False,
                           filt_list=filt_list, phot_units="ergscma")
-    fit = pipes.fit(galaxy, fit_instructions, run=run_name)
+    fit = pipes.fit(galaxy, FIT_INSTRUCTIONS, run=run_name)
     try:
         fit.fit(verbose=False, sampler="multinest", n_live=n_live)
     except (AttributeError, OSError) as e:
         print(f"MultiNest unavailable ({e}); using nautilus.")
         fit.fit(verbose=False, sampler="nautilus", n_live=n_live)
-    return fit.posterior.samples["stellar_mass"]
+
+    fit.posterior.get_advanced_quantities()
+    s = fit.posterior.samples
+    z_p50 = float(np.median(s["redshift"]))
+    wav_rest = fit.posterior.model_galaxy.wavelengths        # rest-frame [AA]
+    wav_obs = wav_rest * (1.0 + z_p50)                       # observed-frame [AA]
+    spec_p16, spec_p50, spec_p84 = np.percentile(s["spectrum_full"], [16, 50, 84], axis=0)
+    mp16, mp50, mp84 = np.percentile(s["photometry"], [16, 50, 84], axis=0)
+    return dict(
+        stellar_mass=s["stellar_mass"],
+        flam=flam, flam_err=flam_err,
+        eff_wavs=np.asarray(fit.galaxy.filter_set.eff_wavs, dtype=float),
+        model_phot_p16=mp16, model_phot_p50=mp50, model_phot_p84=mp84,
+        wav_obs=wav_obs, spec_p16=spec_p16, spec_p50=spec_p50, spec_p84=spec_p84,
+        z_p50=z_p50,
+    )
 
 
 def main():
@@ -87,60 +121,17 @@ def main():
         print(f"{name:<12} {pivot[i]:>8.0f}  {mag_aperture[i]:>7.4f}  "
               f"{mag_sersic[i]:>7.4f}  {mag_sersic[i]-mag_aperture[i]:>+7.4f}")
 
-    # 10% fractional errors (nb02 convention)
-    flam_err = 0.1 * flam_sersic
+    # Fit BOTH photometry choices, extracting the model SED + filter-convolved model
+    # photometry (so the figure can show measured points, model spectrum, model phot).
+    # AGEL0206_sersic is cached (reloads instantly); the aperture fig-run fits fresh.
+    print("\nBagpipes fit on Sersic-total photometry...")
+    ser = fit_and_extract(mag_sersic, pivot, "AGEL0206_sersic")
+    print("Bagpipes fit on empirical aperture photometry (masked, not filled)...")
+    apr = fit_and_extract(mag_aperture, pivot, "AGEL0206_aperture_fig")
 
-    # Bagpipes resolves filt_list relative to its install_dir, so use absolute paths.
-    filt_list = [
-        os.path.abspath(p) for p in [
-            "HST_WFC3_UVIS1.F200LP.dat",
-            "HST_WFC3_IR.F140W.dat",
-            "JWST_NIRCam.F150W2.dat",
-            "JWST_NIRCam.F322W2.dat",
-        ]
-    ]
-
-    # nb02 fit_instructions
-    exp = {
-        "age": (0.1, 15.),
-        "tau": (0.3, 10.),
-        "massformed": (1., 15.),
-        "metallicity": (0., 2.5),
-    }
-    dust = {"type": "Calzetti", "Av": (0., 2.)}
-    fit_instructions = {
-        "redshift": (0.674, 0.676),
-        "exponential": exp,
-        "dust": dust,
-    }
-
-    def load_data(ID):
-        return np.array([flam_sersic, flam_err]).T
-
-    galaxy = pipes.galaxy("0206_sersic", load_data, spectrum_exists=False,
-                          filt_list=filt_list, phot_units="ergscma")
-    fit = pipes.fit(galaxy, fit_instructions, run="AGEL0206_sersic")
-
-    print("\nRunning Bagpipes fit on Sersic-total photometry...")
-    try:
-        fit.fit(verbose=True, sampler="multinest", n_live=400)
-    except (AttributeError, OSError) as e:
-        print(f"MultiNest unavailable ({e}); using nautilus.")
-        fit.fit(verbose=True, sampler="nautilus", n_live=400)
-
-    samples = fit.posterior.samples
-    log_M_sersic = samples["stellar_mass"]
-
-    # Load nb02 aperture posterior
-    ap_path = "results/bagpipes_sed_results.npz"
-    if os.path.exists(ap_path):
-        ap = np.load(ap_path, allow_pickle=True)
-        log_M_aperture = ap["stellar_mass"]
-        ap_p16, ap_p50, ap_p84 = np.percentile(log_M_aperture, [16, 50, 84])
-    else:
-        log_M_aperture = None
-        ap_p50 = 11.33
-
+    log_M_sersic = ser["stellar_mass"]
+    log_M_aperture = apr["stellar_mass"]
+    ap_p16, ap_p50, ap_p84 = np.percentile(log_M_aperture, [16, 50, 84])
     s_p16, s_p50, s_p84 = np.percentile(log_M_sersic, [16, 50, 84])
 
     print()
@@ -160,7 +151,7 @@ def main():
         print(f"{'Δ in solar masses':<25} {10**(s_p50-a50):>22.2f}× more massive")
     print("=" * 70)
 
-    # Save
+    # Save: M* posteriors + measured/model photometry + model SED for BOTH choices
     out = "results/bagpipes_sersic_refit.npz"
     save = dict(
         filter_names=filter_names,
@@ -169,18 +160,25 @@ def main():
         mag_sersic=mag_sersic,
         flam_aperture=flam_aperture,
         flam_sersic=flam_sersic,
-        flam_err_used=flam_err,
+        flam_err_used=apr["flam_err"],
         log_M_sersic_samples=log_M_sersic,
-        log_M_sersic_p16=s_p16,
-        log_M_sersic_p50=s_p50,
-        log_M_sersic_p84=s_p84,
+        log_M_sersic_p16=s_p16, log_M_sersic_p50=s_p50, log_M_sersic_p84=s_p84,
+        log_M_aperture_samples=log_M_aperture,
+        log_M_aperture_p16=ap_p16, log_M_aperture_p50=ap_p50, log_M_aperture_p84=ap_p84,
+        delta_log_M=s_p50 - ap_p50,
+        # model SED + filter-convolved model photometry (for the figure)
+        eff_wavs=apr["eff_wavs"],
+        ap_flam=apr["flam"], ap_flam_err=apr["flam_err"],
+        ap_model_phot_p16=apr["model_phot_p16"], ap_model_phot_p50=apr["model_phot_p50"],
+        ap_model_phot_p84=apr["model_phot_p84"],
+        ap_wav_obs=apr["wav_obs"], ap_spec_p16=apr["spec_p16"],
+        ap_spec_p50=apr["spec_p50"], ap_spec_p84=apr["spec_p84"], ap_z_p50=apr["z_p50"],
+        ser_flam=ser["flam"], ser_flam_err=ser["flam_err"],
+        ser_model_phot_p16=ser["model_phot_p16"], ser_model_phot_p50=ser["model_phot_p50"],
+        ser_model_phot_p84=ser["model_phot_p84"],
+        ser_wav_obs=ser["wav_obs"], ser_spec_p16=ser["spec_p16"],
+        ser_spec_p50=ser["spec_p50"], ser_spec_p84=ser["spec_p84"], ser_z_p50=ser["z_p50"],
     )
-    if log_M_aperture is not None:
-        save.update(dict(
-            log_M_aperture_samples=log_M_aperture,
-            log_M_aperture_p16=ap_p16, log_M_aperture_p50=ap_p50, log_M_aperture_p84=ap_p84,
-            delta_log_M=s_p50 - ap_p50,
-        ))
     np.savez(out, **save)
     print(f"\nSaved → {out}")
 
