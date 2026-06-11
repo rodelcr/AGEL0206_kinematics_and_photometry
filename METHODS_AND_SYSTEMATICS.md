@@ -189,7 +189,7 @@ second handle on z_source via the same physical absorber.
 
 The headline σ_e is measured on a single I-weighted, 1-D aperture
 spectrum extracted at R<R_e from the IFU cube. This matches the
-literature standard (Cappellari et al. 2006, eq. 1, as adopted by
+literature standard (Cappellari et al. 2006, SAURON IV §2.3 co-add-then-fit; σ_e integral = Gültekin 2009 eq. 1 — NOT Cappellari 2006 eq. 1, which is the aperture correction; as adopted by
 Kormendy & Ho 2013, Greene et al. 2020 ARA&A, SAURON/ATLAS3D, MaNGA).
 
 ### Center and aperture radius
@@ -446,7 +446,7 @@ guarantee.
 Gültekin et al. (2009); we use it for the radial σ(R) profile and the
 per-annulus systematics inspection. The §6cum cumulative I-weighted
 aperture is the literature-standard σ_e definition for M•–σ work
-(Cappellari et al. 2006, eq. 1, also used by KH13 / Greene+20 /
+(Cappellari et al. 2006, SAURON IV §2.3 co-add-then-fit; σ_e def. = Gültekin 2009 eq. 1, also used by KH13 / Greene+20 /
 SAURON / ATLAS3D / MaNGA), and is the cross-check the paper headline is
 calibrated against. The arc-as-sky test (E8) is the rigorous test of
 the no-mask Δ mechanism: with the arc spectrum as a free-amplitude
@@ -868,7 +868,7 @@ z_source             = 1.302                  (AGEL DR2; cross-checked via
    Removed a +20 km/s outlier in the I-shape sweep; the I-shape budget
    shrank from ±5.4 to ±1.5 km/s at the wide window.
 4. **Quadrature-conservative budget with literature-standard estimator.**
-   §6cum (cumulative I-weighted aperture ppxf) matches Cappellari+2006
+   §6cum (cumulative I-weighted aperture ppxf) matches Cappellari et al. 2006 (SAURON IV §2.3)
    eq. 1 and Greene+20 ARA&A; three independent estimators (§7, §7b,
    arc-subtraction) agree within budget.
 5. **Aperture-vs-Sersic-total mass sensitivity.** Quote the aperture
@@ -970,7 +970,7 @@ z_source             = 1.302                  (AGEL DR2; cross-checked via
 ## Selected literature references
 
 - Cappellari & Emsellem (2004) — ppxf
-- Cappellari et al. (2006) — eq. 1 σ_e definition (cumulative I-weighted)
+- Cappellari et al. (2006, SAURON IV) — §2.3 co-add-then-fit σ_e (cumulative I-weighted); NB its eq. 1 is the aperture correction, not σ_e. σ_e integral = Gültekin 2009 eq. 1
 - Cappellari (2017, 2023) — ppxf revisions, high-z fwhm_gal_dict pattern
 - Ciddor (1996) — vacuum-to-air conversion
 - Kormendy & Ho (2013) — M•–σ scaling for ellipticals

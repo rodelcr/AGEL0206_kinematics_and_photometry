@@ -425,7 +425,8 @@ reproduce the arc selection), validated + applied to all four bands.
 > z **unbiased**. Had we left the cube in vacuum and used air rest lines, z would be biased high by
 > ≈ (1+z)·(n−1) ≈ +5×10⁻⁴ (≈ +90 km/s); the conversion removes this.
 - **Double verification with ppxf:** the Gaussian line-fit z is independent of, and consistent with,
-  the ppxf V_sys (ppxf returns z via z = (1+z₀)·exp(V/c) − 1; Cappellari 2023 eq. 5c).
+  the ppxf V_sys (ppxf returns z via z = (1+z₀)·exp(V/c) − 1; Cappellari 2023, the ppxf
+  relativistic velocity convention — *eq. number not yet verified, do not assert "eq. 5c"*).
 - **Source z = 1.30263 ± 0.00003** — measured from the **[O II] λλ3726,3729 doublet** in the red cube
   (notebook 04; obs 8579.2/8585.6 Å), consistent with AGEL DR2 z = 1.302. (The ±0.00003 is the
   formal doublet-fit error; the per-line spread 1.30185–1.30357 is the realistic uncertainty.)
@@ -471,8 +472,8 @@ reproduce the arc selection), validated + applied to all four bands.
 **Spatial regime / masking / R_e**
 
 - Headline σ_e is measured on a **single I(r)-weighted 1-D aperture spectrum at R < R_e** — the
-  literature-standard σ_e (Cappellari et al. 2006 eq. 1; the KH13 / Greene+20 / SAURON / ATLAS3D /
-  MaNGA convention). **R_e = 2.097″ = 14.76 kpc** (best mask; §2.1.2).
+  co-add-then-fit method of **Cappellari et al. 2006 (SAURON IV, §2.3)**, the literature-standard σ_e
+  (KH13 / Greene+20 / SAURON / ATLAS³ᴰ / MaNGA convention). **R_e = 2.097″ = 14.76 kpc** (best mask; §2.1.2).
 - **Center:** HST-mean `photutils.centroid_2dg` of F140W+F200LP cores, propagated through the KCWI
   WCS; adopted RA = 31.55613°, Dec = −1.23819° (ICRS). F140W↔F200LP offset 0.36″ (F200LP shifted by
   the UV-bright arc; F140W is the clean bulge centroid).
@@ -523,24 +524,29 @@ reproduce the arc selection), validated + applied to all four bands.
 
 **σ_e definition & wavelength window**
 
-- **σ_e definition — analytic (Gültekin) and discrete (Cappellari) forms are the SAME quantity.**
-  (Gültekin et al. 2009 eq. 1; Kormendy & Ho 2013 eq. 3; 2D-IFU form Cappellari et al. 2006 eq. 1.)
-  - **Analytic / luminosity-weighted integral** (Gültekin 1D longslit, generalised to 2D — the 2πr
-    is the axisymmetric area element dA = 2πr dr):
+- **σ_e definition — the luminosity-weighted second moment of the LOSVD within R_e.** (Defined as the
+  radial integral in **Gültekin et al. 2009, eq. (1)** [verified 2026-06-12]; the relation we place it on
+  is **Kormendy & Ho 2013 eq. 3**.) Two mathematically-equivalent representations:
+  - **Analytic / luminosity-weighted integral — Gültekin et al. 2009 eq. (1)** (their 1D form;
+    generalised to the 2D axisymmetric area element dA = 2πr dr):
 
     $$\sigma_e^2 = \frac{\int_0^{R_e} (V^2 + \sigma^2)\, I(r)\, 2\pi r\, dr}{\int_0^{R_e} I(r)\, 2\pi r\, dr}.$$
-  - **Discrete Cappellari (2006) eq. 1 spaxel/bin sum** — the *same* moment evaluated over spaxels
-    (or Voronoi bins) n, with $F_n$ = the I-band flux (luminosity weight) of spaxel n; the 2πr factor
-    is captured implicitly because the number of spaxels per annulus scales with area:
+  - **Discrete spaxel/bin sum** — the same moment evaluated over spaxels (or Voronoi bins) n, with
+    $F_n$ = the I-band flux (luminosity weight) of spaxel n; the 2πr factor is captured implicitly
+    because the number of spaxels per annulus scales with area:
 
     $$\sigma_e^2 = \frac{\sum_{n:\, R_n \le R_e} F_n\,[(V_n - V_\mathrm{sys})^2 + \sigma_n^2]}{\sum_{n:\, R_n \le R_e} F_n}.$$
 
-    This is the form SAURON IV / ATLAS3D III / MaNGA-DAP (Westfall+2019) use on Voronoi bins.
-- **These two forms are equivalent and BOTH are already implemented and cross-checked in this project**
-  (do not re-derive): the **analytic integral is the headline path** — the cumulative I-weighted
-  single-ppxf fit on the R<R_e aperture spectrum (preserves LOSVD shape; what KH13/Greene+20 compute) —
-  and the **discrete Cappellari/Gültekin spaxel-sum is the §7 / nb07c annular implementation**
-  (`run_gultekin_mc`, F_j = Σ I over each unmasked annulus). The two agree at **<1σ**: integral
+    This discrete form is the standard IFU convention (ATLAS$^{\rm 3D}$, Cappellari et al. 2013;
+    MaNGA-DAP, Westfall et al. 2019). **It is NOT in Cappellari et al. 2006** — a prior draft
+    mis-cited it as "Cappellari 2006 eq. 1"; that paper's eq. (1) is the *aperture correction*
+    $(\sigma_R/\sigma_e)=(R/R_e)^{-0.066}$, and its σ_e (SAURON IV §2.3) is the co-add-then-fit method below.
+- **Both forms are implemented and cross-checked here** (do not re-derive). The **headline** (§6cum/nb09)
+  is the **co-add-then-fit method of Cappellari et al. 2006 (SAURON IV, §2.3)** — co-add the I-weighted
+  R<R_e spectra into one effective spectrum and fit a single LOSVD with pPXF; the width of that co-added
+  spectrum *equals* the luminosity-weighted second moment above (this is what KH13/Greene+20/ATLAS$^{\rm 3D}$
+  report). The **discrete annular sum (Gültekin 2009 eq. 1)** is the §7 / nb07c cross-check
+  (`run_gultekin_mc`, F_j = Σ I over each unmasked annulus). The two agree at **<1σ**: co-add-fit
   (§6cum, narrow) 267.32 ± 24 vs discrete annular (§7, arc-filtered to R<R_safe=3R_e/4) 256.17 −13.0/+12.7.
   Full implementation + subtleties in `reference_gultekin_implementation.md`.
 - **Why the integral path is the headline** (not the discrete sum): the discrete spaxel-sum is (i)
@@ -714,9 +720,9 @@ manuscript Methods section.
 ### §2.4.4 Reproducibility / infrastructure
 
 - **Architecturally-independent estimators** (must not share intermediate state): **§6cum** cumulative
-  I-weighted single-ppxf aperture (the analytic Gültekin path = headline) · **§7** discrete
-  Cappellari (2006) annular spaxel-sum (`run_gultekin_mc`, arc-filtered to R<R_safe) · **nb07e**
-  arc-spectrum subtraction. The three agree at <1σ (267.32 integral vs 256.17 discrete, narrow).
+  I-weighted single-ppxf aperture (the Cappellari 2006 co-add-then-fit method = headline) · **§7** discrete
+  **Gültekin (2009) eq. 1** annular spaxel-sum (`run_gultekin_mc`, arc-filtered to R<R_safe) · **nb07e**
+  arc-spectrum subtraction. The three agree at <1σ (267.32 co-add-fit vs 256.17 discrete, narrow).
 - **Caching + seed discipline.** Every expensive bootstrap writes a `.npz` keyed by its parameters
   (`results/<sweep>/<params>_N{N}.npz`); a cached result is **never** re-run. Seeds are deterministic
   (§2.4.1 step 7) so re-runs bit-reproduce; **N=50 smoke before N=500 production**; joblib with
@@ -752,10 +758,10 @@ manuscript Methods section.
   (the line-fit value supersedes AGEL DR2 z = 0.67511). The lensed-**source** redshift is
   **z = 1.30263 ± 0.00003** (red-cube [O II] λλ3726,3729 doublet). [§2.2.2; `scripts/redshift_verify.py`,
   `run_sigma_e_Re_grid.py`]
-- **Headline: σ_e(<R_e) = 267.31 ± 12.79 km/s** (asym −12.98/+12.61), via the Gültekin (2009)
-  luminosity-weighted formalism evaluated with the Cappellari ppxf implementation on the
-  I(r)-weighted R<R_e aperture spectrum (R_e = 2.097″ best-mask CoG), plus the wild-bootstrap
-  error pool. **Supersedes 269.62 ± 13.27 at R_e=2.305″** — the "best mask throughout"
+- **Headline: σ_e(<R_e) = 267.31 ± 12.79 km/s** (asym −12.98/+12.61), the luminosity-weighted σ_e
+  within R_e (Gültekin et al. 2009 eq. 1 definition) measured by the **Cappellari et al. 2006 (SAURON IV
+  §2.3) co-add-then-fit method** — a single pPXF fit to the I(r)-weighted R<R_e aperture spectrum
+  (R_e = 2.097″ best-mask CoG) — plus the wild-bootstrap error pool. **Supersedes 269.62 ± 13.27 at R_e=2.305″** — the "best mask throughout"
   cascade (2026-06-11) adopts the best-mask R_e=2.097″, lowering σ_e by 2.3 km/s along the
   rising σ(R) profile (well within errors).
 - **Reproduce:** σ_e at the headline aperture is `results/run_wide_sigma_e/resys_best_mean/`
@@ -812,8 +818,9 @@ then the spectrum (mask ±6.65, frame ±5.0, window ±3.82, reduction ±3.45, ce
 → ±11.77 (M11 re-derivation) → **±13.27 (M12, +R_e-source ±6.13, 2026-06-08)**. He I pushes σ up ~2.9,
 the 9 sky bands pull it down ~2.2 (near-cancel); central value 269.62 stable across M10→M12 (only the error grew).
 
-**Compare with Greene (2016/2020) and KH13 choices:** σ_e(<R_e) here uses the Cappellari et al. 2006
-eq. 1 luminosity-weighted single-aperture definition, exactly as adopted by Kormendy & Ho 2013
+**Compare with Greene (2016/2020) and KH13 choices:** σ_e(<R_e) here uses the luminosity-weighted
+single-aperture σ_e (Cappellari et al. 2006 SAURON IV §2.3 co-add-then-fit; Gültekin 2009 eq. 1 definition),
+exactly as adopted by Kormendy & Ho 2013
 (M•–σ eq. 3) and Greene et al. 2020 ARA&A (fig. 5). We dropped R<R_e/8 (JFK95 σ_c) because seeing
 under-resolves it. For a pure elliptical, galaxy R_e ≈ bulge R_e, so KH13's "bulge R_e" equals the
 measured total R_e — no bulge/disk decomposition needed.
@@ -917,8 +924,11 @@ spaxels at S/N≥5, σ ∈ [144, 251] km/s (median 201), declining with R, no co
 # Key citations (verified in notebook 10)
 
 - **ppxf:** Cappellari & Emsellem (2004); Cappellari (2017, MNRAS 466, 798); Cappellari (2023).
-- **σ_e aperture definition:** Cappellari et al. (2006, MNRAS 366, 1126) eq. 1;
-  **Gültekin et al. (2009)** eq. 1; **Kormendy & Ho (2013, ARA&A 51, 511)** eq. 3 (scatter 0.29 dex);
+- **σ_e definition:** **Gültekin et al. (2009)** eq. 1 (the luminosity-weighted second-moment integral —
+  verified 2026-06-12); co-add-then-fit method **Cappellari et al. (2006, MNRAS 366, 1126, SAURON IV §2.3)**
+  [NB: that paper's eq. 1 is the *aperture correction*, NOT σ_e — do not cite "Cappellari 2006 eq. 1" for
+  σ_e]; discrete-bin IFU form ATLAS³ᴰ (Cappellari et al. 2013) / MaNGA-DAP (Westfall et al. 2019);
+  **Kormendy & Ho (2013, ARA&A 51, 511)** eq. 3 (scatter 0.29 dex);
   **Greene, Strader & Ho (2020, ARA&A 58, 257)** fig. 5 **[⚠ AUDIT FLAG — see below]**; Saglia et al. (2016).
 - **z=0 IFS calibration:** Cappellari et al. (2013, ATLAS3D XV & XX); Krajnović et al. (2013, XVII);
   Zhu et al. (2024, MaNGA DynPop III).

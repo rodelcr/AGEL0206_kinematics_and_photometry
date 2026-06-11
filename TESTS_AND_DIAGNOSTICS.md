@@ -415,9 +415,10 @@ percentile of this combined-SPS pool.
 **D1 §6cum cumulative I-weighted ppxf** —
 For each spaxel inside R<R_max, build I-weight from the IFU 6500–7500 Å
 white-light band, drop arc-mask-flagged spaxels, normalize and sum to a
-single 1-D spectrum, fit ppxf. This is the headline path — matches
-KH13 / Greene+20 / SAURON / ATLAS3D / MaNGA σ_e definition (Cappellari+2006
-eq. 1). Cross-references in
+single 1-D spectrum, fit ppxf. This is the headline path — the co-add-then-fit
+method of Cappellari et al. 2006 (SAURON IV §2.3), as KH13 / Greene+20 / SAURON /
+ATLAS3D / MaNGA compute σ_e (the σ_e definition integral is Gültekin 2009 eq. 1;
+**NOT** Cappellari 2006 eq. 1, which is the aperture correction). Cross-references in
 `~/.claude/.../reference_cumulative_vs_annular_sigma_e.md`.
 Code: `scripts/final_sigma_e.py:run_aperture_sps`.
 

@@ -83,7 +83,7 @@ Prior cross-checks (notebook 07c Gültekin pipeline, narrow window only — supe
 **nb09 wide arc-masked** (current paper headline) — single ppxf fit on the I-band-weighted R<R_e aperture spectrum across rest 3800–5400 Å with explicit z=1.302 source-emission masking (Mg II 2796/2803, [O II] 3727/3729, **He I 3819**, [Ne III] 3869). Pros over nb07c §6cum: 4× more spectral pixels (2161 vs 555 good pixels) → ±6 stat vs ±24 stat; orthogonal feature-set cross-check via `wR4000_5400_arcmask` (Hβ + Mg b, no Ca H+K) gives 15 km/s window-spread systematic. Cons: needs explicit catalog of source-emission lines mapped into deflector rest frame (one-time cost; reusable for other AGEL targets).
 
 §6cum (cumulative I-weighted aperture ppxf, nb07c, narrow window only) is preserved as the **method cross-check**. See `~/.claude/.../memory/reference_cumulative_vs_annular_sigma_e.md` for the full case. Short version of why §6cum was preferred over §7 (and why both are now superseded by nb09 for the headline):
-- Single ppxf fit on the I-weighted aperture spectrum at R<R_max — matches what KH13 / Greene+20 / SAURON / ATLAS3D / MaNGA actually compute (Cappellari+2006 eq. 1)
+- Single ppxf fit on the I-weighted aperture spectrum at R<R_max — the co-add-then-fit method of Cappellari et al. 2006 (SAURON IV §2.3), as KH13 / Greene+20 / SAURON / ATLAS3D / MaNGA compute it. **Do NOT cite "Cappellari 2006 eq. 1" for σ_e** — eq. 1 there is the aperture correction; the σ_e definition integral is Gültekin 2009 eq. 1 (verified 2026-06-12)
 - No binning to defend (no equal-r vs equal-N debate)
 - Single LOSVD fit preserves line-shape information that §7's moment-pooling discards
 - Bright-center I-weighting auto-suppresses arc contamination (verified by nb07e: < 0.1 km/s shift)
