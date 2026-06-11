@@ -474,7 +474,7 @@ reproduce the arc selection), validated + applied to all four bands.
 
 - Headline σ_e is measured on a **single I(r)-weighted 1-D aperture spectrum at R < R_e** — the
   co-add-then-fit method of **Cappellari et al. 2006 (SAURON IV, §2.3)**, the literature-standard σ_e
-  (KH13 / Greene+20 / SAURON / ATLAS³ᴰ / MaNGA convention). **R_e = 2.097″ = 14.76 kpc** (best mask; §2.1.2).
+  (KH13 / Greene+20 / SAURON / ATLAS3D / MaNGA convention). **R_e = 2.097″ = 14.76 kpc** (best mask; §2.1.2).
 - **Center:** HST-mean `photutils.centroid_2dg` of F140W+F200LP cores, propagated through the KCWI
   WCS; adopted RA = 31.55613°, Dec = −1.23819° (ICRS). F140W↔F200LP offset 0.36″ (F200LP shifted by
   the UV-bright arc; F140W is the clean bulge centroid).
@@ -544,7 +544,7 @@ reproduce the arc selection), validated + applied to all four bands.
 
     $$\sigma_e^2 = \frac{\sum_{n:\, R_n \le R_e} F_n\,[(V_n - V_\mathrm{sys})^2 + \sigma_n^2]}{\sum_{n:\, R_n \le R_e} F_n}.$$
 
-    This discrete spaxel/bin sum **is Cappellari et al. 2013 (ATLAS³ᴰ XV, MNRAS 432, 1709) eq. 29**
+    This discrete spaxel/bin sum **is Cappellari et al. 2013 (ATLAS3D XV, MNRAS 432, 1709) eq. 29**
     — $\langle v_{\rm rms}^2\rangle_e \equiv \langle V^2+\sigma^2\rangle_e \equiv \sum_n F_n(V_n^2+\sigma_n^2)/\sum_n F_n$
     — equivalently the discretised form of the Gültekin 2009 eq. 1 integral. (Their eq. 29 also carries
     an **inclination/projection element** in the dynamical-model framework; our §7 uses the
@@ -971,7 +971,7 @@ spaxels at S/N≥5, σ ∈ [144, 251] km/s (median 201), declining with R, no co
 - **σ_e definition:** **Gültekin et al. (2009)** eq. 1 (the luminosity-weighted second-moment integral —
   verified 2026-06-12); co-add-then-fit method **Cappellari et al. (2006, MNRAS 366, 1126, SAURON IV §2.3)**
   [NB: that paper's eq. 1 is the *aperture correction*, NOT σ_e — do not cite "Cappellari 2006 eq. 1" for
-  σ_e]; the discrete spaxel/bin sum (§7) is **Cappellari et al. (2013, ATLAS³ᴰ XV, MNRAS 432, 1709) eq. 29**
+  σ_e]; the discrete spaxel/bin sum (§7) is **Cappellari et al. (2013, ATLAS3D XV, MNRAS 432, 1709) eq. 29**
   (= the discretised Gültekin 2009 eq. 1; eq. 29 also has an inclination/projection term that our
   observed-plane sum omits) [verified 2026-06-12]; **Kormendy & Ho (2013, ARA&A 51, 511)** eq. 3 (scatter 0.29 dex);
   **Greene, Strader & Ho (2020, ARA&A 58, 257)** fig. 5 **[⚠ AUDIT FLAG — see below]**; Saglia et al. (2016).
