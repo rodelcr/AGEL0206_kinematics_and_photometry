@@ -560,6 +560,27 @@ reproduce the arc selection), validated + applied to all four bands.
   (`run_gultekin_mc`, F_j = Σ I over each unmasked annulus). The two agree at **<1σ**: co-add-fit
   (§6cum, narrow) 267.32 ± 24 vs discrete annular (§7, arc-filtered to R<R_safe=3R_e/4) 256.17 −13.0/+12.7.
   Full implementation + subtleties in `reference_gultekin_implementation.md`.
+- **★ What the headline code ACTUALLY computes** (`final_sigma_e.extract_aperture_spectrum` → pPXF;
+  this is the number we report, 267.31). **We do NOT evaluate either σ_e² sum or integral above.**
+  We form the **I(r)-weighted co-added aperture spectrum**
+
+  $$S_e(\lambda) \;=\; \sum_{n:\, r_n < R_e} w_n\, S_n(\lambda), \qquad
+    w_n = \frac{I_n}{\sum_{m:\, r_m < R_e} I_m}, \qquad w_n \equiv 0 \ \text{for arc-masked spaxels (mask\_weight=0)},$$
+
+  where $S_n(\lambda)$ is the spaxel spectrum and $I_n$ its 6500–7500 Å white-light flux (the luminosity
+  weight). pPXF then fits a **single Gaussian LOSVD** (`moments=2`) to $S_e(\lambda)$,
+
+  $$S_e(\lambda) \;\approx\; \Big[\textstyle\sum_k a_k\, T_k(\lambda)\Big] \otimes \mathcal{G}(v;\,V,\sigma)
+    \;+\; \text{(additive Legendre poly, deg 15–29)},$$
+
+  and **$\sigma_e \equiv \sigma$**, the fitted LOSVD dispersion. Because superposing spaxel spectra at
+  different line-of-sight velocities $V_n$ broadens the co-add, the width $\sigma$ of that single fit
+  *equals* the luminosity-weighted second moment $\sqrt{\langle (V-V_{\rm sys})^2 + \sigma_n^2\rangle}$
+  — so it **measures** the Cappellari 2013 eq. 29 / Gültekin 2009 eq. 1 quantity **without ever forming
+  the explicit sum** (and with $V_{\rm sys}$ absorbed automatically into the fitted $V$; §2.4.1). Code:
+  `extract_aperture_spectrum` (the weighted sum) + `bootstrap_ppxf.setup_ppxf_inputs_from_spectrum` +
+  `ppxf(..., moments=2)`. The explicit discrete sum $\sum_j F_j(V_j^2+\sigma_j^2)/\sum_j F_j$ is computed
+  **only** in the §7 annular cross-check (`run_gultekin_mc`), never in the headline.
 - **Why the integral path is the headline** (not the discrete sum): the discrete spaxel-sum is (i)
   per-spaxel-S/N-limited and (ii) sensitive to arc contamination in the outer spaxels — an *unfiltered*
   discrete sum over the resolved PowerBins out to ~3.4″ is dominated by the z=1.302 arc (outer bins
