@@ -247,8 +247,9 @@ reproduce the arc selection), validated + applied to all four bands.
 - **JWST bands:** same arc geometry; the HST F200LP mask is re-projected from the HST WCS
   onto each JWST frame. [METHODS §II.4]
 - **For the IFU/σ_e application** (context): F200LP mask reprojected to the 0.30″ IFU grid via
-  `scipy.ndimage.map_coordinates(order=0)` nearest-neighbor; ~38/184 spaxels inside R_e flagged
-  (~21% by count, ~27% by I-weight). [feedback_masking_strategy.md]
+  `scipy.ndimage.map_coordinates(order=0)` nearest-neighbor; **35/154 = 23% of spaxels (28% by
+  I-weight)** flagged inside R_e=2.097″ (a geometric LOWER bound — the 1.27″ seeing spreads the arc
+  much wider; see §2.4.1 step 3 + `scripts/psf_mask_fraction.py`). [feedback_masking_strategy.md]
 
 ### §2.1.2 Estimating R_e
 
@@ -537,10 +538,14 @@ reproduce the arc selection), validated + applied to all four bands.
 
     $$\sigma_e^2 = \frac{\sum_{n:\, R_n \le R_e} F_n\,[(V_n - V_\mathrm{sys})^2 + \sigma_n^2]}{\sum_{n:\, R_n \le R_e} F_n}.$$
 
-    This discrete form is the standard IFU convention (ATLAS$^{\rm 3D}$, Cappellari et al. 2013;
-    MaNGA-DAP, Westfall et al. 2019). **It is NOT in Cappellari et al. 2006** — a prior draft
-    mis-cited it as "Cappellari 2006 eq. 1"; that paper's eq. (1) is the *aperture correction*
-    $(\sigma_R/\sigma_e)=(R/R_e)^{-0.066}$, and its σ_e (SAURON IV §2.3) is the co-add-then-fit method below.
+    This discrete spaxel/bin sum **is Cappellari et al. 2013 (ATLAS³ᴰ XV, MNRAS 432, 1709) eq. 29**
+    — $\langle v_{\rm rms}^2\rangle_e \equiv \langle V^2+\sigma^2\rangle_e \equiv \sum_n F_n(V_n^2+\sigma_n^2)/\sum_n F_n$
+    — equivalently the discretised form of the Gültekin 2009 eq. 1 integral. (Their eq. 29 also carries
+    an **inclination/projection element** in the dynamical-model framework; our §7 uses the
+    *observed-plane* projected $V_n,\sigma_n$ directly and omits that term.) **It is NOT "Cappellari
+    2006 eq. 1"** — a prior draft mis-cited it there; Cappellari 2006 eq. 1 is the aperture correction
+    $(\sigma_R/\sigma_e)=(R/R_e)^{-0.066}$, and its σ_e (SAURON IV §2.3) is the co-add-then-fit method
+    below. [eq. numbers verified 2026-06-12: Cappellari 2006 eq. 1, Cappellari 2013 eq. 29, Gültekin 2009 eq. 1]
 - **Both forms are implemented and cross-checked here** (do not re-derive). The **headline** (§6cum/nb09)
   is the **co-add-then-fit method of Cappellari et al. 2006 (SAURON IV, §2.3)** — co-add the I-weighted
   R<R_e spectra into one effective spectrum and fit a single LOSVD with pPXF; the width of that co-added
@@ -613,7 +618,17 @@ Driver for the headline: `scripts/run_wide_sigma_e.py --cube new_clean_hei --n_b
    photutils-validated ±0.002″).
 3. **Spatial arc mask → IFU grid.** The F200LP `_mask.fits` (2512 HST px, arc-only) is reprojected
    onto the 0.30″ IFU grid with `scipy.ndimage.map_coordinates(order=0)` (nearest-neighbour) →
-   `arc_spax_mask` (~38/184 spaxels inside R_e flagged, ~27% by I-weight).
+   `arc_spax_mask`. **Mask coverage within R_e (PSF caveat; `scripts/psf_mask_fraction.py`):** this
+   *geometric* mask flags **35/154 = 23% of spaxels (28% by I-weight)** inside R_e=2.097″. But the arc
+   light is spread by the **1.27″ KCWI seeing**, so the geometric fraction is a **lower bound**: growing
+   the mask by the PSF (binary dilation) raises the masked fraction to **71% / 81%** (by FWHM/2 = 0.64″)
+   or **96% / 98%** (by the full FWHM = 1.27″) — i.e. a hard seeing-grown mask removes nearly the entire
+   aperture and is **infeasible**. (Convolving the binary mask with the PSF and cutting at >25% / >10%
+   arc-light contamination gives 42% / 75% by count; the >50% cut, 1%, is a thin-arc dilution artifact.)
+   This is precisely why we instead (i) **I-weight** the aperture — the bright deflector core dominates,
+   the arc-contaminated outskirts are down-weighted — and (ii) carry the **mask-weight systematic
+   (±6.65 km/s, w=0→1; §2.4.3)** to bracket the residual arc dilution rather than attempt a hard
+   PSF-grown mask.
 4. **I-weighted aperture extraction.** Build the 6500–7500 Å white-light I-map; the R<R_e aperture
    spectrum = Σ_spaxel cube · w, w = I-weight with arc spaxels **hard-masked (mask_weight=0)** and
    re-normalised. Spectra are summed (not averaged) so the bootstrap preserves per-spaxel noise.
@@ -927,8 +942,9 @@ spaxels at S/N≥5, σ ∈ [144, 251] km/s (median 201), declining with R, no co
 - **σ_e definition:** **Gültekin et al. (2009)** eq. 1 (the luminosity-weighted second-moment integral —
   verified 2026-06-12); co-add-then-fit method **Cappellari et al. (2006, MNRAS 366, 1126, SAURON IV §2.3)**
   [NB: that paper's eq. 1 is the *aperture correction*, NOT σ_e — do not cite "Cappellari 2006 eq. 1" for
-  σ_e]; discrete-bin IFU form ATLAS³ᴰ (Cappellari et al. 2013) / MaNGA-DAP (Westfall et al. 2019);
-  **Kormendy & Ho (2013, ARA&A 51, 511)** eq. 3 (scatter 0.29 dex);
+  σ_e]; the discrete spaxel/bin sum (§7) is **Cappellari et al. (2013, ATLAS³ᴰ XV, MNRAS 432, 1709) eq. 29**
+  (= the discretised Gültekin 2009 eq. 1; eq. 29 also has an inclination/projection term that our
+  observed-plane sum omits) [verified 2026-06-12]; **Kormendy & Ho (2013, ARA&A 51, 511)** eq. 3 (scatter 0.29 dex);
   **Greene, Strader & Ho (2020, ARA&A 58, 257)** fig. 5 **[⚠ AUDIT FLAG — see below]**; Saglia et al. (2016).
 - **z=0 IFS calibration:** Cappellari et al. (2013, ATLAS3D XV & XX); Krajnović et al. (2013, XVII);
   Zhu et al. (2024, MaNGA DynPop III).
