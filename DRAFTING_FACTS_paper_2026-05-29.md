@@ -499,8 +499,14 @@ reproduce the arc selection), validated + applied to all four bands.
   per-SPS (scalar-median vac↔air via Ciddor 1996, following Cappellari's pattern). Why: the legacy
   "convert galaxy to air for all three" produced a spurious −90 km/s FSPS V_sys; the fix collapsed
   the V_sys split-track ~110 → ~15–18 km/s (σ shift ≤2 km/s). [reference_ppxf_vacair_handling.md]
-- **Per-SPS V_sys subtracted before pooling** (σ is V-invariant; V_sys medians FSPS −19, EMILES −4,
-  XSL −1 km/s). A single global V_sys would inflate σ_e by ~10–15 km/s in the discrete cross-check.
+- **Per-SPS V_sys subtracted before pooling** (σ is V-invariant; a single global V_sys would inflate
+  σ_e by ~10–15 km/s in the discrete cross-check). **All three libraries now converge to the same
+  redshift** — at the headline R_e=2.097″ aperture the per-SPS V_sys are FSPS −15.7 / EMILES −19.1 /
+  XSL −14.9 km/s → z = 0.67555 / 0.67553 / 0.67556 (a ~4 km/s, Δz≈3×10⁻⁵ spread; mean **z_ppxf =
+  0.67555 ± 0.00001**). This convergence is *the* signature that the air↔vacuum frame fix worked: the
+  legacy "convert all three to air" left FSPS (the vacuum-native library) ~90–110 km/s discrepant from
+  EMILES/XSL; per-SPS native framing collapses it to the ~4 km/s seen here (residual folded into the
+  ±5 km/s frame systematic).
 - **Emission-line handling (sigma clipping / removing emission lines):**
   - Custom **no-Balmer goodpixels** (`_determine_goodpixels_no_balmer`): masks only the forbidden
     lines ([O II], [O III], [O I], [N II], [S II]) and **keeps Hδ, Hγ, Hβ IN the fit** (they are
@@ -767,8 +773,10 @@ manuscript Methods section.
 - **Final redshifts (to quote in Results).** The deflector systemic redshift from **Gaussian line
   fits** (6 absorption features, §2.2.2) is **z = 0.67564 ± 0.00033**, in agreement with the
   independent **ppxf stellar-kinematic** redshift **z = 0.67555 ± 0.00002** (V_sys = −16 ± 4 km/s
-  relative to the line-fit value; pooled over FSPS+EMILES+XSL on the headline R_e=2.097″ aperture).
-  The 16 km/s line-fit↔ppxf offset is well within the ±59 km/s line-fit uncertainty (and the ppxf
+  relative to the line-fit value; headline R_e=2.097″ aperture). **All three SPS libraries converge:**
+  FSPS 0.67555 / EMILES 0.67553 / XSL 0.67556 (~4 km/s spread) — the signature of the air↔vacuum
+  per-SPS frame fix (§2.4.1), which collapsed the legacy ~110 km/s FSPS-vs-air offset. The 16 km/s
+  line-fit↔ppxf offset is well within the ±59 km/s line-fit uncertainty (and the ppxf
   formal ±4 km/s carries an additional ~±5 km/s per-SPS frame systematic). **We adopt z = 0.67564**
   (the line-fit value supersedes AGEL DR2 z = 0.67511). The lensed-**source** redshift is
   **z = 1.30263 ± 0.00003** (red-cube [O II] λλ3726,3729 doublet). [§2.2.2; `scripts/redshift_verify.py`,
