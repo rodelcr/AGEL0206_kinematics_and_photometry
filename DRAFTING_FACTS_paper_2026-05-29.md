@@ -579,6 +579,17 @@ reproduce the arc selection), validated + applied to all four bands.
   and take peak-to-peak/2 of the spread (266.83–271.37 km/s on the NEW cube + M10). So $I_i$ = IFU
   white-light is the *headline* choice, not an assumption: σ_e moves ≤±2.27 km/s across this whole
   family of luminosity weightings.
+  - **PSF resolution of the HST weight maps (`scripts/ishape_psf_convolved_test.py`, 2026-06-12):** the
+    HST F140W/F200LP weight maps (and the Sérsic maps) are reprojected at **native HST resolution** —
+    they are NOT convolved to the KCWI ~1.27″ seeing. Convolving them to the KCWI PSF before weighting
+    *raises* σ_e by **+7–8 km/s** (F140W 266→274, F200LP 268→277), larger than the ±2.27 term — but this
+    is a **contamination effect, not a resolution improvement**, so it is **not folded** (sensitivity
+    only). Smoothing by 1.27″ (i) leaks the *masked* arc light into the unmasked arc-adjacent spaxels
+    (worst for F200LP, where the z=1.302 arc is UV-bright) and (ii) up-weights the high-σ outskirts —
+    exactly the arc/outskirt contamination the I-weighting + arc mask are built to suppress. The
+    **headline IFU white-light** map is already at KCWI resolution AND arc-masked AND deflector-light-
+    weighted (it down-weights the arc-adjacent outskirts), so it is the correct resolution-matched
+    anchor; the **raw** HST maps (arc light confined to masked spaxels) are the right I-shape members.
   pPXF then fits a **single Gaussian LOSVD** (`moments=2`) to $S_e(\lambda)$,
 
   $$S_e(\lambda) \;\approx\; \Big[\textstyle\sum_k a_k\, T_k(\lambda)\Big] \otimes \mathcal{G}(v;\,V,\sigma)
