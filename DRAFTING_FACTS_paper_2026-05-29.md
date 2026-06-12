@@ -538,14 +538,14 @@ reproduce the arc selection), validated + applied to all four bands.
     generalised to the 2D axisymmetric area element dA = 2πr dr):
 
     $$\sigma_e^2 = \frac{\int_0^{R_e} (V^2 + \sigma^2)\, I(r)\, 2\pi r\, dr}{\int_0^{R_e} I(r)\, 2\pi r\, dr}.$$
-  - **Discrete spaxel/bin sum** — the same moment evaluated over spaxels (or Voronoi bins) n, with
-    $F_n$ = the I-band flux (luminosity weight) of spaxel n; the 2πr factor is captured implicitly
-    because the number of spaxels per annulus scales with area:
+  - **Discrete spaxel/bin sum** — the same moment evaluated over the $N$ spaxels (or Voronoi bins) $i$
+    inside $R_e$, with $F_i$ = the I-band flux (luminosity weight) of spaxel $i$; the 2πr factor is
+    captured implicitly because the number of spaxels per annulus scales with area:
 
-    $$\sigma_e^2 = \frac{\sum_{n:\, R_n \le R_e} F_n\,[(V_n - V_\mathrm{sys})^2 + \sigma_n^2]}{\sum_{n:\, R_n \le R_e} F_n}.$$
+    $$\sigma_e^2 = \frac{\sum_{i=1}^{N} F_i\,[(V_i - V_\mathrm{sys})^2 + \sigma_i^2]}{\sum_{i=1}^{N} F_i}.$$
 
     This discrete spaxel/bin sum **is Cappellari et al. 2013 (ATLAS3D XV, MNRAS 432, 1709) eq. 29**
-    — $\langle v_{\rm rms}^2\rangle_e \equiv \langle V^2+\sigma^2\rangle_e \equiv \sum_n F_n(V_n^2+\sigma_n^2)/\sum_n F_n$
+    — $\langle v_{\rm rms}^2\rangle_e \equiv \langle V^2+\sigma^2\rangle_e \equiv \sum_i F_i(V_i^2+\sigma_i^2)/\sum_i F_i$
     — equivalently the discretised form of the Gültekin 2009 eq. 1 integral. (Their eq. 29 also carries
     an **inclination/projection element** in the dynamical-model framework; our §7 uses the
     *observed-plane* projected $V_n,\sigma_n$ directly and omits that term.) **It is NOT "Cappellari
@@ -564,25 +564,29 @@ reproduce the arc selection), validated + applied to all four bands.
   this is the number we report, 267.31). **We do NOT evaluate either σ_e² sum or integral above.**
   We form the **I(r)-weighted co-added aperture spectrum**
 
-  $$S_e(\lambda) \;=\; \sum_{n:\, r_n < R_e} w_n\, S_n(\lambda), \qquad
-    w_n = \frac{I_n}{\sum_{m:\, r_m < R_e} I_m}, \qquad w_n \equiv 0 \ \text{for arc-masked spaxels (mask\_weight=0)},$$
+  $$S_e(\lambda) \;=\; \sum_{i=1}^{N} w_i\, S_i(\lambda), \qquad
+    w_i = \frac{I_i}{I_{\rm tot}}, \quad I_{\rm tot} \equiv \sum_{i=1}^{N} I_i, \qquad
+    I_i \equiv 0 \ \text{for arc-masked spaxels (mask\_weight=0)},$$
 
-  where $S_n(\lambda)$ is the spaxel spectrum and $I_n$ its 6500–7500 Å observed-band IFU flux (the
-  luminosity weight). **The choice of weight map $I_n$ is itself a budgeted systematic — the "I-shape"
-  term (±2.27 km/s; §2.4.3, `run_isource_shape_sweep.py`).** Holding the spaxel selection fixed, we
-  re-measure σ_e with **10 alternative weight maps** — (1) the headline 6500–7500 Å IFU band, (2) full
-  IFU white-light, (3–4) HST F140W / F200LP reprojected (raw), (5–6) the same arc-masked, (7–8) their
-  1-D curve-of-growth annular means, (9–10) their 2-D Sérsic-model fits — and take peak-to-peak/2 of the
-  spread (266.83–271.37 km/s on the NEW cube + M10). So $I_n$ = IFU white-light is the *headline* choice,
-  not an assumption: σ_e moves ≤±2.27 km/s across this whole family of luminosity weightings.
+  where $i$ indexes the $N$ spaxels inside $R_e$ ($r_i < R_e$), $S_i(\lambda)$ is the spaxel spectrum,
+  and $I_i$ its 6500–7500 Å observed-band IFU flux (the luminosity weight; arc-masked spaxels carry
+  $I_i=0$ so $w_i=0$). The denominator $I_{\rm tot}$ is the single normalisation constant (total
+  in-aperture flux) so $\sum_i w_i = 1$. **The choice of weight map $I_i$ is itself a budgeted
+  systematic — the "I-shape" term (±2.27 km/s; §2.4.3, `run_isource_shape_sweep.py`).** Holding the
+  spaxel selection fixed, we re-measure σ_e with **10 alternative weight maps** — (1) the headline
+  6500–7500 Å IFU band, (2) full IFU white-light, (3–4) HST F140W / F200LP reprojected (raw), (5–6) the
+  same arc-masked, (7–8) their 1-D curve-of-growth annular means, (9–10) their 2-D Sérsic-model fits —
+  and take peak-to-peak/2 of the spread (266.83–271.37 km/s on the NEW cube + M10). So $I_i$ = IFU
+  white-light is the *headline* choice, not an assumption: σ_e moves ≤±2.27 km/s across this whole
+  family of luminosity weightings.
   pPXF then fits a **single Gaussian LOSVD** (`moments=2`) to $S_e(\lambda)$,
 
   $$S_e(\lambda) \;\approx\; \Big[\textstyle\sum_k a_k\, T_k(\lambda)\Big] \otimes \mathcal{G}(v;\,V,\sigma)
     \;+\; \text{(additive Legendre poly, deg 15–29)},$$
 
   and **$\sigma_e \equiv \sigma$**, the fitted LOSVD dispersion. Because superposing spaxel spectra at
-  different line-of-sight velocities $V_n$ broadens the co-add, the width $\sigma$ of that single fit
-  *equals* the luminosity-weighted second moment $\sqrt{\langle (V-V_{\rm sys})^2 + \sigma_n^2\rangle}$
+  different line-of-sight velocities $V_i$ broadens the co-add, the width $\sigma$ of that single fit
+  *equals* the luminosity-weighted second moment $\sqrt{\langle (V_i-V_{\rm sys})^2 + \sigma_i^2\rangle}$
   — so it **measures** the Cappellari 2013 eq. 29 / Gültekin 2009 eq. 1 quantity **without ever forming
   the explicit sum** (and with $V_{\rm sys}$ absorbed automatically into the fitted $V$; §2.4.1). Code:
   `extract_aperture_spectrum` (the weighted sum) + `bootstrap_ppxf.setup_ppxf_inputs_from_spectrum` +
