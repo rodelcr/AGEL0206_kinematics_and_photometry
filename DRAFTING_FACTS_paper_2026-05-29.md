@@ -487,8 +487,20 @@ reproduce the arc selection), validated + applied to all four bands.
 
 **ppxf setup**
 
-- **ppxf v9.x** (Cappellari & Emsellem 2004; Cappellari 2017, 2023), **moments = 2** (first two
-  velocity moments V, σ). [METHODS §I.5/I.6; scripts/bootstrap_ppxf.py]
+- **What ppxf does** — **Penalized Pixel-Fitting** (Cappellari & Emsellem 2004, PASP 116, 138; upgraded
+  in Cappellari 2017, MNRAS 466, 798; Cappellari 2023 — *volume/page not re-verified here*). It forward-models the
+  observed galaxy spectrum, in **pixel space on a log-rebinned (constant km/s per pixel) grid**, as a
+  **non-negative linear combination of stellar templates convolved with a parametrised line-of-sight
+  velocity distribution (LOSVD)**, plus low-order additive Legendre polynomials that absorb
+  continuum/template mismatch. The template weights are solved by non-negative least-squares and the
+  LOSVD parameters by Levenberg–Marquardt, alternately, to minimise χ². The *"penalized"* is an optional
+  bias that pulls the higher Gauss–Hermite moments toward a Gaussian at low S/N — **inactive here**, since
+  we fit a pure Gaussian LOSVD.
+- **ppxf v9.4.5**, **`moments = 2`** (fit only V and σ; no h₃/h₄), `bias` left at the default (irrelevant
+  at moments=2), `clean = False` (cosmic rays are handled by the `BAD_PIXELS_REST` mask instead — ppxf's
+  internal σ-clip rejects 0 pixels here because the KCWI noise array is over-estimated vs the residual
+  scatter), `velscale` set to the cube's native sampling, `trig = False`. [scripts/bootstrap_ppxf.py,
+  `run_wide_sigma_e.py`; METHODS §I.5/I.6]
 - **Polynomial degrees:** additive Legendre `degree` swept over **15–29 (15 values)** and pooled;
   `mdegree = 0`. σ-vs-degree is flat within the bootstrap envelope (no LOSVD absorption by the
   polynomial). *(Note: METHODS §I.5 prose mis-labels these "multiplicative" — the code passes
