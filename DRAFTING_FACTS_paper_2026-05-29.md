@@ -584,24 +584,29 @@ reproduce the arc selection), validated + applied to all four bands.
   and $I_i$ its 6500–7500 Å observed-band IFU flux (the luminosity weight; arc-masked spaxels carry
   $I_i=0$ so $w_i=0$). The denominator $I_{\rm tot}$ is the single normalisation constant (total
   in-aperture flux) so $\sum_i w_i = 1$. **The choice of weight map $I_i$ is itself a budgeted
-  systematic — the "I-shape" term (±2.27 km/s; §2.4.3, `run_isource_shape_sweep.py`).** Holding the
-  spaxel selection fixed, we re-measure σ_e with **10 alternative weight maps** — (1) the headline
-  6500–7500 Å IFU band, (2) full IFU white-light, (3–4) HST F140W / F200LP reprojected (raw), (5–6) the
-  same arc-masked, (7–8) their 1-D curve-of-growth annular means, (9–10) their 2-D Sérsic-model fits —
-  and take peak-to-peak/2 of the spread (266.83–271.37 km/s on the NEW cube + M10). So $I_i$ = IFU
-  white-light is the *headline* choice, not an assumption: σ_e moves ≤±2.27 km/s across this whole
-  family of luminosity weightings.
-  - **PSF resolution of the HST weight maps (`scripts/ishape_psf_convolved_test.py`, 2026-06-12):** the
-    HST F140W/F200LP weight maps (and the Sérsic maps) are reprojected at **native HST resolution** —
-    they are NOT convolved to the KCWI ~1.27″ seeing. Convolving them to the KCWI PSF before weighting
-    *raises* σ_e by **+7–8 km/s** (F140W 266→274, F200LP 268→277), larger than the ±2.27 term — but this
-    is a **contamination effect, not a resolution improvement**, so it is **not folded** (sensitivity
-    only). Smoothing by 1.27″ (i) leaks the *masked* arc light into the unmasked arc-adjacent spaxels
-    (worst for F200LP, where the z=1.302 arc is UV-bright) and (ii) up-weights the high-σ outskirts —
-    exactly the arc/outskirt contamination the I-weighting + arc mask are built to suppress. The
-    **headline IFU white-light** map is already at KCWI resolution AND arc-masked AND deflector-light-
-    weighted (it down-weights the arc-adjacent outskirts), so it is the correct resolution-matched
-    anchor; the **raw** HST maps (arc light confined to masked spaxels) are the right I-shape members.
+  systematic — the "I-shape" term (±2.29 km/s; §2.4.3, `run_isource_shape_sweep.py` +
+  `ishape_arcfree_pooled.py`).** Holding the spaxel selection fixed, we re-measure σ_e with **14
+  alternative weight maps**: the 10 of `run_isource_shape_sweep` — (1) the headline 6500–7500 Å IFU band,
+  (2) full IFU white-light, (3–4) HST F140W / F200LP reprojected (raw), (5–6) the same arc-masked, (7–8)
+  their 1-D curve-of-growth annular means, (9–10) their 2-D Sérsic-model fits — **plus 4 arc-free
+  PSF-matched maps** (11–14: F140W/F200LP single-Sérsic and arc-filled, each convolved to the 1.27″ KCWI
+  PSF; see below). Peak-to-peak/2 of the full 14-shape spread (266.79–271.37 km/s, NEW cube + M10) =
+  **±2.29 km/s**. So $I_i$ = IFU white-light is the *headline* choice, not an assumption: σ_e moves
+  ≤±2.29 km/s across this whole family of luminosity weightings.
+  - **PSF resolution of the HST weight maps (FOLDED into I-shape 2026-06-12).** The HST F140W/F200LP
+    (and Sérsic) weight maps are reprojected at native HST resolution, not convolved to the KCWI ~1.27″
+    seeing. To test resolution-matching **correctly the arc must be removed first** — using the *arc-free
+    deflector model* (single-Sérsic, or the HST image with the masked arc filled by that model) and only
+    *then* convolving to the KCWI PSF (`scripts/ishape_arcfree_psf_test.py`, `ishape_arcfree_pooled.py`).
+    On the 3-SPS-pooled footing these arc-free, PSF-matched weights give σ_e = **266.79–268.78** km/s
+    (F140W Sérsic 266.79 / filled 267.38; F200LP Sérsic 268.29 / filled 268.78) — i.e. they fall
+    **inside** the existing 10-shape spread (266.83–271.37). Folding them in (14 shapes) moves the
+    I-shape term **±2.27 → ±2.29** (negligible) and σ_e is unchanged. *(Cautionary cross-check: naively
+    convolving the **raw** arc-containing HST images instead gives a spurious +7–8 km/s — that is arc
+    **leakage** (the 1.27″ kernel spreads the masked arc light into unmasked arc-adjacent spaxels, worst
+    for the UV-bright F200LP) plus high-σ-outskirt up-weighting, NOT a resolution effect; not used.)* The
+    **headline IFU white-light** weight is already at KCWI resolution AND arc-masked AND deflector-light-
+    weighted, so the resolution choice is bounded within the I-shape term.
   pPXF then fits a **single Gaussian LOSVD** (`moments=2`) to $S_e(\lambda)$,
 
   $$S_e(\lambda) \;\approx\; \Big[\textstyle\sum_k a_k\, T_k(\lambda)\Big] \otimes \mathcal{G}(v;\,V,\sigma)
@@ -856,14 +861,14 @@ and IFU-only 2.61″; masked CoG removes arc/companion bias.
 | Component | ± km/s | Note |
 |---|---|---|
 | stat (N=500) | 4.51 | asym −5.04/+3.98; pooled 3 SPS × 15 deg (marginalizes SPS + degree) |
-| I-shape | 2.27 | 10-shape peak-to-peak/2 on NEW cube + M10 |
+| I-shape | 2.29 | 14-shape peak-to-peak/2 (266.79-271.37): the 10 raw maps + 4 arc-free PSF-matched (Sérsic/filled→1.27" conv); was ±2.27 over 10 |
 | F200 mask | 6.65 | (w00-w100)/2; larger-of-two vs mask-approach 5.85 (no double-count) |
 | frame (vac/air) | 5.00 | carried constant |
 | centering | 4.00 | carried constant |
 | fit-window | 3.82 | peak-to-peak/2 across 3 fit windows |
 | reduction-pass | 3.45 | half-Δ between NEW and OLD reductions |
 | R_e-source (best-mask grid) | 5.13 | peak-to-peak/2 across best-mask CoG family {F140W 1.91", mean 2.10", F200LP 2.28"} at the 2.097" headline (user 2026-06-11; CaHK+G & full grid are cross-checks, not folded) |
-| **TOTAL (sym)** | **12.79** | quadrature (sys ±11.96 ⊕ stat) |
+| **TOTAL (sym)** | **12.79** | quadrature (sys ±11.97 ⊕ stat) |
 | **TOTAL (asym)** | **−12.98 / +12.61** | preserves stat-side skew |
 
 Cross-checks (not added): arc-mask-definition ±4.58 (overlaps F200 mask) · full-grid R_e-source ±9.98 (incl. CaHK+G, conservative ceiling) · CaHK+G(2.90″) deviation +12.38 km/s.

@@ -95,8 +95,9 @@ def build():
 
     # named components (carried M11 constants pointed at their caches + live R_e-source)
     components = {
-        'Ishape':    _entry(2.27, 'km/s', 'results/ishape_sweep_wR3800_5400_arcmask/ (M11)',
-                            '10-shape peak-to-peak/2 on NEW cube + M10', carried=1),
+        'Ishape':    _entry(2.29, 'km/s', 'results/ishape_arcfree_pooled.npz (M11 + arc-free PSF-matched, 2026-06-12)',
+                            '14-shape peak-to-peak/2 (266.79-271.37): the 10 raw maps + 4 arc-free '
+                            'PSF-matched (Sérsic/filled→1.27" conv); was ±2.27 over 10', carried=1),
         'F200mask':  _entry(6.65, 'km/s', 'results/maskweight_sweep_wR3800_5400_arcmask/ (M11)',
                             '(w00-w100)/2; larger-of-two vs mask-approach 5.85 (no double-count)', carried=1),
         'frame':     _entry(5.0, 'km/s', 'structural (per-SPS native vac/air frame)',

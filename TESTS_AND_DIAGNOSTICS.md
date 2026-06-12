@@ -4,7 +4,7 @@
 
 **Headline (NEW `_mtwdo_` + bad-pixel mask + Balmer-unmasked + He I 3819 mask + M10 sky audit + M11 systematic re-derivation + M13 best-mask R_e=2.097" aperture, wide arc-masked window):**
 σ_e(<R_e) = **267 ± 13 km/s** = 267.31 ± 12.79 km/s
-(stat ±4.6 ⊕ I-shape ±2.27 ⊕ mask ±6.65 ⊕ frame ±5 ⊕ centering ±4 ⊕ window ±3.82 ⊕ reduction ±3.45 **⊕ R_e-source ±5.13**)
+(stat ±4.6 ⊕ I-shape ±2.29 ⊕ mask ±6.65 ⊕ frame ±5 ⊕ centering ±4 ⊕ window ±3.82 ⊕ reduction ±3.45 **⊕ R_e-source ±5.13**)
 Asymmetric form: 267.31 −12.98 / +12.61 km/s.
 **All headline numbers are emitted deterministically by `scripts/paper_values.py` → `results/PAPER_VALUES.json` (single source of truth; do not hand-edit).**
 Source (headline aperture): `results/run_wide_sigma_e/resys_best_mean/` (R_e=2.097"), via `scripts/run_sigma_e_Re_grid.py --n_bootstrap 500`. **M13:** adopting the best-mask R_e=2.097" (was 2.305") moved σ_e −2.3 km/s along σ(R) and re-derived R_e-source ±6.13→±5.13 (best-mask CoG family).
@@ -126,6 +126,7 @@ script/notebook that runs it and the result file or note it produced.
 | J6 | N=500 production at wide arc-masked window | `results/nb09a_wavelength_sweep/wR3800_5400_arcmask_*_N500.npz` | σ_e = 254.9 −7/+5 km/s (stat-only, all-3 SPS pool) | ✓ |
 | J7 | Sersic2D bound-fix (n ∈ [1.0, 6.0]) | `scripts/run_isource_shape_sweep.py:181-207`, 2026-05-11 | F200LP previously escaped to n=0.30 (unphysical flat-disk), inflating I-shape budget; multi-init grid + tight bounds fix it. I-shape ±5.4 → ±1.5 | ✓ |
 | J8 | I-shape sweep at wR3800_5400_arcmask (10 shapes × 3 SPS × N=250) | `results/ishape_sweep_wR3800_5400_arcmask/` | std = 1.5 km/s — 9× tighter than narrow's ±13 | ✓ |
+| J8b | Arc-free PSF-matched I-weights folded into I-shape (2026-06-12) | `scripts/ishape_arcfree_psf_test.py`, `ishape_arcfree_pooled.py`, `results/ishape_arcfree_pooled.npz` | Resolution-match the HST weight maps correctly = remove arc FIRST (Sérsic or arc-filled), THEN convolve to 1.27″ KCWI PSF. 4 arc-free maps (F140W/F200LP × Sérsic/filled) pooled σ_e **266.79–268.78**, WITHIN the existing 10-shape spread (266.83–271.37) → **I-shape ±2.27→±2.29** (negligible; σ_e=267.31±12.79 unchanged). The naive raw-HST convolution (+7–8 km/s, `ishape_psf_convolved_test.py`) is arc LEAKAGE, not used. Headline stays IFU white-light (empirical, KCWI-res, arc-masked). | ✓ folded |
 | J9 | Mask-weight sweep at wR3800_5400_arcmask (w ∈ {0, 0.5, 1.0} × 3 SPS × N=250) | `results/maskweight_sweep_wR3800_5400_arcmask/` | peak-to-peak/2 = 3.8 km/s — 4× tighter than narrow's ±16; spectral arc mask absorbs the worst | ✓ |
 | J10 | Three-window cross-check at N=500 | nb09 §9: w6500_7500 vs wR3800_5400_arcmask vs wR4000_5400_arcmask | Spread = 15.0 km/s → window systematic ±15 (dominant residual). wR4000_5400_arcmask = orthogonal Hβ + Mg b feature set (no Ca H+K) | ✓ |
 | J11 | Both-windows side-by-side budget | `notebooks/09d_final_systematics_both_windows.ipynb`, `results/sigma_e_final_systematics_nb09d.npz` | WIDE 254.85 ± 17.87 vs NARROW 267.95 ± 30.10; consistent at 0.4σ | ✓ |
