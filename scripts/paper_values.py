@@ -98,10 +98,17 @@ def build():
         'Ishape':    _entry(2.29, 'km/s', 'results/ishape_arcfree_pooled.npz (M11 + arc-free PSF-matched, 2026-06-12)',
                             '14-shape peak-to-peak/2 (266.79-271.37): the 10 raw maps + 4 arc-free '
                             'PSF-matched (Sérsic/filled→1.27" conv); was ±2.27 over 10', carried=1),
+        # General arc-masking systematic (formerly "F200 mask"): the measured arc-dilution
+        # sensitivity from the F200LP-located mask-weight sweep w∈{0..1}; subsumes the
+        # 4-approach arc-mask-definition spread (±4.58, larger-of-two, no double-count).
         'F200mask':  _entry(6.65, 'km/s', 'results/maskweight_sweep_wR3800_5400_arcmask/ (M11)',
-                            '(w00-w100)/2; larger-of-two vs mask-approach 5.85 (no double-count)', carried=1),
-        'frame':     _entry(5.0, 'km/s', 'structural (per-SPS native vac/air frame)',
-                            'carried constant', carried=1),
+                            'arc masking: (w00-w100)/2 weight sweep; subsumes mask-approach 4.58 (larger-of-two)', carried=1),
+        # NOTE (2026-06-14): the old "frame (vac/air) ±5" term was DROPPED. It is not a live
+        # uncertainty: (1) applying each SPS in its native vac/air frame is a DETERMINISTIC
+        # correction whose actual σ impact is <0.5 km/s (TESTS D4); (2) the ±5 was defined as
+        # the "max σ shift across SPS" (TESTS C3) = the inter-SPS spread, which the pooled
+        # 3-SPS bootstrap stat ALREADY marginalizes (between-SPS ±2.04 ⊂ pooled stat ±4.6).
+        # Carrying it separately double-counted the pool. User decision 2026-06-14.
         'centering': _entry(4.0, 'km/s', 'HST WCS centroid', 'carried constant', carried=1),
         'fitwindow': _entry(3.82, 'km/s', 'results/run_wide_sigma_e/ 3-window (M11)',
                             'peak-to-peak/2 across 3 fit windows', carried=1),
@@ -139,43 +146,154 @@ def build():
     # HEADLINE = aperture-corrected total (empirical aperture + single-Sersic model wings;
     # the GAMA/Taylor+2011 fluxscale approach). All five estimators + the Sersic-only
     # systematic budget are emitted. Provenance: results/aperture_matched_photometry.npz.
+    #
+    # COSMOLOGY (2026-06-12): the project adopts Planck 2015 (H0=67.7, Om0=0.302) to match
+    # the companion lens-modeling paper (Ferrami et al.); the underlying npz was fit under
+    # the old H0=70, Om=0.3. A flux-calibrated SED stellar mass scales EXACTLY as D_L^2
+    # (the M/L is color-driven, i.e. cosmology-independent), so switching cosmology is a
+    # uniform additive shift of +2·log10(D_L_P15/D_L_70) = +0.0282 dex at our fixed
+    # z_l=0.67564 — applied here analytically to every estimator (NO Bagpipes re-fit).
+    # TODO: drop DLOGM_COSMO once aperture_matched_photometry.npz is regenerated under
+    #       Planck 2015 (else it would be double-counted).
+    DLOGM_COSMO = 0.0282  # +2*log10(4214.06/4079.23), D_L at z=0.67564, P15 vs H0=70
     am = np.load(RESULTS / 'aperture_matched_photometry.npz', allow_pickle=True)
     provM = 'results/aperture_matched_photometry.npz'
+    # HEADLINE M* PIPELINE (2026-06-15 audit). Two coupled fixes vs the prior 11.50:
+    #  (1) VALIDATED-FIT aperture correction: the model-dependent estimators use a Sérsic
+    #      whose SHAPE is fixed to the photutils-validated per-band table fit (amplitude+sky
+    #      to data), NOT the biased auto fit_sersic (r_eff 2.2-2.7", ellip→0) — removes a
+    #      ~0.15 mag/band beyond-aperture over-correction (scripts/aperture_correction_validated.py).
+    #  (2) SPECTRUM-CONSISTENT (quiescence-constrained) SED prior: the 4-band SED is degenerate
+    #      (age-dust-M/L; ΔlnZ=-0.18, identical χ², scripts/sed_quiescence_check.py) and the flat-age
+    #      prior slides onto a young+dusty branch (SFR~57) the KCWI absorption-line spectrum rules
+    #      out. The headline adopts a passive SFH prior (old age, short tau, low dust); the
+    #      fiducial↔quiescent spread is carried as the SFH-prior systematic.
+    #  Net: 11.50 → 11.47 (validated photom -0.11 dex, partly offset by old-population M/L +0.10).
+    #  All five estimators + budget come from results/mstar_headline_quiescent.npz.
+    amv = np.load(RESULTS / 'aperture_correction_validated.npz', allow_pickle=True)
+    qui = np.load(RESULTS / 'mstar_headline_quiescent.npz', allow_pickle=True)
+    provV = 'results/aperture_correction_validated.npz'
+    provQ = 'results/mstar_headline_quiescent.npz'
 
     def _est(kind, nre=2.0):
         p = am[f'logM_{kind}_{nre:g}']
-        return float(p[1]), float(p[1] - p[0]), float(p[2] - p[1])  # median, lo, hi
+        return float(p[1]) + DLOGM_COSMO, float(p[1] - p[0]), float(p[2] - p[1])
 
-    tot, tlo, thi = _est('total')         # headline: aperture-corrected total at 2 R_e
-    raw, rlo, rhi = _est('raw')           # empirical lower bound
-    rac, _, _ = _est('raw_apcorr')        # most-empirical total
-    fil, _, _ = _est('filled')
-    ser = np.load(RESULTS / 'bagpipes_sersic_refit.npz', allow_pickle=True)
+    def _estq(kind):  # validated photometry + quiescent (spectrum-consistent) SED prior
+        p = qui[f'logM_{kind}_qui']
+        return float(p[1]) + DLOGM_COSMO, float(p[1] - p[0]), float(p[2] - p[1])
+
+    tot, tlo, thi = _estq('total')        # HEADLINE: validated photom + quiescent SED prior
+    raw, rlo, rhi = _estq('raw')          # empirical lower bound (validated photom, quiescent prior)
+    rac, _, _ = _estq('raw_apcorr')
+    fil, _, _ = _estq('filled')
+    ser_tot = _estq('sersic')[0]          # pure-Sérsic total under the quiescent prior
     st = np.load(RESULTS / 'sersic_total_systematic.npz', allow_pickle=True)
+    msk = np.load(RESULTS / 'Mstar_masking_systematic.npz', allow_pickle=True)
+    masking_sys = float(msk['masking_sys_10pct'])              # ±0.086 (under-arc ⊕ mask-def)
+    apcorr_sys = float(qui['sys_apcorr_model_dex'])            # auto vs validated apcorr (quiescent prior)
+    sfh_sys = float(qui['sys_sfh_prior_dex'])                  # fiducial vs quiescent SED prior (age-dust-M/L)
+    mstar_sys_quad = float(np.sqrt(masking_sys**2 + apcorr_sys**2 + sfh_sys**2))   # SYMMETRIC sys
+    # Total-light / cD-envelope ambiguity is ALREADY captured by the existing budget: the apcorr-model
+    # term (auto more-extended Sérsic = the more-outer-light direction) + the quadrature sys reach a +1σ
+    # upper bound of ~11.65, and the empirical curve-of-growth total (CoG@8") lands at 11.69 — only +0.04
+    # dex beyond +1σ. So the CoG is recorded as a CROSS-CHECK only (NOT a separate systematic; a separate
+    # +0.22 term would double-count the apcorr-model contribution). User decision 2026-06-17.
+    cogf = np.load(RESULTS / 'cog_total_light.npz', allow_pickle=True)
+    logM_cog = float(cogf['logM_cog8_H070'][1]) + DLOGM_COSMO
     reg['logMstar'] = {
-        'central_10pct': _entry(tot, 'dex', provM, 'aperture-corrected total, 2 R_e, 10% (HEADLINE)'),
-        'stat_lo_10pct': _entry(tlo, 'dex', provM, 'median - p16'),
-        'err_hi_10pct':  _entry(thi, 'dex', provM, 'p84 - median'),
-        'empirical_raw': _entry(raw, 'dex', provM, 'empirical aperture, masked (lower bound), 2 R_e'),
-        'raw_apcorr':    _entry(rac, 'dex', provM, 'most-empirical total: raw + model wings, 2 R_e'),
-        'filled':        _entry(fil, 'dex', provM, 'masked pixels filled within aperture, 2 R_e'),
-        'sersic_total':  _entry(float(ser['log_M_sersic_p50']), 'dex',
-                                'results/bagpipes_sersic_refit.npz', 'pure single-Sersic total to inf'),
+        'central_10pct': _entry(tot, 'dex', provQ, 'validated photom + quiescent SED prior, 2 R_e, 10% (HEADLINE)'),
+        'stat_lo_10pct': _entry(tlo, 'dex', provQ, 'median - p16 (Bagpipes posterior, quiescent prior)'),
+        'err_hi_10pct':  _entry(thi, 'dex', provQ, 'p84 - median (Bagpipes posterior, quiescent prior)'),
+        'sys_quad_dex':  _entry(mstar_sys_quad, 'dex', provQ,
+                                'folded systematic = masking ⊕ apcorr-model ⊕ SFH-prior (quadrature)'),
+        'empirical_raw': _entry(raw, 'dex', provQ, 'empirical aperture (lower bound), 2 R_e, quiescent prior'),
+        'raw_apcorr':    _entry(rac, 'dex', provQ, 'raw + validated model wings, 2 R_e, quiescent prior'),
+        'filled':        _entry(fil, 'dex', provQ, 'masked pixels filled with validated model, quiescent prior'),
+        'sersic_total':  _entry(ser_tot, 'dex', provQ, 'pure single-Sersic total to inf, quiescent prior (Planck15)'),
         'sersic_total_sys_dex': _entry(float(st['total']), 'dex',
                                 'results/sersic_total_systematic.npz',
                                 'Sersic-only stat+sys quadrature (mask-dominated 0.10)'),
-        'aperture_arcsec': _entry(2 * 2.097, 'arcsec', provM, '2 R_e matched elliptical aperture (R_e=2.097")'),
+        'aperture_arcsec': _entry(2 * 2.097, 'arcsec', provV, '2 R_e matched elliptical aperture (R_e=2.097")'),
     }
-    msk = np.load(RESULTS / 'Mstar_masking_systematic.npz', allow_pickle=True)
-    reg['logMstar']['masking_sys_dex'] = _entry(float(msk['masking_sys_10pct']), 'dex',
+    reg['logMstar']['masking_sys_dex'] = _entry(masking_sys, 'dex',
         'results/Mstar_masking_systematic.npz', 'peak-to-peak/2 across masking approaches')
+    reg['logMstar']['apcorr_model_sys_dex'] = _entry(apcorr_sys, 'dex', provQ,
+        'auto-fit vs validated-fit total — aperture-correction Sérsic-model systematic (2026-06-15)')
+    reg['logMstar']['sfh_prior_sys_dex'] = _entry(sfh_sys, 'dex', provQ,
+        'fiducial (flat-age) vs quiescent SED prior — age-dust-M/L degeneracy systematic (2026-06-15)')
+    reg['logMstar']['cog_total_10pct'] = _entry(logM_cog, 'dex',
+        'results/cog_total_light.npz',
+        'empirical CoG@8" total (quiescent prior) = 11.69; CROSS-CHECK only — lands +0.04 dex beyond the '
+        '+1σ upper bound, i.e. the total-light/cD-envelope ambiguity is already captured by the apcorr-model + sys budget')
+
+    # ── M⋆ error budget — two parallel framings (2026-06-14) ──────────────────
+    # σ_e's budget is a single quadrature of named components; M⋆ has TWO framings:
+    #  (1) HEADLINE total-light estimator: the reported error IS the asymmetric
+    #      Bagpipes posterior (stat — the age–dust–M/L outshining low-tail, present
+    #      in all 5 estimators incl. raw), with the masking-approach systematic
+    #      (±0.086) reported alongside. The model-choice spread is NOT folded into
+    #      the headline error — it is captured by framing (2), kept as a cross-check
+    #      so model choices are not double-counted into the empirical-aperture mass.
+    #  (2) Sérsic-only estimator: a named-component quadrature (mask-dominated) — the
+    #      M⋆ analogue of the σ_e budget table. Cross-check, NOT the headline error.
+    # Both emitted; --render writes the `mstar_budget` block from these.
+    stc = {str(name): float(val) for name, val in st['components']}
+    reg['logMstar_budget'] = {
+        'headline': {
+            'estimator': 'validated photom + quiescent (spectrum-consistent) SED prior (2 R_e, 10% floor)',
+            'stat_lo': _entry(tlo, 'dex', provQ,
+                'median - p16 (Bagpipes posterior, quiescent prior — tight; degeneracy tail removed)'),
+            'stat_hi': _entry(thi, 'dex', provQ, 'p84 - median (Bagpipes posterior, quiescent prior)'),
+            'masking_sys': _entry(masking_sys, 'dex',
+                'results/Mstar_masking_systematic.npz',
+                'peak-to-peak/2 across masking approaches = under-arc ⊕ mask-def'),
+            'masking_under_arc': _entry(float(msk['under_arc_10pct']), 'dex',
+                'results/Mstar_masking_systematic.npz', 'raw↔filled (under-arc fill)'),
+            'masking_def': _entry(float(msk['maskdef_10pct']), 'dex',
+                'results/Mstar_masking_systematic.npz', 'per-band↔global mask definition'),
+            'apcorr_model_sys': _entry(apcorr_sys, 'dex', provQ,
+                'auto-fit vs validated-fit total (aperture-correction Sérsic-model choice; 2026-06-15)'),
+            'sfh_prior_sys': _entry(sfh_sys, 'dex', provQ,
+                'fiducial (flat-age) vs quiescent SED prior (age-dust-M/L degeneracy; 2026-06-15)'),
+            'sys_quad': _entry(mstar_sys_quad, 'dex', provQ,
+                'folded systematic = masking ⊕ apcorr-model ⊕ SFH-prior (the apcorr-model term already spans the more-outer-light / cD-envelope direction)'),
+            'total_lo': _entry(float(np.hypot(tlo, mstar_sys_quad)), 'dex', provQ, 'stat_lo ⊕ sys_quad'),
+            'total_hi': _entry(float(np.hypot(thi, mstar_sys_quad)), 'dex', provQ, 'stat_hi ⊕ sys_quad'),
+        },
+        'sersic_only': {
+            'central': _entry(float(st['central']) + DLOGM_COSMO, 'dex',
+                'results/sersic_total_systematic.npz', 'Sérsic-only central (Planck15)'),
+            'stat': _entry(float(st['stat']), 'dex',
+                'results/sersic_total_systematic.npz', 'Bagpipes posterior width'),
+            'sys_quad': _entry(float(st['sys_quad']), 'dex',
+                'results/sersic_total_systematic.npz', 'quadrature of the components below'),
+            'total': _entry(float(st['total']), 'dex',
+                'results/sersic_total_systematic.npz', 'stat ⊕ sys'),
+            'components': {
+                'mask':         _entry(stc['mask'], 'dex', 'results/sersic_total_systematic.npz',
+                                       'arc-mask choice (expert↔global Sérsic-total) — dominant'),
+                'model_form':   _entry(stc['model_form'], 'dex', 'results/sersic_total_systematic.npz',
+                                       'single-Sérsic vs alternative model form'),
+                'flux_floor':   _entry(stc['flux_floor'], 'dex', 'results/sersic_total_systematic.npz',
+                                       '10%↔20% flux floor'),
+                'fit_param':    _entry(stc['fit_param'], 'dex', 'results/sersic_total_systematic.npz',
+                                       'Sérsic-n / fit-parameter spread'),
+                'apcorr_recon': _entry(stc['apcorr_recon'], 'dex', 'results/sersic_total_systematic.npz',
+                                       'apcorr ↔ pure-model reconstruction'),
+            },
+        },
+    }
 
     # ── R_e ──────────────────────────────────────────────────────────────────
     # Best-mask (single-Sérsic + color/morph gate + WCS reg) F140W+F200LP CoG.
     # Adopted 2026-06-11 ("best mask throughout"); photutils-validated to ±0.002"
     # (scripts/validate_Re_photutils.py). Was the expert-mask 2.305".
     cog = np.load(RESULTS / 'Re_cog_reconciliation_bestmask.npz', allow_pickle=True)
-    KPC = 7.04  # kpc/arcsec at z=0.67564 (CLAUDE.md)
+    # Planck 2015 (H0=67.7, Om0=0.302), z=0.67564 — matched to companion paper (Ferrami et al.),
+    # 2026-06-12. Was 7.04 under H0=70,Om=0.3 (a pure cosmological rescale, ×1.0331). astropy:
+    # FlatLambdaCDM(67.7,0.302).kpc_proper_per_arcmin(0.67564) → 7.2764 kpc/arcsec; D_A=1500.9 Mpc.
+    KPC = 7.2764  # kpc/arcsec at z=0.67564 (Planck 2015)
     # Headline R_e KEPT at 2.097" (best-mask CoG; user decision 2026-06-11). The Sérsic
     # ELLIPTICITY fix (multi-start fitter) shifts the best-mask CoG to
     # cog['headline_mean_raw']≈2.093" — a −0.004" change, 25× below the ±0.100" method
@@ -204,9 +322,83 @@ def build():
     # ── fixed metadata ───────────────────────────────────────────────────────
     reg['constants'] = {
         'z_deflector': _entry(0.67564, '', 'notebook 04', 'line-fit systemic'),
-        'z_source': _entry(1.302, '', 'AGEL DR2', 'source redshift'),
-        'kpc_per_arcsec': _entry(KPC, 'kpc/arcsec', 'CLAUDE.md', 'at z=0.67564'),
+        'z_source': _entry(1.30263, '', '[O II] λλ3726,3729 doublet (red cube); AGEL DR2 gives 1.302', 'source redshift'),
+        'kpc_per_arcsec': _entry(KPC, 'kpc/arcsec', 'Planck 2015 (H0=67.7,Om0=0.302)', 'at z=0.67564'),
+        'ra_deg': _entry(31.55611, 'deg', 'target coordinates (ICRS)', 'R.A.'),
+        'dec_deg': _entry(-1.23817, 'deg', 'target coordinates (ICRS)', 'Decl.'),
     }
+
+    # ── photometry — matched 2 R_e total AB mags (the SED / M⋆ fluxes) ─────────
+    FLUX_FLOOR = 0.10                       # adopted 10% systematic flux floor
+    mag_floor_err = 2.5 * np.log10(1 + FLUX_FLOOR)
+    reg['photometry'] = {
+        'aperture': _entry(2 * 2.097, 'arcsec', provM, 'matched 2 R_e elliptical aperture (b/a=0.75)'),
+        'mag_floor_err': _entry(mag_floor_err, 'mag', provM,
+                                '2.5·log10(1+0.10) — adopted 10% systematic flux floor (propagated errors 0.03–1.6%)'),
+        'bands': {str(fn): {'pivot_AA': float(pv), 'm_AB_total': float(mg)}
+                  for fn, pv, mg in zip(amv['filter_names'], amv['pivot'], amv['mag_total_2'])},
+    }
+
+    # ── lens model — PROVISIONAL (Ferrami et al. draft 2026-06-12; NOT final) ──
+    # Combined free-BH posterior; Planck-2015 (= our adopted cosmology). Do NOT freeze
+    # into the manuscript until Ferrami's final MultiNest runs land (DRAFTING §3.3 flag G1).
+    # Central = free-BH combined posterior (highest evidence; user decision 2026-06-12). UNCERTAINTY
+    # = the 1σ errors across the FINAL SELECTED (free-BH) EPL models = the 1σ model envelope
+    # (min median−σlo to max median+σhi over the 3 free-BH solutions) = 3.81–6.91e8, via
+    # bh_mass_combine.py (user 2026-06-16). Excludes the fixed-BH runs (not in the final selection).
+    mbh, mbh_lo, mbh_hi = 5.2e8, 1.39e8, 1.71e8
+    reg['lens_model'] = {
+        'provisional': 1,
+        'M_BH': _entry(mbh, 'Msun',
+                       'Ferrami et al. draft Table 1; free-BH (selected EPL) 1σ model envelope, scripts/bh_mass_combine.py',
+                       'free-BH central; uncertainty = 1σ errors across selected free-BH EPL models (3.8–6.9e8); PROVISIONAL', err_lo=mbh_lo, err_hi=mbh_hi),
+        'logM_BH': _entry(np.log10(mbh), 'dex', 'derived from M_BH', 'log10(M_BH); PROVISIONAL',
+                          err_lo=np.log10(mbh) - np.log10(mbh - mbh_lo),
+                          err_hi=np.log10(mbh + mbh_hi) - np.log10(mbh)),
+        'theta_E': _entry(1.36, 'arcsec', 'Ferrami et al. draft §3.3.2',
+                          'main-halo Einstein radius (free-BH best model); PROVISIONAL'),
+        'gamma': _entry(1.31, '', 'Ferrami et al. draft §3.3.2',
+                        'total mass-density slope (sub-isothermal); PROVISIONAL', err_sym=0.08),
+    }
+    # M•–σ offset vs Greene+2020 — the relation drawn in the M•–σ figure
+    # (figures_paper4 cell 11: log M_BH = 8.03 + 4.24·log10(σ/160) + 0.43, pivot σ=160).
+    # Δ = log M_BH(obs) − relation(σ_e). PROVISIONAL (tracks the provisional M_BH);
+    # offset error carried from the logM_BH posterior (relation-param + σ_e terms
+    # are sub-dominant and the whole quantity is provisional).
+    sig_e = reg['sigma_e']['central']['value']
+    g_pred = 8.03 + 4.24 * np.log10(sig_e / 160.) + 0.43
+    lm_off = np.log10(mbh) - g_pred
+    reg['lens_model']['mbh_sigma_offset'] = _entry(
+        lm_off, 'dex',
+        'Greene+2020 M•–σ (α,β,ε=8.03,4.24,0.43 @ σ=160; figures_paper4 cell 11) − PROVISIONAL logM_BH',
+        'log10(M_BH) − [8.03 + 4.24·log10(σ_e/160) + 0.43]; negative = undermassive BH; PROVISIONAL',
+        err_lo=np.log10(mbh) - np.log10(mbh - mbh_lo),
+        err_hi=np.log10(mbh + mbh_hi) - np.log10(mbh))
+
+    # ── SED-derived stellar population (Bagpipes posterior) ──────────────────
+    # From the HEADLINE-consistent validated-fit total run (AGEL0206_aperVAL_total_2Re),
+    # NOT the superseded original SED fit — keeps the age tied to the adopted photometry.
+    # full stellar-population posterior from the HEADLINE fit (validated photom + quiescent,
+    # spectrum-consistent SED prior) — the same Bagpipes run that sets the headline log M*.
+    # The fiducial flat-age fit's young+dusty SFR (~57) is a degeneracy artifact ruled out by
+    # the KCWI absorption-line spectrum; these passive properties supersede it.
+    spd = {str(k).replace('prop_', ''): (float(qui[k][0]), float(qui[k][1]), float(qui[k][2]))
+           for k in qui.files if k.startswith('prop_')}
+    provSP = 'results/mstar_headline_quiescent.npz (Bagpipes posterior, quiescent prior)'
+    _U = {'mass_weighted_age': ('Gyr', 'mass-weighted stellar age'),
+          'formed_mass': ('dex', 'log10 total mass ever formed (pre mass-loss)'),
+          'sfr': ('Msun/yr', 'SFR at observation (delayed-exp SFH)'),
+          'ssfr': ('log10(1/yr)', 'specific SFR; quiescent if <-11'),
+          'metallicity': ('Zsun', 'stellar metallicity'),
+          'dust_Av': ('mag', 'dust attenuation A_V'),
+          'tau': ('Gyr', 'exponential SFH e-folding time'),
+          'age_form': ('Gyr', 'time since SF onset')}
+    reg['sed'] = {}
+    for k, (unit, desc) in _U.items():
+        if k in spd:
+            p, lo, hi = spd[k]
+            reg['sed'][k] = _entry(p, unit, provSP, desc + ' (posterior median; p16/p84)',
+                                   err_lo=lo, err_hi=hi)
     return reg
 
 
@@ -247,6 +439,12 @@ def print_table(reg):
           f"total {M['central_10pct']['value']:.2f} (headline) · Sérsic-total {M['sersic_total']['value']:.2f}")
     print(f"  Sérsic-only budget ±{M['sersic_total_sys_dex']['value']:.2f} (mask-dom)  "
           f"mask-sys ±{M['masking_sys_dex']['value']:.2f}")
+    MB = reg['logMstar_budget']; H = MB['headline']; S = MB['sersic_only']
+    print(f"  budget (1) headline error  +{H['stat_hi']['value']:.2f}/−{H['stat_lo']['value']:.2f} (posterior) "
+          f"⊕ masking ±{H['masking_sys']['value']:.3f} (under-arc ±{H['masking_under_arc']['value']:.3f} + mask-def ±{H['masking_def']['value']:.3f})")
+    print(f"  budget (2) Sérsic-only     stat ±{S['stat']['value']:.3f} ⊕ "
+          + ' ⊕ '.join(f"{n.replace('_','-')} ±{c['value']:.3f}" for n, c in S['components'].items())
+          + f" → ±{S['total']['value']:.2f}")
     R = reg['R_e']
     print(f"R_e         = {R['central_arcsec']['value']:.3f}\" = {R['central_kpc']['value']:.2f} kpc  "
           f"(method sys ±{R['method_sys_arcsec']['value']:.2f}\")")
@@ -375,8 +573,7 @@ def render_budget(reg):
     rows = [
         ('stat (N=500)', se['stat_sym']['value'], f"asym −{_rh(se['stat_lo']['value'],2)}/+{_rh(se['stat_hi']['value'],2)}; pooled 3 SPS × 15 deg (marginalizes SPS + degree)"),
         ('I-shape', comp['Ishape']['value'], comp['Ishape']['formula']),
-        ('F200 mask', comp['F200mask']['value'], comp['F200mask']['formula']),
-        ('frame (vac/air)', comp['frame']['value'], comp['frame']['formula']),
+        ('arc masking', comp['F200mask']['value'], comp['F200mask']['formula']),
         ('centering', comp['centering']['value'], comp['centering']['formula']),
         ('fit-window', comp['fitwindow']['value'], comp['fitwindow']['formula']),
         ('reduction-pass', comp['reduction']['value'], comp['reduction']['formula']),
@@ -394,7 +591,58 @@ def render_budget(reg):
     return "\n".join(out)
 
 
-BLOCKS = {'headline': render_headline, 'budget': render_budget}
+def render_mstar_budget(reg):
+    """M⋆ final error budget — a single named-component quadrature (now parallel to σ_e),
+    plus the Sérsic-only quadrature kept as a model-systematic cross-check."""
+    M, B = reg['logMstar'], reg['logMstar_budget']
+    H, S = B['headline'], B['sersic_only']
+    tot = M['central_10pct']['value']
+    sysq = M['sys_quad_dex']['value']
+    out = [
+        "**M⋆ error budget** — *generated by `scripts/paper_values.py --render`; do not hand-edit inside the markers.* "
+        "The headline error is a single named-component quadrature (like σ_e): the Bagpipes statistical "
+        "posterior combined with the masking, aperture-correction-model, and SFH-prior systematics. The "
+        "Sérsic-only quadrature is retained below as an independent model-path cross-check.",
+        "",
+        f"**(1) Headline — log(M⋆/M☉) = {_rh(tot,2)} = {_rh(tot,1)} (validated photometry + quiescent, "
+        "spectrum-consistent SED prior; matched 2 R_e, 10% floor):**",
+        "",
+        "| Component | ± dex | Note |",
+        "|---|---|---|",
+        f"| stat (Bagpipes posterior) | +{_rh(H['stat_hi']['value'],3)} / −{_rh(H['stat_lo']['value'],3)} | "
+        "quiescent prior — tight; the age–dust–M/L young-solution tail is removed by the spectrum-motivated prior |",
+        f"| masking-approach | {_rh(H['masking_sys']['value'],3)} | "
+        f"under-arc (raw↔filled) {_rh(H['masking_under_arc']['value'],3)} ⊕ mask-def (per-band↔global) {_rh(H['masking_def']['value'],3)} |",
+        f"| aperture-correction model | {_rh(H['apcorr_model_sys']['value'],3)} | "
+        "auto-fit vs validated-fit Sérsic shape (the over-correction this audit removed) |",
+        f"| SFH prior | {_rh(H['sfh_prior_sys']['value'],3)} | "
+        "fiducial flat-age vs quiescent SED prior (the age–dust–M/L degeneracy the 4-band SED cannot break) |",
+        f"| **sys (quadrature)** | **{_rh(sysq,3)}** | masking ⊕ apcorr-model ⊕ SFH-prior |",
+        f"| **REPORTED** | **+{_rh(H['stat_hi']['value'],2)} / −{_rh(H['stat_lo']['value'],2)} (stat) "
+        f"± {_rh(sysq,2)} (sys)** | one-decimal: {_rh(tot,1)} ± {_rh(H['stat_hi']['value'],1)} (stat) ± {_rh(sysq,1)} (sys) |",
+        f"| _CoG cross-check_ | _{_rh(M['cog_total_10pct']['value'],2)}_ | empirical curve-of-growth total-light "
+        "(cD envelope); lands +0.04 dex beyond +1σ → total-light ambiguity already captured by the apcorr-model + sys budget, NOT added separately |",
+        "",
+        f"**(2) Sérsic-only estimator (log(M⋆/M☉) = {_rh(M['sersic_total']['value'],2)}) — independent "
+        "model-path systematic envelope (cross-check):**",
+        "",
+        "| Component | ± dex | Note |",
+        "|---|---|---|",
+        f"| stat | {_rh(S['stat']['value'],3)} | Bagpipes posterior width |",
+    ]
+    for name, c in S['components'].items():
+        out.append(f"| {name.replace('_','-')} | {_rh(c['value'],3)} | {c['formula']} |")
+    out.append(f"| **TOTAL** | **{_rh(S['total']['value'],2)}** | "
+               f"stat ±{_rh(S['stat']['value'],2)} ⊕ sys ±{_rh(S['sys_quad']['value'],2)} (mask-dominated) |")
+    out.append("")
+    out.append("Five M⋆ estimators (empirical→model, validated photometry + quiescent SED prior, matched 2 R_e, Planck 2015): "
+               f"raw **{_rh(M['empirical_raw']['value'],2)}** (empirical lower bound) · "
+               f"raw+apcorr **{_rh(M['raw_apcorr']['value'],2)}** · filled **{_rh(M['filled']['value'],2)}** · "
+               f"**total {_rh(tot,2)} (headline)** · Sérsic-total **{_rh(M['sersic_total']['value'],2)}**.")
+    return "\n".join(out)
+
+
+BLOCKS = {'headline': render_headline, 'budget': render_budget, 'mstar_budget': render_mstar_budget}
 
 
 def do_render(files, reg):

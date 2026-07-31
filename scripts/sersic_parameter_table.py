@@ -20,7 +20,7 @@ Outputs: results/sersic_parameter_table.npz, results/sersic_parameter_table.md (
 appendix table), results/sersic_parameter_table.tex (deluxetable for the manuscript).
 Usage: conda activate ISMgas; python scripts/sersic_parameter_table.py [--n-boot 80]
 """
-import os, sys, argparse
+import os, sys, argparse, json
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -33,7 +33,9 @@ from scripts.sersic_total_photometry import (fit_sersic2d, sersic_total_flux_ana
 
 ORDER = ["F200LP", "F140W", "F150W2", "F322W2"]
 SYSZ = np.load("results/photometry_systematics.npz", allow_pickle=True)
-KPC_PER_ARCSEC = 7.04   # at z=0.67564
+# Deterministic: read the angular scale from the single source of truth (Planck 2015,
+# 7.2764 kpc/arcsec at z=0.67564). Was hardcoded 7.04 (old H0=70) → stale kpc column.
+KPC_PER_ARCSEC = float(json.load(open("results/PAPER_VALUES.json"))["constants"]["kpc_per_arcsec"]["value"])
 PIVOT = {n: float(load_band(n)["cfg"]["pivot_AA"]) for n in ORDER}
 
 

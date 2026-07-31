@@ -90,6 +90,7 @@ def fit_and_extract(mags_AB, pivot_AA, run_name, n_live=400, err_frac=0.1):
     mp16, mp50, mp84 = np.percentile(s["photometry"], [16, 50, 84], axis=0)
     return dict(
         stellar_mass=s["stellar_mass"],
+        mass_weighted_age=s.get("mass_weighted_age"),   # Gyr, posterior samples (advanced qty)
         flam=flam, flam_err=flam_err,
         eff_wavs=np.asarray(fit.galaxy.filter_set.eff_wavs, dtype=float),
         model_phot_p16=mp16, model_phot_p50=mp50, model_phot_p84=mp84,
