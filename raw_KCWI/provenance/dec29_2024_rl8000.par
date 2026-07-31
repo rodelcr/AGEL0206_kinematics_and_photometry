@@ -1,0 +1,9 @@
+dimension 100 100
+align_box 23 23 67 69
+orientation 0
+xpix 0.3
+ypix 0.3
+wavebin 6699.45 8710.81
+ref_xy 53 56
+ref_ad 114.2783826 65.6108638
+ref_fn /Volumes/obs-data/kcwi_kcrm/vs44/VS44_ps_g_cutout_northup.fits
