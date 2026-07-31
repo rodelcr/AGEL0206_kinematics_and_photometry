@@ -4,14 +4,14 @@
 slides. This brief is self-contained — you don't need to read the
 repo. For the technical catalogue see `TESTS_AND_DIAGNOSTICS.pdf`.
 
-**Last updated.** 2026-05-05
+**Last updated.** 2026-06-14
 
 ---
 
 ## 1. One-line headline
 
-We measure the central stellar velocity dispersion **σ_e = 268 ± 32 km/s**
-inside one effective radius and the stellar mass **M★ = 2.2 × 10¹¹ M☉**
+We measure the central stellar velocity dispersion **σ_e = 267 ± 12 km/s**
+inside one effective radius and the stellar mass **M★ = 3.2 × 10¹¹ M☉**
 of the foreground deflector galaxy in the strong-lens system
 **AGEL J020613-011417** at z = 0.676, anchoring it on the M•–σ
 relation.
@@ -29,20 +29,20 @@ relation.
   extract σ_e inside R<R_e via cumulative-aperture I-weighted fitting
   — the literature-standard definition (Cappellari+ 2006 eq. 1, used
   in KH13, Greene+ 2020, SAURON/ATLAS3D/MaNGA).
-- **Headline result.** σ_e(<R_e) = 269.62 ± 13.27 km/s; combined with
-  M★ = 1.4 × 10¹¹ M☉ (log M★/M☉ = 11.16; Bagpipes SED on HST WFC3 + JWST NIRCam
-  photometry) this places AGEL0206 cleanly on the M•–σ and M•–M★
+- **Headline result.** σ_e(<R_e) = 267.31 ± 11.77 km/s; combined with
+  M★ ≈ 3.0 × 10¹¹ M☉ (log M★/M☉ = 11.46; Bagpipes SED on HST WFC3 + JWST NIRCam
+  photometry, validated-fit apcorr + quiescent prior) this places AGEL0206 cleanly on the M•–σ and M•–M★
   scaling relations and provides an independent strong-lens-side
   σ-aperture constraint for cosmographic uses.
 
 ## 3. Headline numbers (paper-ready)
 
 ```
-σ_e(<R_e)            = 269.62 ± 13.27 km/s  (paper headline; asym −13.45/+13.10)
+σ_e(<R_e)            = 267.31 ± 11.77 km/s  (paper headline; asym −11.98/+11.58)
 σ_e(<R_e/2)          = 224 ± 18 km/s     (gradient diagnostic)
 
-R_e                  = 2.305″ = 16.23 kpc   (HST F140W+F200LP CoG mean)
-log(M★/M☉)           = 11.16 +0.32/−0.08  (principled IR-extended masking, 10%)
+R_e                  = 2.097″ = 15.26 kpc   (HST F140W+F200LP best-mask CoG)
+log(M★/M☉)           = 11.5 ± 0.1 (stat) ± 0.2 (sys)  [2dp 11.46]  (validated-fit apcorr + quiescent SED prior, 2 R_e, 10%; was 11.50)
 log(M★/M☉) [20% err] = 11.04 ± 0.14       (fill-in reach 11.46; supersedes 11.33)
 
 z_deflector          = 0.67564          (line fit — Ca H+K, [O II], etc.)
@@ -164,7 +164,7 @@ non-trivial here and how we handle each:
 ```
 ┌──────────────────┬──────────────────┬──────────────────┐
 │ Title + authors  │   System sketch  │   Headline box:  │
-│   + AGEL logo    │  (HST color cut, │  σ_e = 268 ± 32  │
+│   + AGEL logo    │  (HST color cut, │  σ_e = 267 ± 12  │
 │                  │   arc + lens)    │  log M★ = 11.33  │
 ├──────────────────┼──────────────────┼──────────────────┤
 │ Motivation       │   Method (ppxf+  │   Hero figure 1: │

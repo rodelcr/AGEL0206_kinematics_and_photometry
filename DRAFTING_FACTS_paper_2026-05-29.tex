@@ -42,6 +42,7 @@
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
 \usepackage{color}
 \usepackage{fancyvrb}
 \newcommand{\VerbBar}{|}
@@ -90,10 +91,92 @@
 % Allow footnotes in longtable head/foot
 \IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
 \makesavenoteenv{longtable}
+\usepackage[normalem]{ulem}
+% Avoid problems with \sout in headers with hyperref
+\pdfstringdefDisableCommands{\renewcommand{\sout}{}}
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% Header include for TESTS_AND_DIAGNOSTICS pandoc -> xelatex build.
+% Goal: prevent overlapping text in wide tables.
+
+\usepackage{array}
+\usepackage{etoolbox}
+
+% Tighter column padding so long cells don't overflow
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+
+% Shrink table fonts so wide rows fit the page
+\AtBeginEnvironment{longtable}{\footnotesize}
+\AtBeginEnvironment{tabular}{\footnotesize}
+\AtBeginEnvironment{tabularx}{\footnotesize}
+
+% Allow URLs / inline code to break across lines
+\usepackage{xurl}
+\renewcommand{\UrlBreaks}{\do\/\do\-\do\_\do\.\do\=}
+
+% pandoc's `inline code` becomes \texttt{...} — long paths overflow
+% table columns. The Lua filter .pandoc_break_paths.lua rewrites
+% these as \BreakablePath{...} with \discretionary{}{}{} break
+% opportunities already inserted after / _ - . — so we only need to
+% set tt-family and allow sloppy line breaking.
+\newcommand{\BreakablePath}[1]{{\ttfamily\sloppy #1}}
+
+% --- Symbol fallback for glyphs missing from STIX Two Text -----------------
+% STIX Two Text lacks several common math/symbol glyphs in the OT:scri
+% feature set we render with (→, ≤, ≥, ∈, ≈, ↔, ★). Map each one to its
+% counterpart in STIX Two Math, which has the full set.
+\usepackage{newunicodechar}
+\newfontfamily\stixfallback{STIX Two Math}[Scale=MatchLowercase]
+\newcommand{\fb}[1]{{\stixfallback #1}}
+
+\newunicodechar{→}{\fb{→}}
+\newunicodechar{←}{\fb{←}}
+\newunicodechar{↔}{\fb{↔}}
+\newunicodechar{≤}{\fb{≤}}
+\newunicodechar{≥}{\fb{≥}}
+\newunicodechar{∈}{\fb{∈}}
+\newunicodechar{≈}{\fb{≈}}
+\newunicodechar{★}{\fb{★}}
+\newunicodechar{⋆}{\fb{⋆}}
+\newunicodechar{≪}{\fb{≪}}
+\newunicodechar{≫}{\fb{≫}}
+\newunicodechar{≠}{\fb{≠}}
+\newunicodechar{≳}{\fb{≳}}
+\newunicodechar{≲}{\fb{≲}}
+\newunicodechar{⊕}{\fb{⊕}}
+\newunicodechar{σ}{\fb{σ}}
+\newunicodechar{Σ}{\fb{Σ}}
+\newunicodechar{Δ}{\fb{Δ}}
+\newunicodechar{α}{\fb{α}}
+\newunicodechar{β}{\fb{β}}
+\newunicodechar{γ}{\fb{γ}}
+\newunicodechar{δ}{\fb{δ}}
+\newunicodechar{ε}{\fb{ε}}
+\newunicodechar{η}{\fb{η}}
+\newunicodechar{λ}{\fb{λ}}
+\newunicodechar{μ}{\fb{μ}}
+\newunicodechar{π}{\fb{π}}
+\newunicodechar{ρ}{\fb{ρ}}
+\newunicodechar{τ}{\fb{τ}}
+\newunicodechar{φ}{\fb{φ}}
+\newunicodechar{χ}{\fb{χ}}
+\newunicodechar{²}{\fb{²}}
+\newunicodechar{³}{\fb{³}}
+\newunicodechar{ω}{\fb{ω}}
+\newunicodechar{Ω}{\fb{Ω}}
+\newunicodechar{∝}{\fb{∝}}
+\newunicodechar{√}{\fb{√}}
+\newunicodechar{∞}{\fb{∞}}
+\newunicodechar{±}{\fb{±}}
+\newunicodechar{×}{\fb{×}}
+\newunicodechar{÷}{\fb{÷}}
+\newunicodechar{−}{\fb{−}}
+\newunicodechar{☉}{\fb{☉}}
+\newunicodechar{✓}{\fb{✓}}
+\newunicodechar{⚠}{\fb{⚠}}
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -107,10 +190,11 @@ Results Sections}
 }
 \makeatother
 \subtitle{Facts, decisions, and provenance keyed to the paper outline
-(2026-05-29)}
+--- last revised 2026-06-12 (lens-model summary from Ferrami draft;
+post-M12)}
 \author{Compiled for R. Córdova Rosado from project notes, memory,
 METHODS\_AND\_SYSTEMATICS.md, and TESTS\_AND\_DIAGNOSTICS.md}
-\date{2026-05-29}
+\date{2026-06-08}
 
 \begin{document}
 \maketitle
@@ -120,26 +204,41 @@ METHODS\_AND\_SYSTEMATICS.md, and TESTS\_AND\_DIAGNOSTICS.md}
 
 This is a \textbf{drafting reference}, not prose for the paper. Every
 bullet is a fact or decision we have already made, with its source file
-in \texttt{{[}brackets{]}} so you can verify it. Where a number is
-superseded, the current value is given and the stale one flagged.
+in \BreakablePath{[brackets]} so you can verify it. Where a number is
+superseded, the current value is given and the stale one flagged. The
+\textbf{\BreakablePath{<!-\discretionary{}{}{}-\discretionary{}{}{} PV:auto:… -\discretionary{}{}{}-\discretionary{}{}{}>}
+blocks} (the headline numbers below + the §3.1 budget table) are
+\textbf{generated from
+\BreakablePath{results/\discretionary{}{}{}PAPER\_\discretionary{}{}{}VALUES.\discretionary{}{}{}json}}
+--- do not hand-edit inside the markers; refresh with
+\BreakablePath{python scripts/\discretionary{}{}{}paper\_\discretionary{}{}{}values.\discretionary{}{}{}py -\discretionary{}{}{}-\discretionary{}{}{}render DRAFTING\_\discretionary{}{}{}FACTS\_\discretionary{}{}{}paper\_\discretionary{}{}{}2026-\discretionary{}{}{}05-\discretionary{}{}{}29.\discretionary{}{}{}md}.
 \textbf{Three gaps} are flagged up front --- they are not in this repo
 and you must source them elsewhere before drafting those paragraphs:
 
 \begin{itemize}
 \tightlist
 \item
-  \textbf{G1 --- Lens modeling (Ferrami et al.).} No BPL / point-mass /
-  M(\textless r\_break) / joint-posterior / PSF / shear / subhalo
-  content exists in this kinematics+photometry repo. Source from the
-  lens-modeling repo
-  (\texttt{\textasciitilde{}/Documents/AGEL/202509\_DESJ0206\_modeling/}
-  or \texttt{20251112\_DESJ0206\_Pyauto\_PRONTO/}) or the Ferrami draft
-  directly.
+  \textbf{G1 --- Lens modeling (Ferrami et al.) --- RESOLVED 2026-06-12
+  (provisional).} Summarised into \textbf{§2.3} (method) and
+  \textbf{§3.3} (results) from the \textbf{Ferrami et al.~June-12 draft}
+  (\BreakablePath{\~/\discretionary{}{}{}Documents/\discretionary{}{}{}AGEL/\discretionary{}{}{}AGEL\_\discretionary{}{}{}0206\_\discretionary{}{}{}ApJL\_\discretionary{}{}{}Figures/\discretionary{}{}{}SMBH\_\discretionary{}{}{}in\_\discretionary{}{}{}Einstein\_\discretionary{}{}{}Spiral\_\discretionary{}{}{}DESJ0206\_\discretionary{}{}{}0114\_\discretionary{}{}{}June12/\discretionary{}{}{}main.\discretionary{}{}{}md}):
+  \BreakablePath{pronto} code, sEPL/cEPL/bEPL halos, point-mass vs
+  SPS/NFW perturber test, 15-model evidence table, best-model
+  parameters, M•--σ placement. \textbf{All numbers PROVISIONAL} (draft
+  stamps them \BreakablePath{PLACEHOLDER UNTIL FINAL RUNS}) and on
+  \textbf{Planck-2015 cosmology} (≠ our H₀=70) --- see §2.3 flags.
+  Lens-modeling repos remain
+  \BreakablePath{\~/\discretionary{}{}{}Documents/\discretionary{}{}{}AGEL/\discretionary{}{}{}202509\_\discretionary{}{}{}DESJ0206\_\discretionary{}{}{}modeling/\discretionary{}{}{}},
+  \BreakablePath{20251112\_\discretionary{}{}{}DESJ0206\_\discretionary{}{}{}Pyauto\_\discretionary{}{}{}PRONTO/\discretionary{}{}{}}
+  for the underlying runs.
 \item
-  \textbf{G2 --- X-ray / ``truly quiescent'' statement.} No X-ray,
-  Chandra, or explicit quiescence data anywhere in the read files. The
-  galaxy is only ever described as a ``passive elliptical.'' You need an
-  external source if you want the X-ray quiescence claim in §Results.
+  \textbf{G2 --- X-ray / ``truly quiescent'' statement --- PARTLY
+  RESOLVED 2026-06-12.} The Ferrami draft §Data supplies the quiescence
+  argument (Chandra DR2 X-ray flux limit 1.8×10⁻¹⁵ erg s⁻¹ cm⁻² →
+  L\_X\textless10⁴³ ≈ 10⁻⁴ L\_Edd; LOFAR DR3 radio-quiet; no AGN lines
+  in KCWI) --- captured in \textbf{§3.3.6}. Still verify the
+  Chandra/LOFAR source values directly before asserting them in
+  \emph{our} paper.
 \item
   \textbf{G3 --- ``We do not account for peculiar velocities.''} This
   sentence is not currently written in any methods doc. It is a true
@@ -147,39 +246,261 @@ and you must source them elsewhere before drafting those paragraphs:
   --- just add it; nothing to reconcile.
 \end{itemize}
 
-\textbf{Headline numbers (current, 2026-05-27, post-M11):}
+\textbf{Headline numbers} --- \emph{generated from
+\BreakablePath{results/\discretionary{}{}{}PAPER\_\discretionary{}{}{}VALUES.\discretionary{}{}{}json}
+by
+\BreakablePath{scripts/\discretionary{}{}{}paper\_\discretionary{}{}{}values.\discretionary{}{}{}py -\discretionary{}{}{}-\discretionary{}{}{}render};
+do not hand-edit inside the markers.}
 
 \begin{itemize}
 \tightlist
 \item
-  σ\_e(\textless R\_e) = \textbf{269.62 ± 11.77 km/s} (asym −11.98 /
-  +11.57); often rounded \textbf{270 ± 12 km/s}.
+  σ\_e(\textless R\_e) = \textbf{267.31 ± 12.79 km/s} (asym −12.98 /
+  +12.61); often rounded \textbf{267 ± 13 km/s}. Measured at the
+  best-mask R\_e=2.097″ aperture; the R\_e-source systematic (±5.13,
+  best-mask CoG family) is folded into the budget (§3.1).
 \item
-  log(M⋆/M☉) = \textbf{11.16 ± 0.08 (stat) +0.31 (sys)} at 10\% flux
-  errors {[}\textbf{11.04 ± 0.14 (stat) +0.32 (sys)} at 20\%{]} ---
-  \textbf{NEW principled arc masking} (F200LP-located + IR-extended, raw
-  aperture). The one-sided +sys is the Sérsic fill-in of deflector light
-  hidden under the arc, reaching log M⋆ ≈ 11.46. \textbf{Supersedes
-  11.33 +0.07/−0.09} (older expert-aperture value, smaller masks; now a
-  mid-range cross-check). See §2.1.1b / §3.2 and
-  \texttt{NOTES\_photometry\_mask\_systematics\_2026-05-29.md}.
+  log(M⋆/M☉) = \textbf{11.50 +0.09/−0.14 (stat, 10\%)} ---
+  aperture-corrected total at the matched 2 R\_e = 4.19″ elliptical
+  aperture (empirical aperture + single-Sérsic model wings;
+  GAMA/Taylor+2011 fluxscale). Five estimators: raw \textbf{11.21}
+  (empirical) · raw+apcorr \textbf{11.38} · filled \textbf{11.38} ·
+  \textbf{total 11.50 (headline)} · Sérsic-total \textbf{11.43}.
+  Sérsic-only systematic ±0.19 dex; masking-approach ±0.09 dex. See
+  §2.1.1b / §3.2.
 \item
-  R\_e = \textbf{2.305″ = 16.23 kpc}.
+  R\_e = \textbf{2.097″ = 15.26 kpc} (best-mask F140W+F200LP CoG; method
+  systematic ±0.10″). \textbf{Supersedes 2.305″} (expert mask).
 \item
   z\_deflector = \textbf{0.67564}; z\_source = \textbf{1.302}.
 \end{itemize}
 
-\textbf{Cosmology:} FlatLambdaCDM, H₀ = 70 km/s/Mpc, Ω\_m = 0.3; 1″ ≈
-7.04 kpc (7043.5 pc/arcsec), D\_A = 1452 Mpc at z = 0.67564.
+\textbf{Cosmology (Planck 2015 --- adopted 2026-06-12 to match the
+companion lens-modeling paper, Ferrami et al.):} FlatLambdaCDM,
+\textbf{H₀ = 67.7 km/s/Mpc, Ω\_m,0 = 0.302}; 1″ ≈ \textbf{7.2764 kpc},
+\textbf{D\_A = 1500.9 Mpc}, D\_L = 4214.1 Mpc at z = 0.67564. \emph{(Was
+H₀=70, Ω\_m=0.3 → 7.04 kpc / D\_A=1452 Mpc before this date.)}
 {[}reference\_hst\_jwst\_data\_properties.md{]}
 
 \begin{quote}
-\textbf{Staleness warning:} the \emph{body} of
-\texttt{METHODS\_AND\_SYSTEMATICS.md} (dated 2026-05-18) still prints
-pre-M11 numbers (254.85 / 268.98, total ±18) in its narrative prose. Its
-own §0 table and \texttt{CLAUDE.md} (2026-05-27) carry the current
-headline 269.62 ± 11.77. Always quote the current value.
+\textbf{Cosmology switch --- impact (2026-06-12).} Matching Planck 2015
+changes only the \textbf{distance-scaled} quantities, and only mildly
+(D\_L and D\_A both ×1.0331 at our fixed z\_l = 0.67564): -
+\textbf{R\_e: 14.76 → 15.26 kpc} (+3.3\%). R\_e in \textbf{arcsec
+(2.097″) is unchanged}. - \textbf{log M⋆: 11.47 → 11.50} (+0.0282 dex).
+This is an \textbf{exact D\_L² rescale} of the flux-calibrated SED mass
+(the M/L is color-driven, hence cosmology-independent), so it is a
+uniform additive shift of \emph{every} estimator --- \textbf{no Bagpipes
+re-fit needed}. Well inside the ±0.09 (stat) / ±0.19 (Sérsic sys) budget
+→ \textbf{not a dominant systematic}. - \textbf{σ\_e = 267.31 ± 12.79
+km/s and every angular quantity (θ\_E, R\_e″, masks, apertures) are
+IDENTICAL} --- velocities and angles do not depend on cosmology. -
+\textbf{Implementation:} the PV:auto headline + §3.1 budget are
+re-rendered under Planck 2015
+(\BreakablePath{scripts/\discretionary{}{}{}paper\_\discretionary{}{}{}values.\discretionary{}{}{}py}:
+KPC=7.2764;
+\BreakablePath{DLOGM\_\discretionary{}{}{}COSMO=+0.\discretionary{}{}{}0282}
+applied to all M⋆ estimators). \textbf{TODO:} drop
+\BreakablePath{DLOGM\_\discretionary{}{}{}COSMO} once
+\BreakablePath{results/\discretionary{}{}{}aperture\_\discretionary{}{}{}matched\_\discretionary{}{}{}photometry.\discretionary{}{}{}npz}
+is regenerated under Planck 2015 upstream, else it double-counts. -
+\textbf{Redshift reconciliation --- TODO (sub-dominant).} Ferrami quotes
+z\_l = 0.675 / z\_s = 1.303 but \textbf{takes the redshifts FROM us};
+our line-fit \textbf{z\_l = 0.67564, z\_s = 1.30263} (notebook 04) are
+canonical and should propagate into their final runs. The
+\textasciitilde6×10⁻⁴ / 1×10⁻³ differences shift D\_A by \textless0.1\%
+--- not a dominant systematic, left as a to-do.
 \end{quote}
+
+\begin{quote}
+\textbf{Staleness warning:} older docs
+(\BreakablePath{METHODS\_\discretionary{}{}{}AND\_\discretionary{}{}{}SYSTEMATICS.\discretionary{}{}{}md}
+2026-05-18 body; pre-2026-06-11 handoffs) print superseded σ\_e numbers
+(254.85 / 268.98 / 269.62, totals ±18/±13.27). The current headline is
+\textbf{267.31 ± 12.79} (post ``best mask throughout'', 2026-06-11,
+R\_e=2.097″). Always quote the current value (canonical source:
+\BreakablePath{results/\discretionary{}{}{}PAPER\_\discretionary{}{}{}VALUES.\discretionary{}{}{}json}).
+\end{quote}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{data-and-observations}{%
+\section{§1 Data and observations}\label{data-and-observations}}
+
+\emph{All values below are read directly from the FITS headers of the
+analysis files (verified 2026-06-08), not from memory. Target:
+\textbf{AGEL J020613−011417} = DES J0206−0114, ICRS RA = 31.55611°, Dec
+= −1.23817° (HST
+\BreakablePath{RA\_\discretionary{}{}{}TARG}/\BreakablePath{DEC\_\discretionary{}{}{}TARG});
+deflector z = 0.67564, source z = 1.302. The field is the massive
+cluster \textbf{ACT-CL J0206.2−0114} (ACT DR5, Hilton et al.~2021) ---
+the JWST pointing target.}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.14}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.14}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.14}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.14}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.14}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.14}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.14}}@{}}
+\toprule
+Facility & Inst. / mode & Band(s) & Program (PI) & UT date & Exp. &
+Pixel scale \\
+\midrule
+\endhead
+Keck II & KCWI --- KCRM red (RL) \textbf{+} KCB blue (BL), Medium
+slicer, 2×2 & RL 5625--8941 Å (σ\_e); BL λc 4500 Å & \textbf{U204 + K409
++ U002} (3-night combine) & 2024-12 → 2025-11 & \textbf{≈180 min RED +
+≈198 min BLUE} (36 × 300 s RED) & 0.300″/spaxel \\
+HST & WFC3/UVIS & F200LP & \textbf{16773 (Glazebrook)} & 2022-07-14 &
+600.0 s (NDRIZIM 4) & 0.050″/pix \\
+HST & WFC3/IR & F140W & \textbf{16773 (Glazebrook)} & 2022-07-14 & 597.7
+s (NDRIZIM 3) & 0.080″/pix \\
+JWST & NIRCam SW, module B & F150W2 (CLEAR) & \textbf{05594 (Mahler)} &
+2024-08-27 & 1836.0 s & 0.03075″/pix \\
+JWST & NIRCam LW, module B & F322W2 (CLEAR) & \textbf{05594 (Mahler)} &
+2024-08-27 & 1836.0 s & 0.06301″/pix \\
+\bottomrule
+\end{longtable}
+
+\hypertarget{keckkcwi-ifu-spectroscopy-the-ux3c3_e-data}{%
+\subsubsection{§1.1 Keck/KCWI IFU spectroscopy (the σ\_e
+data)}\label{keckkcwi-ifu-spectroscopy-the-ux3c3_e-data}}
+
+\begin{itemize}
+\item
+  \textbf{Keck II / KCWI}, KCRM \textbf{red} arm, \textbf{RL (Red-Low)}
+  grating (\BreakablePath{RGRATNAM}), \textbf{Medium} slicer
+  (\BreakablePath{IFUNAM}), \textbf{2×2} binning
+  (\BreakablePath{BINNING}/\BreakablePath{CCDSUM}); nod-and-shuffle
+  \textbf{off} (\BreakablePath{RNASNAM='Open'}).
+\item
+  \textbf{The headline cube is a 3-NIGHT, 3-PROGRAM combine} (see
+  §2.2.1), NOT a single dataset --- the cube header
+  (\BreakablePath{DATE-\discretionary{}{}{}OBS} 2025-11-17,
+  \BreakablePath{PROGPI} Jones, \BreakablePath{XPOSURE} 300 s) describes
+  only the \textbf{first input frame}, so cite the combine, not the
+  header:
+
+  \begin{longtable}[]{@{}llll@{}}
+  \toprule
+  Night (UT) & Program (PI) & RED (RL) & BLUE (BL) \\
+  \midrule
+  \endhead
+  2024 Dec 29 & U204 & 4 × 300 s & 1 × 1320 s \emph{(excluded by
+  reducer)} \\
+  2025 Aug 30 & K409 (PI TBD) & 12 × 300 s & 4 × 990 s \\
+  2025 Nov 17 & U002 (Jones) & 20 × 300 s & 5 × 1320 s \\
+  \bottomrule
+  \end{longtable}
+
+  → \textbf{36 × 300 s ≈ 180 min RED + ≈ 198 min BLUE on-source.} The
+  NEW
+  \textbf{\BreakablePath{\_\discretionary{}{}{}mtwdo\_\discretionary{}{}{}}}
+  reduction (Master-Twilight + Dome hybrid flats, K. R. Gupta),
+  \BreakablePath{Nov17\_\discretionary{}{}{}2025\_\discretionary{}{}{}DESJ0206\_\discretionary{}{}{}RL\_\discretionary{}{}{}combined\_\discretionary{}{}{}mtwdo\_\discretionary{}{}{}icubes\_\discretionary{}{}{}wcs.\discretionary{}{}{}fits};
+  dithered (PA 0°/45°/90°); CR rejection via \textbf{astroscrappy}
+  (\BreakablePath{fsmode=median},
+  \BreakablePath{psffwhm=2.\discretionary{}{}{}50}).
+  \BreakablePath{OBSERVER} = Glazebrook, Gupta, Jones, Kacprzak, Alcorn,
+  Rhoades, Barone, Tran, Chen, Vasa. \emph{(K409 PI + Aug-30 DIMM seeing
+  still TBD for acknowledgements.)}
+\item
+  \textbf{Both KCWI arms recorded simultaneously.} The \textbf{red} arm
+  (\textbf{KCRM}, RL grating, central λ 7150 Å \BreakablePath{RCWAVE}
+  --- the cube below) is the σ\_e dataset. The \textbf{blue} arm
+  (\textbf{KCWI/KCB}, \textbf{BL (Blue-Low)} grating
+  \BreakablePath{BGRATNAM}, central λ \textbf{4500 Å}
+  \BreakablePath{BCWAVE}, \textbf{KBlue} filter
+  \BreakablePath{BFILTNAM}, N\&S off) is the ≈198 min BLUE above; it is
+  \textbf{not used for σ\_e} (the deflector's Ca H+K\ldots Mg b
+  absorption falls in the red) but supplies the \textbf{source-z = 1.302
+  cross-check} (Fe II UV multiplet; §2.2.2). \textbf{The blue combined
+  cube is not in this repo} (only the RL cube) --- quote the blue arm
+  from the observing log, not a local file.
+\item
+  \textbf{Conditions (Nov-17 frame, header-literal):} airmass
+  \textbf{1.165} (\BreakablePath{AIRMASS}); \textbf{guide-star FWHM
+  1.271″} (\BreakablePath{GUIDFWHM}) --- the adopted seeing; parallactic
+  angle 15.6°, rotator 0°. (Per-night airmass/seeing for the other two
+  nights not carried in the combined cube.)
+\item
+  \textbf{Cube:} 100 × 100 spaxels × 3317 λ-pixels;
+  \textbf{0.300″/spaxel} (square; from WCS), \textbf{30″ × 30″} FOV;
+  wavelength \textbf{5625--8941 Å} at \textbf{1.0 Å/pix}
+  (\BreakablePath{CRVAL3}/\BreakablePath{CD3\_\discretionary{}{}{}3}),
+  red central λ 7150 Å (\BreakablePath{RCWAVE}). Spectral resolution
+  \textbf{R ≈ 10000} at the fit band → \textbf{σ\_inst ≈ 12.6 km/s}
+  (well below σ\_e ≈ 270; the LSF is carried into ppxf).
+  {[}reference\_kcwi\_data\_properties.md{]}
+\item
+  Pointing \BreakablePath{RA}/\BreakablePath{DEC} = 02:06:13.38 /
+  −01:14:20.8; target \BreakablePath{TARGRA}/\BreakablePath{TARGDEC} =
+  02:06:13.58 / −01:14:19.8.
+\end{itemize}
+
+\hypertarget{hstwfc3-imaging-f200lp-f140w}{%
+\subsubsection{§1.2 HST/WFC3 imaging (F200LP,
+F140W)}\label{hstwfc3-imaging-f200lp-f140w}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Program 16773, PI Karl Glazebrook}
+  (\BreakablePath{PROPOSID}/\BreakablePath{PR\_\discretionary{}{}{}INV\_\discretionary{}{}{}*});
+  \BreakablePath{TARGNAME} = DESJ0206-0114; both bands \textbf{UT
+  2022-07-14} (\BreakablePath{EXPSTART} MJD 59774.30--59774.31),
+  ORIENTAT 111.9°, drizzled, units \textbf{ELECTRONS/S}.
+\item
+  \textbf{F200LP} --- WFC3/\textbf{UVIS}, aperture UVIS2: EXPTIME
+  \textbf{600.0 s}, NDRIZIM 4, NCOMBINE 2, drizzle scale
+  \textbf{0.050″/pix}; \BreakablePath{PHOTFLAM} = 5.1851×10⁻²⁰,
+  \BreakablePath{PHOTPLAM} = 4923.48 Å → \textbf{ZP\_AB = 27.344}.
+\item
+  \textbf{F140W} --- WFC3/\textbf{IR}: EXPTIME \textbf{597.7 s}, NDRIZIM
+  3, NCOMBINE 3, drizzle scale \textbf{0.080″/pix};
+  \BreakablePath{PHOTFLAM} = 1.4829×10⁻²⁰, \BreakablePath{PHOTPLAM} =
+  13922.91 Å → \textbf{ZP\_AB = 26.446}.
+\item
+  AB zeropoints are recomputed per-image from
+  \BreakablePath{PHOTFLAM}/\BreakablePath{PHOTPLAM} (never hardcoded);
+  \BreakablePath{ZP\_\discretionary{}{}{}AB = −2.\discretionary{}{}{}5·log10(PHOTFLAM) − 21.\discretionary{}{}{}10 − 5·log10(PHOTPLAM) + 18.\discretionary{}{}{}6921}.
+  \textbf{Drizzle pixel correlation:} empirical noise ≈1.3--2× the
+  CCD-equation value → motivates the 10\% flux floor (§2.1.4).
+\end{itemize}
+
+\hypertarget{jwstnircam-imaging-f150w2-f322w2}{%
+\subsubsection{§1.3 JWST/NIRCam imaging (F150W2,
+F322W2)}\label{jwstnircam-imaging-f150w2-f322w2}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Program 05594} --- \emph{``JWST Cluster SLICE --- Strong
+  Lensing and Cluster Evolution''}, \textbf{PI Guillaume Mahler} (SURVEY
+  category); \BreakablePath{TARGPROP} = ACT-CL\_J0206.2−0114 (the
+  cluster field; the deflector sits in it). Both bands \textbf{UT
+  2024-08-27} (\BreakablePath{DATE-\discretionary{}{}{}BEG}
+  06:02--06:40), NIRCam \textbf{module B}, units \textbf{MJy/sr} (i2d),
+  NINTS 1 / NGROUPS 4.
+\item
+  \textbf{F150W2} (SHORT channel, CLEAR pupil):
+  \BreakablePath{EFFEXPTM}/\BreakablePath{XPOSURE} \textbf{1836.0 s};
+  \BreakablePath{PIXAR\_\discretionary{}{}{}SR} = 2.2222×10⁻¹⁴ sr →
+  \textbf{0.03075″/pix} (PIXAR\_A2 = 9.454×10⁻⁴ ″²) → \textbf{ZP\_AB =
+  28.033}.
+\item
+  \textbf{F322W2} (LONG channel, CLEAR pupil):
+  \BreakablePath{EFFEXPTM}/\BreakablePath{XPOSURE} \textbf{1836.0 s};
+  \BreakablePath{PIXAR\_\discretionary{}{}{}SR} = 9.3307×10⁻¹⁴ sr →
+  \textbf{0.06301″/pix} (PIXAR\_A2 = 3.970×10⁻³ ″²) → \textbf{ZP\_AB =
+  26.475}.
+\item
+  JWST AB from area:
+  \BreakablePath{ZP\_\discretionary{}{}{}AB = −6.\discretionary{}{}{}10 − 2.\discretionary{}{}{}5·log10(PIXAR\_\discretionary{}{}{}SR)}.
+  No PAM correction (drizzled/resampled).
+\end{itemize}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -195,8 +516,10 @@ headline 269.62 ± 11.77. Always quote the current value.
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Use the F200LP \texttt{\_mask.fits} as the arc mask --- NOT
-  the F140W one.} {[}feedback\_masking\_strategy.md;
+  \textbf{Use the F200LP
+  \BreakablePath{\_\discretionary{}{}{}mask.\discretionary{}{}{}fits} as
+  the arc mask --- NOT the F140W one.}
+  {[}feedback\_masking\_strategy.md;
   reference\_hst\_jwst\_data\_properties.md; METHODS §II.4{]}
 
   \begin{itemize}
@@ -220,11 +543,11 @@ headline 269.62 ± 11.77. Always quote the current value.
 The hand-painted masks are now backed by an objective, reproducible
 recipe (so a referee can reproduce the arc selection), validated +
 applied to all four bands.
-{[}\texttt{NOTES\_arc\_mask\_verification\_2026-05-29.md},
-\texttt{NOTES\_photometry\_mask\_systematics\_2026-05-29.md};
-\texttt{scripts/arc\_mask\_verification.py},
-\texttt{mask\_method\_comparison.py},
-\texttt{photometry\_systematics.py}{]}
+{[}\BreakablePath{NOTES\_\discretionary{}{}{}arc\_\discretionary{}{}{}mask\_\discretionary{}{}{}verification\_\discretionary{}{}{}2026-\discretionary{}{}{}05-\discretionary{}{}{}29.\discretionary{}{}{}md},
+\BreakablePath{NOTES\_\discretionary{}{}{}photometry\_\discretionary{}{}{}mask\_\discretionary{}{}{}systematics\_\discretionary{}{}{}2026-\discretionary{}{}{}05-\discretionary{}{}{}29.\discretionary{}{}{}md};
+\BreakablePath{scripts/\discretionary{}{}{}arc\_\discretionary{}{}{}mask\_\discretionary{}{}{}verification.\discretionary{}{}{}py},
+\BreakablePath{mask\_\discretionary{}{}{}method\_\discretionary{}{}{}comparison.\discretionary{}{}{}py},
+\BreakablePath{photometry\_\discretionary{}{}{}systematics.\discretionary{}{}{}py}{]}
 
 \begin{itemize}
 \item
@@ -232,49 +555,197 @@ applied to all four bands.
   source). Two independent objective selectors reproduce the F200LP hand
   mask: (i) a color cut m\_F200LP−m\_F140W (arc bluer than the red
   deflector); (ii) a \textbf{Sérsic-residual} mask (subtract a 2D
-  deflector model, flag positive excess \textgreater{} 3σ\_sky). On
-  F200LP the Sérsic-residual mask reproduces the expert photometry to
-  \textbf{0.016 mag}, R\_e to 3\%.
+  deflector model, flag pixels whose positive residual exceeds
+  \textbf{k·σ\_sky}, where \textbf{k is the detection threshold in units
+  of the sky noise σ\_sky} and σ\_sky is the robust background scatter;
+  we adopt \textbf{k = 3}). On F200LP the Sérsic-residual mask
+  reproduces the expert photometry to \textbf{0.016 mag}, R\_e to 3\%.
 \item
   \textbf{Transfer to other bands by reprojecting the F200LP footprint}
-  (WCS + \texttt{map\_coordinates}). Reproduces the expert JWST aperture
-  mags to \textbf{0.01--0.02 mag}. Do \textbf{NOT} use an independent
-  per-band Sérsic-residual mask on F140W/JWST --- a single Sérsic
-  under-fits the bright extended IR galaxy (median residual +1.0) and
-  over-masks by 0.2--0.4 mag.
+  (WCS + \BreakablePath{map\_\discretionary{}{}{}coordinates}).
+  Reproduces the expert JWST aperture mags to \textbf{0.01--0.02 mag}.
 \item
-  \textbf{IR extends the source footprint:} the deeper/sharper JWST
-  bands see the arc's fuller extent (F150W2 mask grows \textasciitilde6×
-  vs HST). We grow the F200LP arc into each band's 2-component-Sérsic
-  residual source pixels that are contiguous with the arc (region
-  growing; cannot grab the core pedestal or field companions).
+  \textbf{WCS registration (NEW 2026-06-10).} A raw WCS reprojection
+  leaves a \textbf{0.09--0.18″} residual offset between the F200LP arc
+  and the JWST/F140W frames (HST UVIS↔IR and HST↔JWST astrometry; the
+  JWST i2d GWCS differs from the FITS-header WCS astropy reads). On the
+  thin arc that mis-covers one edge and lets a companion slip past the
+  mask. We \textbf{cross-correlation-register} the reprojected F200LP
+  arc (and the F140W color layer) to each band's own image near the
+  deflector
+  (\BreakablePath{photometry\_\discretionary{}{}{}systematics.\discretionary{}{}{}register\_\discretionary{}{}{}shift}),
+  which drives the residual offset to \textbf{0.00″} (verified F140W
+  0.179→0, F150W2 0.154→0, F322W2 0.089→0). Field-galaxy contamination
+  check after registration: \textbf{no unmasked source (\textgreater8σ)
+  falls inside the photometry aperture} in any band. \emph{Do not}
+  anchor on the F200LP deflector centroid instead --- it is arc-biased
+  (the faint blue deflector centroid is pulled \textasciitilde0.26″ by
+  the arc), so the arc cross-correlation is the right fiducial.
 \item
-  \textbf{Deflector model = 2-component (bulge+disk) Sérsic} --- single
-  Sérsic under-fits JWST; 2-comp cuts galaxy-body RMS 3.3--3.5×.
-  \textbf{PSF effect on the fill quantified}
-  (\texttt{scripts/psf\_fill\_model.py}): a PSF-convolved 2-comp Sérsic
-  (Gaussian at instrument FWHM; env lacks \texttt{webbpsf}) shifts the
-  filled mag by \textbf{≤0.004 mag} → ΔM⋆ ≪0.01 dex, negligible. The
-  fill is PSF-robust (arc is outside the PSF core).
+  \textbf{Deflector model = single-component Sérsic} (per user
+  2026-06-10). The deflector is an elliptical, so a single Sérsic is the
+  physically-motivated light profile --- we do \textbf{not} fit a
+  bulge+disk decomposition (an earlier 2-component model was only a
+  numerical kludge to make the residual-based mask growth behave; see
+  the mask-evolution note below). The single Sérsic is fit per band with
+  masked pixels excluded, capturing \textbf{66--87\%} of the box flux
+  (F140W is the weakest, with a localized central residual from the
+  absent bulge/disk split, but that residual sits inside the arc-free
+  core and does not enter the mask).
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \emph{Implementation gotcha (documented so it isn't reintroduced):}
+    \BreakablePath{astropy.\discretionary{}{}{}modeling.\discretionary{}{}{}Sersic2D}'s
+    \BreakablePath{amplitude} parameter is \textbf{I(r\_eff), not the
+    central peak}. Since I(0)/I(r\_eff)=exp(b\_n)≈2150 at n=4,
+    initialising \BreakablePath{amplitude} at the data peak
+    over-predicts the centre \textasciitilde2000× and LevMar collapses
+    the amplitude to ≈0 (the whole galaxy then reads as positive
+    residual → catastrophic over-masking). Initialise
+    \BreakablePath{amplitude ≈ peak·exp(−b\_\discretionary{}{}{}n)}
+    (\textasciitilde peak·0.05 for n≈3) and \textbf{bound it to
+    (peak·1e-3, peak·1.5)}, exactly as
+    \BreakablePath{sersic\_\discretionary{}{}{}total\_\discretionary{}{}{}photometry.\discretionary{}{}{}fit\_\discretionary{}{}{}sersic2d}.
+  \end{itemize}
+\item
+  \textbf{IR extends the source footprint --- grown band-specifically
+  (HST color gate / deep-JWST morphology guard):} the deeper/sharper
+  JWST bands see the arc's fuller extent, so we region-grow the F200LP
+  arc seed into the IR. The ``is this pixel source, not deflector
+  body?'' test is gated two ways depending on the band's depth (a
+  candidate must also be a \textgreater k·σ\_sky residual, within
+  R\textless5″, and spatially contiguous with the arc seed --- region
+  growing via
+  \BreakablePath{scipy.\discretionary{}{}{}ndimage.\discretionary{}{}{}label}):
+
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \tightlist
+  \item
+    \textbf{HST bands (F200LP, F140W) --- COLOR GATE:} the pixel must be
+    \textbf{bluer than the deflector core} by ≥ \textbf{ΔC = 0.5 mag} in
+    \textbf{F200LP−F140W} (\BreakablePath{DCOLOR}), at \textbf{k = 3}
+    (\BreakablePath{K\_\discretionary{}{}{}EXT}).
+  \item
+    \textbf{Deep JWST bands (F150W2, F322W2) --- MORPHOLOGY GUARD:} the
+    pixel must be \textbf{source-dominated},
+    \BreakablePath{data − sky − model > MORPH\_\discretionary{}{}{}FRAC·model}
+    (excess beats the single-Sérsic deflector model → it is OUTSIDE the
+    Sérsic-dominated region), at the lower \textbf{k = 2}
+    (\BreakablePath{K\_\discretionary{}{}{}EXT\_\discretionary{}{}{}JWST}).
+    \textbf{No HST color is required}, so the deep JWST data captures
+    the \textbf{diffuse} arc emission HST is too shallow to
+    color-confirm. Because the single Sérsic already accounts for
+    66--87\% of the deflector flux, \BreakablePath{resid > model}
+    rejects the deflector body (model-dominated) while admitting the
+    diffuse source (excess-dominated) --- verified: raw mag stable (no
+    deflector loss), 0 unmasked \textgreater8σ sources in the aperture,
+    the deflector core \textless0.4″ never masked. F150W2 IR-extension
+    grows 1049→5288 px (the diffuse arc), F322W2 415→1230 px.
+  \end{enumerate}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{Why the color gate is needed (and is the right physics).} A
+    \emph{single} Sérsic, being the correct elliptical model, still
+    under-fits the bright extended IR galaxy body slightly, leaving a
+    low-level \textbf{positive} residual over the \emph{red} galaxy.
+    Residual-only growth (criterion 1 alone, the old 2-component recipe)
+    therefore sweeps red galaxy-body light --- and even neighbouring
+    companions --- into the ``arc'' mask (verified: F150W2 mask balloons
+    and raw mags fall 1--2 mag). The z=1.302 source is a \textbf{blue,
+    star-forming} lensed galaxy; the deflector is a \textbf{red,
+    passive} elliptical. Requiring the grown pixels to be \textbf{bluer
+    than the deflector core} (criterion 2) exploits this intrinsic
+    4000-Å-break contrast to keep the blue source extension while
+    rejecting the red body. The mask thus becomes a property of the
+    \textbf{source color}, not of the (imperfect) deflector residual.
+    This is the same physical contrast used by the validated F200LP
+    color selector (i) above; we are simply applying it per-pixel during
+    the IR growth.
+  \item
+    \textbf{Color construction.} Per target-band grid, reproject the
+    F200LP and F140W surface brightness
+    (\BreakablePath{scripts.\discretionary{}{}{}arc\_\discretionary{}{}{}mask\_\discretionary{}{}{}verification.\discretionary{}{}{}reproject\_\discretionary{}{}{}intensity},
+    WCS + bilinear \BreakablePath{map\_\discretionary{}{}{}coordinates})
+    and form
+    \BreakablePath{−2.\discretionary{}{}{}5·log10(SB\_\discretionary{}{}{}F200LP/\discretionary{}{}{}SB\_\discretionary{}{}{}F140W)}
+    (arc → more negative). Constant ZP offsets \textbf{cancel} because
+    we threshold on the contrast vs the deflector-core color (median in
+    a 0.4--0.8″ annulus), not on an absolute color.
+  \item
+    \textbf{Caveats.} (a) \emph{(RESOLVED 2026-06-10)} the HST color
+    gate is conservative where HST is shallow and was missing faint
+    diffuse JWST arc emission (user catch via the deep-stretch
+    \BreakablePath{\_\discretionary{}{}{}diffuse\_\discretionary{}{}{}mask\_\discretionary{}{}{}check});
+    the \textbf{deep-JWST morphology guard} above now captures it using
+    JWST's own sensitivity + the source-dominance test, without
+    over-masking the deflector (raw mag stable). (b) ΔC = 0.5 mag and
+    MORPH\_FRAC = 1.0 are tunables; the resulting masks reproduce the
+    expert hand-mask M⋆ (11.33), our calibration that they neither over-
+    nor under-mask. (c) The morphology guard assumes the single Sérsic
+    captures the deflector majority --- true here (66--87\%); if a
+    future target has a worse single-Sérsic fit, re-check that
+    \BreakablePath{resid>model} still protects the body.
+  \end{itemize}
 \item
   \textbf{raw vs fill-in:} raw photutils (masked) discards the deflector
-  light under the arc; the Sérsic fill-in (replace masked pixels with
-  the model) recovers it. With the large IR-extended masks the fill-in
-  correction is \textbf{+0.18 to +0.96 mag} per band. \textbf{filled
-  photometry is mask-definition-independent} (per-band vs global agree
-  to 0.01 dex); \textbf{raw is mask-size- dependent} (up to 0.78 mag)
-  --- see §3.2.
+  light under the arc; the single-Sérsic fill-in (replace masked pixels
+  with the model) recovers it. Under the color-gated masks the fill-in
+  correction is \textbf{−0.19 to −0.27 mag} per band (smaller than the
+  old 2-component +0.18 to +0.96 mag, because the cleaner masks remove
+  less deflector light). The \textbf{headline is the empirical raw value
+  with the best (per-band, color-gated) mask}; the fill-in is carried as
+  a \textbf{one-sided +sys} (deflector light the mask removes).
+  \textbf{PSF effect on the fill} stays negligible
+  (\BreakablePath{scripts/\discretionary{}{}{}psf\_\discretionary{}{}{}fill\_\discretionary{}{}{}model.\discretionary{}{}{}py}:
+  ≤0.004 mag → ΔM⋆ ≪0.01 dex; arc is outside the PSF core).
 \item
   \textbf{per-band vs global mask} (union of all per-band masks):
-  negligible for filled (0.01 dex M⋆), large for raw --- confirming
-  filled is the robust quantity, raw the conservative lower bound.
+  masking systematic \textbf{±0.086 dex} (10\%); the raw↔filled
+  (under-arc) term dominates (±0.057), the per-band↔global
+  mask-definition term ±0.028. See §3.2.
+\item
+  \textbf{Mask-evolution note (why we settled on the single-Sérsic +
+  color-gated mask).} Three attempts, documented in
+  \BreakablePath{results/\discretionary{}{}{}figures/\discretionary{}{}{}mask\_\discretionary{}{}{}attempts\_\discretionary{}{}{}comparison.\discretionary{}{}{}png}
+  + notebook 12 §8:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{(A) 2-component (bulge+disk) Sérsic + residual-only IR
+    growth} --- over-masks: residual-only growth grabs red galaxy body +
+    a companion (F150W2 15768 px, F322W2 4258 px) → raw biased low
+    (11.16) and a large +0.31 fill-in. The bulge+disk was never physical
+    for this elliptical; it was a kludge to tame the residual growth.
+  \item
+    \textbf{(B) single-Sérsic with a broken fit (amplitude→0) + color
+    gate} --- DISCARDED artifact: the near-zero model made the residual
+    term meaningless and collapsed the fill-in to \textasciitilde0.01
+    mag (apparent 11.34 ± 0.013). Caught via the black model panel in
+    the diagnostic figures.
+  \item
+    \textbf{(C) single-Sérsic (fixed init) + color-gated IR growth + WCS
+    registration} --- FINAL: tighter, arc-focused, correctly-registered
+    masks (F150W2 7698 px, F322W2 1997 px; companion now masked), raw
+    central 11.36 \textbf{consistent with the validated expert hand-mask
+    11.33}, fill real but smaller (−0.19 to −0.28), masking systematic
+    ±0.086 (vs ±0.16 for 2-comp). Physically motivated (single Sérsic) +
+    physically-gated (source color) + astrometrically registered
+    (§2.1.1b).
+  \end{itemize}
 \item
   \textbf{Files} (in sibling dir
-  \texttt{../velocity\_dispersion\_from\_IFU/}):
-  \texttt{AGEL020613-011417A\_F200LP\_WFC3\_cutout\_L3\_mask.fits}
+  \BreakablePath{.\discretionary{}{}{}.\discretionary{}{}{}/\discretionary{}{}{}velocity\_\discretionary{}{}{}dispersion\_\discretionary{}{}{}from\_\discretionary{}{}{}IFU/\discretionary{}{}{}}):
+  \BreakablePath{AGEL020613-\discretionary{}{}{}011417A\_\discretionary{}{}{}F200LP\_\discretionary{}{}{}WFC3\_\discretionary{}{}{}cutout\_\discretionary{}{}{}L3\_\discretionary{}{}{}mask.\discretionary{}{}{}fits}
   (500×500, 25″×25″); the mask was revised 2026-02-28
-  (\texttt{\_mask\_20260228.fits}); original kept as
-  \texttt{\_mask\_OLD.fits}.
+  (\BreakablePath{\_\discretionary{}{}{}mask\_\discretionary{}{}{}20260228.\discretionary{}{}{}fits});
+  original kept as
+  \BreakablePath{\_\discretionary{}{}{}mask\_\discretionary{}{}{}OLD.\discretionary{}{}{}fits}.
 \item
   \textbf{JWST bands:} same arc geometry; the HST F200LP mask is
   re-projected from the HST WCS onto each JWST frame. {[}METHODS
@@ -282,9 +753,11 @@ applied to all four bands.
 \item
   \textbf{For the IFU/σ\_e application} (context): F200LP mask
   reprojected to the 0.30″ IFU grid via
-  \texttt{scipy.ndimage.map\_coordinates(order=0)} nearest-neighbor;
-  \textasciitilde38/184 spaxels inside R\_e flagged (\textasciitilde21\%
-  by count, \textasciitilde27\% by I-weight).
+  \BreakablePath{scipy.\discretionary{}{}{}ndimage.\discretionary{}{}{}map\_\discretionary{}{}{}coordinates(order=0)}
+  nearest-neighbor; \textbf{35/154 = 23\% of spaxels (28\% by I-weight)}
+  flagged inside R\_e=2.097″ (a geometric LOWER bound --- the 1.27″
+  seeing spreads the arc much wider; see §2.4.1 step 3 +
+  \BreakablePath{scripts/\discretionary{}{}{}psf\_\discretionary{}{}{}mask\_\discretionary{}{}{}fraction.\discretionary{}{}{}py}).
   {[}feedback\_masking\_strategy.md{]}
 \end{itemize}
 
@@ -294,46 +767,91 @@ applied to all four bands.
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Headline R\_e = 2.305″ = 16.23 kpc} at z = 0.67564.
-  {[}CLAUDE.md; METHODS §II.3/A3{]}
+  \textbf{Headline R\_e = 2.097″ = 14.76 kpc} at z = 0.67564 (best-mask
+  F140W+F200LP CoG). {[}CLAUDE.md; METHODS §II.3/A3{]}
 \item
-  \textbf{Method:} mean of the \textbf{F140W and F200LP masked
+  \textbf{``Best mask throughout'' (2026-06-11):} the headline R\_e is
+  now the \textbf{best-mask} (single-Sérsic + color/morph gate + WCS
+  registration) curve-of-growth = \textbf{2.097″}, superseding the
+  expert-mask 2.305″. The best masks genuinely remove outer diffuse-arc
+  + interloper light that slightly inflated the expert-mask R\_e; the
+  model-based Sérsic r\_eff (1.897″) and sky-subtracted CoG (1.922″)
+  both confirm the inward shift. The HST 2-R\_e companion mask is empty
+  (companions live only in deep JWST), so it does not enter the HST R\_e
+  --- the global color/morph mask alone gives 2.097″ (self-consistent
+  fixed point).
+  \BreakablePath{scripts/\discretionary{}{}{}re\_\discretionary{}{}{}mask\_\discretionary{}{}{}sensitivity.\discretionary{}{}{}py},
+  \BreakablePath{scripts/\discretionary{}{}{}Re\_\discretionary{}{}{}bestmask\_\discretionary{}{}{}reconciliation.\discretionary{}{}{}py}.
+\item
+  \textbf{photutils validation
+  (\BreakablePath{scripts/\discretionary{}{}{}validate\_\discretionary{}{}{}Re\_\discretionary{}{}{}photutils.\discretionary{}{}{}py}):}
+  our azimuthally-averaged masked CoG is independently reproduced by
+  photutils \BreakablePath{RadialProfile} (integrated) to
+  \textbf{±0.002″}, and unmasked matches photutils
+  \BreakablePath{CurveOfGrowth} (direct 2D aperture sum) to ±0.004″. A
+  naive masked aperture-\emph{sum} (photutils
+  \BreakablePath{CurveOfGrowth} dropping masked pixels) would bias R\_e
+  \textbf{+0.25--0.41″ high} → our azimuthal-fill is the correct
+  masked-CoG treatment.
+  \BreakablePath{centroid\_\discretionary{}{}{}2dg} is robust;
+  \BreakablePath{centroid\_\discretionary{}{}{}quadratic} fails on
+  extended light (expected --- a point-source tool).
+\item
+  \textbf{Method systematic (best mask) = ±0.100″} (raw CoG 2.097 /
+  sky-sub CoG 1.922 / Sérsic r\_eff 1.897, peak-to-peak/2;
+  \BreakablePath{results/\discretionary{}{}{}Re\_\discretionary{}{}{}cog\_\discretionary{}{}{}reconciliation\_\discretionary{}{}{}bestmask.\discretionary{}{}{}npz}).
+\item
+  \textbf{Method:} mean of the \textbf{F140W and F200LP best-mask
   curves-of-growth}
-  (\texttt{scripts/final\_sigma\_e.py:curve\_of\_growth}, the PRODUCTION
-  script):
+  (\BreakablePath{scripts/\discretionary{}{}{}final\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e.\discretionary{}{}{}py:curve\_\discretionary{}{}{}of\_\discretionary{}{}{}growth},
+  the PRODUCTION script):
 
   \begin{itemize}
   \tightlist
   \item
-    F140W masked CoG = \textbf{2.168″}; F200LP masked CoG =
-    \textbf{2.441″}; mean = \textbf{2.305″}.
+    best-mask F140W CoG = \textbf{1.912″}; F200LP CoG = \textbf{2.281″};
+    mean = \textbf{2.097″} (expert-mask values were 2.168/2.441/2.305).
   \item
     Masked CoG zeros mask-flagged HST pixels before the radial flux
     integral, so the lensed arc / companions do not bias the half-light
     point.
   \item
-    Centers: HST-mean \texttt{photutils.centroid\_2dg} centers (same as
-    the σ\_e pipeline), both bands.
+    Centers: HST-mean
+    \BreakablePath{photutils.\discretionary{}{}{}centroid\_\discretionary{}{}{}2dg}
+    centers (same as the σ\_e pipeline), both bands.
   \end{itemize}
 \item
-  \textbf{Do NOT confuse with \texttt{scripts/measure\_Re.py}} →
-  \texttt{results/Re\_measurements.npz}. That script uses the
-  image-geometric center and produces \textbf{10 variants} (3 sources ×
-  4 masking strategies: \texttt{unmasked}, \texttt{zeroed},
-  \texttt{proper}, \texttt{PSF-convolved}); its ``proper-mask'' mean
-  (2.633″) is \textbf{not the headline} --- early-reference only. (It
-  also hardcodes pixscale=0.08 for both HST bands, another reason
-  production is preferred.)
+  \textbf{Do NOT confuse with
+  \BreakablePath{scripts/\discretionary{}{}{}measure\_\discretionary{}{}{}Re.\discretionary{}{}{}py}}
+  →
+  \BreakablePath{results/\discretionary{}{}{}Re\_\discretionary{}{}{}measurements.\discretionary{}{}{}npz}.
+  That script uses the image-geometric center and produces \textbf{10
+  variants} (3 sources × 4 masking strategies: \BreakablePath{unmasked},
+  \BreakablePath{zeroed}, \BreakablePath{proper},
+  \BreakablePath{PSF-\discretionary{}{}{}convolved}); its
+  ``proper-mask'' mean (2.633″) is \textbf{not the headline} ---
+  early-reference only.
+  (\BreakablePath{measure\_\discretionary{}{}{}Re.\discretionary{}{}{}hst\_\discretionary{}{}{}Re}
+  previously hardcoded pixscale=0.08 for both bands; \textbf{fixed
+  2026-06-08 (A3c/nb14) to read the WCS pixscale +
+  \BreakablePath{r\_\discretionary{}{}{}max\_\discretionary{}{}{}arcsec=6.\discretionary{}{}{}0},
+  now reconciling with the production CoG to \textless0.04″} --- but
+  \BreakablePath{final\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e}
+  remains the headline path.)
 \item
-  \textbf{Superseded prior value:} IFU white-light R\_e = 2.61″ (nb05/06
-  era) --- superseded because the HST-based 2.305″ has the F140W+F200LP
-  arc masks built in. A Ca H+K+G depth-map gives 2.866″.
+  \textbf{Superseded prior values:} IFU white-light R\_e = 2.61″
+  (nb05/06 era); expert-mask HST CoG = 2.305″ (pre-2026-06-11). A Ca
+  H+K+G depth-map gives 2.90″ (kinematic-tracer estimator, not the
+  photometric R\_e).
 \item
-  \textbf{R\_e as a σ\_e systematic (test D7):} four R\_e definitions
-  shift narrow-window σ\_e by up to \textbf{16.9 km/s} (σ\_e rises
-  monotonically with R\_e). \textbf{FLAG: this component is currently
-  held OUTSIDE the formal wide-window budget --- flagged for a
-  wide-window re-measurement.} {[}CLAUDE.md{]}
+  \textbf{R\_e as a σ\_e systematic (test D7 → best-mask grid):} σ\_e
+  rises monotonically with R\_e. Re-measured at the wide window over a
+  7-point R\_e grid bracketing the 2.097″ headline
+  (\BreakablePath{scripts/\discretionary{}{}{}run\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e\_\discretionary{}{}{}Re\_\discretionary{}{}{}grid.\discretionary{}{}{}py});
+  the \textbf{adopted} R\_e-source systematic = \textbf{±5.13 km/s}
+  (best-mask CoG family \{1.912/2.097/2.281″\}), folded into the budget
+  (§3.1, §2.4.3). The full grid incl.~CaHK+G 2.90″ (±9.98) and CaHK+G's
+  +12.4 km/s deviation are cross-checks, NOT folded. {[}CLAUDE.md{]}
 \end{itemize}
 
 \hypertarget{measuring-fluxes}{%
@@ -342,11 +860,13 @@ applied to all four bands.
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Tools:} \texttt{photutils} aperture photometry (interactive
-  masking GUIs \texttt{scripts/photometry\_masking\_\{HST,JWST\}.py}).
-  \textbf{\texttt{synphot} is NOT currently used} --- flux→AB is done
-  directly from header zeropoints. \emph{(If the outline wants synphot,
-  that is aspirational; flag with co-authors.)} {[}METHODS §II.4{]}
+  \textbf{Tools:} \BreakablePath{photutils} aperture photometry
+  (interactive masking GUIs
+  \BreakablePath{scripts/\discretionary{}{}{}photometry\_\discretionary{}{}{}masking\_\discretionary{}{}{}\{HST,JWST\}.\discretionary{}{}{}py}).
+  \textbf{\BreakablePath{synphot} is NOT currently used} --- flux→AB is
+  done directly from header zeropoints. \emph{(If the outline wants
+  synphot, that is aspirational; flag with co-authors.)} {[}METHODS
+  §II.4{]}
 \item
   \textbf{AB zeropoints --- read per-image from FITS headers, never
   hardcoded.} {[}CLAUDE.md; reference\_hst\_jwst\_data\_properties.md{]}
@@ -355,10 +875,10 @@ applied to all four bands.
   \tightlist
   \item
     HST (drizzled e⁻/s):
-    \texttt{ZP\_AB\ =\ −2.5·log10(PHOTFLAM)\ −\ 21.10\ −\ 5·log10(PHOTPLAM)\ +\ 18.6921}.
+    \BreakablePath{ZP\_\discretionary{}{}{}AB = −2.\discretionary{}{}{}5·log10(PHOTFLAM) − 21.\discretionary{}{}{}10 − 5·log10(PHOTPLAM) + 18.\discretionary{}{}{}6921}.
   \item
     JWST (i2d, MJy/sr):
-    \texttt{ZP\_AB\ =\ −6.10\ −\ 2.5·log10(PIXAR\_SR)}.
+    \BreakablePath{ZP\_\discretionary{}{}{}AB = −6.\discretionary{}{}{}10 − 2.\discretionary{}{}{}5·log10(PIXAR\_\discretionary{}{}{}SR)}.
   \end{itemize}
 \item
   \textbf{Four bands / instruments / programs:}
@@ -396,10 +916,11 @@ al.~2021); the deflector sits in that field. No PAM correction
 \textasciitilde1.3--2× the idealized CCD-equation value --- motivates
 the 10\% flux floor (§2.1.4). - \textbf{2D Sérsic verification given
 masking (the morphology cross-check; notebook 08):} single-component 2D
-Sérsic per band (\texttt{scripts/measure\_Re.py} framework + the
-\textbf{2026-05-11 bound-fix} n∈{[}1.0,6.0{]}, ellip∈{[}0.0,0.6{]},
-3-init grid --- prevented an n=0.30 flat-disk escape on F200LP),
-extrapolated to total flux:
+Sérsic per band
+(\BreakablePath{scripts/\discretionary{}{}{}measure\_\discretionary{}{}{}Re.\discretionary{}{}{}py}
+framework + the \textbf{2026-05-11 bound-fix} n∈{[}1.0,6.0{]},
+ellip∈{[}0.0,0.6{]}, 3-init grid --- prevented an n=0.30 flat-disk
+escape on F200LP), extrapolated to total flux:
 
 \begin{longtable}[]{@{}llllll@{}}
 \toprule
@@ -415,19 +936,20 @@ F322W2 & 18.604 & 17.633 & −0.97 & 1.97 & 2.03 \\
 
 Aperture under-counts outer-profile flux by 0.8--1.9 mag, but the
 integrated-mass effect is only +0.07 dex (see §2.1.4 / Results). Caches:
-\texttt{results/sersic\_total\_photometry.npz},
-\texttt{results/bagpipes\_sersic\_refit.npz}. {[}METHODS §II.6{]}
+\BreakablePath{results/\discretionary{}{}{}sersic\_\discretionary{}{}{}total\_\discretionary{}{}{}photometry.\discretionary{}{}{}npz},
+\BreakablePath{results/\discretionary{}{}{}bagpipes\_\discretionary{}{}{}sersic\_\discretionary{}{}{}refit.\discretionary{}{}{}npz}.
+{[}METHODS §II.6{]}
 
 \hypertarget{sed-modeling-with-bagpipes}{%
 \subsubsection{\texorpdfstring{§2.1.4 SED Modeling with
-\texttt{bagpipes}}{§2.1.4 SED Modeling with bagpipes}}\label{sed-modeling-with-bagpipes}}
+\BreakablePath{bagpipes}}{§2.1.4 SED Modeling with }}\label{sed-modeling-with-bagpipes}}
 
 \begin{itemize}
 \item
-  \textbf{Tool:} \texttt{bagpipes} (Carnall et al.~2018, 2019);
+  \textbf{Tool:} \BreakablePath{bagpipes} (Carnall et al.~2018, 2019);
   BPASS+CLOUDY templates (Bagpipes default). Notebook
-  \texttt{02\_streamlined\_Bagpipes\_SED.ipynb}. {[}METHODS §II.5;
-  reference\_sed\_fitting.md{]}
+  \BreakablePath{02\_\discretionary{}{}{}streamlined\_\discretionary{}{}{}Bagpipes\_\discretionary{}{}{}SED.\discretionary{}{}{}ipynb}.
+  {[}METHODS §II.5; reference\_sed\_fitting.md{]}
 \item
   \textbf{Model:} exponential-τ SFH; Calzetti dust (A\_V free, 0--2);
   free metallicity (0--2.5 Z☉); redshift prior (0.674, 0.676) bracketing
@@ -459,12 +981,18 @@ integrated-mass effect is only +0.07 dex (see §2.1.4 / Results). Caches:
   mass bias. Result: log(M⋆/M☉) = \textbf{11.40 +0.11/−0.15}
   (Sérsic-total) vs \textbf{11.33 +0.07/−0.09} (aperture) → aperture is
   biased low by \textasciitilde0.07 dex (+16\% in M⋆), within the quoted
-  uncertainty. {[}METHODS §II.6{]} \textbf{NOTE (2026-05-29):} this
-  analytic-total refit is now superseded by the per-aperture 2-component
-  Sérsic \textbf{fill-in} under the principled IR-extended masks
-  (§2.1.1b / §3.2): the headline is the raw value 11.16 (10\%) with a
-  one-sided +0.31 dex fill-in systematic reaching 11.46. The 11.40
-  analytic-total sits inside that bracket.
+  uncertainty. {[}METHODS §II.6{]} \textbf{NOTE (updated 2026-06-10):}
+  this analytic-total refit is superseded by the per-aperture
+  \textbf{single-Sérsic fill-in} under the principled color-gated
+  IR-extended masks (§2.1.1b / §3.2): the headline is the empirical raw
+  value \textbf{11.36 (10\%)} with a one-sided \textbf{+0.14} dex
+  fill-in systematic reaching \textbf{11.47}. The 11.40 analytic-total
+  sits just inside that bracket and the central is consistent with the
+  validated expert hand-mask 11.33. The enhanced comparison figure
+  \BreakablePath{results/\discretionary{}{}{}figures/\discretionary{}{}{}nb08\_\discretionary{}{}{}sersic\_\discretionary{}{}{}vs\_\discretionary{}{}{}aperture.\discretionary{}{}{}png}
+  now overlays, for both the empirical-aperture and Sérsic-total
+  choices, the best-fit Bagpipes model SED, the measured photometry, and
+  the filter-convolved model photometry.
 \item
   \textbf{Posteriors (older expert-aperture, now a cross-check):}
   log(M⋆/M☉)=11.33 +0.07/−0.09; mass-weighted age 5.10 Gyr
@@ -474,10 +1002,12 @@ integrated-mass effect is only +0.07 dex (see §2.1.4 / Results). Caches:
   tension; not catastrophic, within ±0.07--0.15 dex). {[}METHODS
   §II.5{]}
 \item
-  \textbf{Caches / figure:} \texttt{results/bagpipes\_sed\_results.npz}
+  \textbf{Caches / figure:}
+  \BreakablePath{results/\discretionary{}{}{}bagpipes\_\discretionary{}{}{}sed\_\discretionary{}{}{}results.\discretionary{}{}{}npz}
   (the file Figure 2 loads),
-  \texttt{pipes/posterior/AGEL0206/0206\_real.h5} (delete to refit),
-  \texttt{results/bagpipes\_sersic\_refit.npz}.
+  \BreakablePath{pipes/\discretionary{}{}{}posterior/\discretionary{}{}{}AGEL0206/\discretionary{}{}{}0206\_\discretionary{}{}{}real.\discretionary{}{}{}h5}
+  (delete to refit),
+  \BreakablePath{results/\discretionary{}{}{}bagpipes\_\discretionary{}{}{}sersic\_\discretionary{}{}{}refit.\discretionary{}{}{}npz}.
 \end{itemize}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
@@ -497,19 +1027,22 @@ Kaustubh}\label{calibration-keerthi-kaustubh}}
   {[}METHODS §I.1; reference\_kcwi\_data\_properties.md{]}
 \item
   \textbf{Cube (headline):}
-  \texttt{Nov17\_2025\_DESJ0206\_RL\_combined\_mtwdo\_icubes\_wcs.fits}
-  --- the NEW \textbf{\texttt{\_mtwdo\_}} reduction (Master Twilight +
-  Dome hybrid flats), K. R. Gupta's latest re-reduction. The earlier
-  no-\texttt{\_mtwdo\_} cube is the OLD reduction (second-reduction
-  cross-check; co-aligned to \textless0.002″, differs only in
-  flat-fielding; σ\_e differs \textasciitilde7 km/s --- the
-  ``reduction-pass'' systematic).
+  \BreakablePath{Nov17\_\discretionary{}{}{}2025\_\discretionary{}{}{}DESJ0206\_\discretionary{}{}{}RL\_\discretionary{}{}{}combined\_\discretionary{}{}{}mtwdo\_\discretionary{}{}{}icubes\_\discretionary{}{}{}wcs.\discretionary{}{}{}fits}
+  --- the NEW
+  \textbf{\BreakablePath{\_\discretionary{}{}{}mtwdo\_\discretionary{}{}{}}}
+  reduction (Master Twilight + Dome hybrid flats), K. R. Gupta's latest
+  re-reduction. The earlier
+  no-\BreakablePath{\_\discretionary{}{}{}mtwdo\_\discretionary{}{}{}}
+  cube is the OLD reduction (second-reduction cross-check; co-aligned to
+  \textless0.002″, differs only in flat-fielding; σ\_e differs
+  \textasciitilde7 km/s --- the ``reduction-pass'' systematic).
 \item
-  \textbf{Reduction chain:} raw frames → \texttt{kcwidrp}; stacked with
-  \texttt{ISMgas/kcwi/kcwiReduction} by \textbf{K. R. Gupta (Kaustubh)};
-  Dec-29 RED frames pre-reduced by Yuguang Chen. \emph{(Calibration
-  prose is Keerthi/Kaustubh's to write --- these are the facts on
-  hand.)}
+  \textbf{Reduction chain:} raw frames → \BreakablePath{kcwidrp};
+  stacked with
+  \BreakablePath{ISMgas/\discretionary{}{}{}kcwi/\discretionary{}{}{}kcwiReduction}
+  by \textbf{K. R. Gupta (Kaustubh)}; Dec-29 RED frames pre-reduced by
+  Yuguang Chen. \emph{(Calibration prose is Keerthi/Kaustubh's to write
+  --- these are the facts on hand.)}
 \item
   \textbf{Cube geometry:} shape (3317, 100, 100); \textbf{0.300″
   spaxels}; \textasciitilde30″×30″ FoV; λ = 5625--8941 Å at Δλ = 1.0
@@ -539,7 +1072,7 @@ fit band; \textbf{σ\_v,inst ≈ 12.6 km/s observed (7.5 km/s rest-frame)}
 --- the \textasciitilde270 km/s dispersion is resolved by
 \textasciitilde20×. LSF robustness ≤ 0.83 km/s over DISPSCAL ×0.5--×2.0.
 - \textbf{Seeing:} guide-camera FWHM = \textbf{1.27″}
-(\texttt{GUIDFWHM}, Nov-17; conservative).
+(\BreakablePath{GUIDFWHM}, Nov-17; conservative).
 
 \hypertarget{redshift-measurement}{%
 \subsubsection{§2.2.2 Redshift Measurement}\label{redshift-measurement}}
@@ -547,42 +1080,157 @@ fit band; \textbf{σ\_v,inst ≈ 12.6 km/s observed (7.5 km/s rest-frame)}
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Method --- single/multi-line Gaussian fits on absorption
-  (+emission) features} in the integrated spectrum, on \textbf{NIST air
-  rest wavelengths} (\texttt{scripts/redshift\_verify.py}, notebook 04):
-
-  \begin{itemize}
-  \tightlist
-  \item
-    Ca K 3933.66, Ca H 3968.47 (fit as a doublet with shared width),
-    G-band 4304.40, Hδ, Hβ, plus the {[}O II{]} 3726/3729 doublet
-    (shared z, σ, flux ratio). Per-line z inverse-variance combined. Hγ
-    excluded (not trusted); Mg I / Fe / Na D out of range or blended.
-  \item
-    \textbf{Deflector systemic z = 0.67564} (supersedes AGEL DR2 z =
-    0.67511; \textasciitilde95 km/s offset, used only in old notebooks).
-    {[}METHODS §I.2; reference\_redshift\_verification.md{]}
-  \end{itemize}
-\item
-  \textbf{Double verification with ppxf:} the Gaussian line-fit z is
-  independent of, and consistent with, the ppxf V\_sys (ppxf returns z
-  via z = (1+z₀)·exp(V/c) − 1; Cappellari 2023 eq. 5c).
-\item
-  \textbf{Source z = 1.302} (AGEL DR2), cross-checked via Fe II UV
-  resonance multiplet + Mg II 2796/2803 in the KCRM blue-arm cube.
-  \emph{(Measured z\_source ± uncertainty + its cache are a
-  \texttt{{[}TBD{]}} placeholder --- confirm before quoting a source-z
-  error bar.)}
-\item
-  \textbf{Peculiar velocities:} we \textbf{do not} correct for peculiar
-  velocities --- we use the line-fit systemic z directly (see gap G3;
-  this sentence needs to be added to the draft).
-\item
-  \textbf{Wavelength convention:} AIR rest wavelengths throughout
-  (NIST-verified); KCWI native vacuum is converted to air. Do not mix
-  SDSS vacuum values (\textasciitilde1 Å ≈ 80 km/s systematic at 4000
-  Å). {[}feedback\_wavelength\_convention.md{]}
+  \textbf{Method --- single/multi-line Gaussian fits} to the
+  integrated-spectrum features on \textbf{NIST air rest wavelengths},
+  per-line z inverse-variance combined
+  (\BreakablePath{scripts/\discretionary{}{}{}redshift\_\discretionary{}{}{}verify.\discretionary{}{}{}py},
+  notebook 04).
 \end{itemize}
+
+\textbf{Deflector absorption features (systemic z = 0.67564 ± 0.00033; 6
+fits):}
+
+\begin{longtable}[]{@{}llllll@{}}
+\toprule
+Feature & Ion/species & rest λ\_air (Å) & obs λ\_air (Å) & z\_line & σ
+(Å) \\
+\midrule
+\endhead
+Ca K & Ca II & 3933.66 & 6591.79 & 0.67574 ± 0.00096 & 11.5 \\
+Ca H & Ca II & 3968.47 & 6649.61 & 0.67561 ± 0.00097 & 16.6 \\
+Hδ & H I & 4101.74 & 6871.80 & 0.67534 ± 0.00058 & 3.3 \\
+G-band & CH (band) & 4304.40 & 7209.31 & 0.67487 ± 0.00160 & 11.3 \\
+Hβ & H I & 4861.33 & 8149.30 & 0.67635 ± 0.00082 & 2.8 \\
+Ca H+K & Ca II doublet & 3933.66 / 3968.47 & --- & 0.67567 ± 0.00069 &
+11.2 \\
+\textbf{Weighted} & & & & \textbf{0.67564 ± 0.00033} & \\
+\bottomrule
+\end{longtable}
+
+\textbf{Source emission features (lensed arc, z = 1.30263 ± 0.00003;
+{[}O II{]} doublet, red cube):}
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule
+Feature & rest λ\_air (Å) & obs λ\_air (Å) & z\_line \\
+\midrule
+\endhead
+{[}O II{]} 3726 & 3726.03 & 8579.2 & 1.30357 ± 0.00005 \\
+{[}O II{]} 3729 & 3728.82 & 8585.6 & 1.30185 ± 0.00005 \\
+\textbf{{[}O II{]} doublet} & & & \textbf{1.30251 ± 0.00004} \\
+\bottomrule
+\end{longtable}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Deflector systemic z = 0.67564} (supersedes AGEL DR2 z =
+  0.67511; \textasciitilde95 km/s offset, used only in old notebooks).
+  {[}METHODS §I.2; reference\_redshift\_verification.md{]}
+\item
+  Other absorption features in
+  \BreakablePath{ABSORPTION\_\discretionary{}{}{}LINES} (Hγ 4340.47,
+  Fe4383 4383.55, Mg I/Mg b 5175.27, Fe I 5270.40, Na D 5893.00) are
+  NIST-air but were NOT used in the systemic fit (out of the red-cube
+  range at z=0.676, or blended); listed for completeness in
+  \BreakablePath{scripts/\discretionary{}{}{}redshift\_\discretionary{}{}{}verify.\discretionary{}{}{}py}.
+\end{itemize}
+
+\begin{quote}
+\textbf{Air↔vacuum audit (2026-06-11 --- PASS).} (1) Every rest
+wavelength is the \textbf{NIST air} value, verified to
+\textbf{\textless0.01 Å} (Ca K 3933.66 vs NIST 3933.663, Hβ 4861.33 vs
+4861.333, {[}O II{]} 3726.03 vs 3726.032, etc.). \textbf{G-band 4304.40
+is the CH molecular bandhead} (a blend centroid, not a single atomic
+line) → it is the most discrepant/uncertain line (z=0.67487, ±0.0016)
+and is down-weighted by its error. (2) The KCWI cube is \textbf{vacuum}
+(FITS \BreakablePath{CTYPE3='WAVE'}; \BreakablePath{AWAV} would denote
+air) and is converted to \textbf{air} before fitting via the
+\textbf{Ciddor (1996)/Morton (2000) IAU-standard} index of refraction n
+= 1 + 8.34254×10⁻⁵ + 2.406147×10⁻²/(130−s²) + 1.5998×10⁻⁴/(38.9−s²), s =
+10⁴/λ\_vac --- \textbf{the same formula the σ\_e ppxf pipeline uses}
+(\BreakablePath{bootstrap\_\discretionary{}{}{}ppxf.\discretionary{}{}{}py};
+Ciddor 1996). (3) Thus z = λ\_obs,air/λ\_rest,air − 1 combines
+\textbf{both wavelengths in the air frame} → internally consistent, z
+\textbf{unbiased}. Had we left the cube in vacuum and used air rest
+lines, z would be biased high by ≈ (1+z)·(n−1) ≈ +5×10⁻⁴ (≈ +90 km/s);
+the conversion removes this. - \textbf{Double verification with ppxf:}
+the Gaussian line-fit z is independent of, and consistent with, the ppxf
+V\_sys (ppxf returns z via z = (1+z₀)·exp(V/c) − 1; Cappellari 2023, the
+ppxf relativistic velocity convention --- \emph{eq. number not yet
+verified, do not assert ``eq. 5c''}). - \textbf{Source z = 1.30263 ±
+0.00003} --- measured from the \textbf{{[}O II{]} λλ3726,3729 doublet}
+in the red cube (notebook 04; obs 8579.2/8585.6 Å), consistent with AGEL
+DR2 z = 1.302. (The ±0.00003 is the formal doublet-fit error; the
+per-line spread 1.30185--1.30357 is the realistic uncertainty.) -
+\textbf{Source rest-UV resonance lines (arc ISM;
+\BreakablePath{scripts/\discretionary{}{}{}source\_\discretionary{}{}{}uv\_\discretionary{}{}{}redshift.\discretionary{}{}{}py},
+2026-06-11).} The bright star-forming arc shows the classic Mg II / Fe
+II resonance absorption: - \textbf{Mg II λλ2796.35,2803.53 (red arm):}
+strongly detected (\textbf{16.7σ / 18.4σ}), z(absorption) =
+\textbf{1.30113 ± 0.00003}, i.e.~a \textbf{−195 km/s} centroid offset vs
+the systemic {[}O II{]} z=1.30263 (both in the \emph{same} red cube, so
+it is a real \emph{relative} offset, not cross-arm calibration).
+\textbf{We do NOT interpret this as an outflow} without further work ---
+for a resonance line on a \emph{lensed} arc the offset is degenerate
+among: (i) Mg II \textbf{emission infill} filling the red absorption
+wing (P-Cygni; pulls the centroid blueward with no bulk motion), (ii)
+\textbf{differential lensing / aperture} --- the Mg II absorption
+(continuum-weighted) and {[}O II{]} emission (H II-region-weighted)
+sample different source regions that the lens positions/magnifies
+differently, and (iii) the blended-doublet single-Gaussian centroid on
+an asymmetric profile. Report it as an \textbf{observed Mg II--{[}O
+II{]} velocity offset}, with outflow as one (unconfirmed) possibility. -
+\textbf{Fe II λλ2344.21,2382.77 (blue arm):} detected (7.9σ / 3.0σ; Fe
+II 2374 only 1.2σ), but at z ≈ 1.306, \textasciitilde+470 km/s from the
+red systemic. Because Fe II sits in the \textbf{separate blue cube} (an
+older \BreakablePath{AWAV}/air reduction, ≠ the red
+\BreakablePath{WAVE}/vacuum mtwdo cube), this offset is dominated by a
+\textbf{blue↔red wavelength-calibration difference}, so the Fe II
+\emph{velocity} is unreliable cross-arm --- the detection is real, the
+velocity is a
+\BreakablePath{[TODO: cross-\discretionary{}{}{}calibrate the blue arm]}.
+(Rest λ are Morton 2003 vacuum; the blue cube is converted air→vac for
+the fit. NOT a clean independent z --- quote Mg II / {[}O II{]}.) -
+\textbf{Companion ellipticals --- a galaxy GROUP at the deflector
+redshift} (notebook 04a,
+\BreakablePath{scripts/\discretionary{}{}{}redshift\_\discretionary{}{}{}verify.\discretionary{}{}{}bootstrap\_\discretionary{}{}{}redshift},
+N=200 wild bootstrap on the red cube). Two early-type companions flank
+the primary deflector, \textbf{both at z ≈ 0.676 = the deflector z}
+(physically associated, not interlopers):
+\end{quote}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.20}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.20}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.20}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.20}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.20}}@{}}
+\toprule
+Companion & position & sep. from deflector & z (absorption) & z
+(emission) \\
+\midrule
+\endhead
+\textbf{NE} (``2 o'clock'', larger) & IFU (x,y)=(61,64) & ≈ 4.5″ ≈ 31
+kpc NE & 0.67580 −0.00067/+0.00062 & 0.67565 −0.00045/+0.00060 \\
+\textbf{SW} (``7 o'clock'', compact) & IFU (x,y)=(38,45) & ≈ 4.6″ ≈ 32
+kpc SW & 0.67588 −0.00034/+0.00047 & 0.67558 −0.00048/+0.00071 \\
+\bottomrule
+\end{longtable}
+
+Both companions sit within \textbar Δcz\textbar{} ≲ 60 km/s of the
+deflector (0.67564) → AGEL J020613−011417 is the central galaxy of a
+\textbf{compact group/triple} at z ≈ 0.676. (These are the field
+ellipticals masked in the aperture photometry; their group membership
+confirms they are not background interlopers.) - \textbf{Peculiar
+velocities:} we \textbf{do not} correct for peculiar velocities --- we
+use the line-fit systemic z directly (see gap G3; this sentence needs to
+be added to the draft). - \textbf{Wavelength convention:} AIR rest
+wavelengths throughout (NIST-verified to \textless0.01 Å); KCWI native
+vacuum (\BreakablePath{CTYPE3='WAVE'}) converted to air via Ciddor 1996
+--- see the air↔vacuum audit box above. Do not mix SDSS vacuum values
+(\textasciitilde1 Å ≈ 80 km/s systematic at 4000 Å).
+{[}feedback\_wavelength\_convention.md{]}
 
 \hypertarget{stellar-kinematics-velocity-dispersion}{%
 \subsubsection{§2.2.3 Stellar Kinematics \& Velocity
@@ -594,13 +1242,14 @@ Dispersion}\label{stellar-kinematics-velocity-dispersion}}
 \tightlist
 \item
   Headline σ\_e is measured on a \textbf{single I(r)-weighted 1-D
-  aperture spectrum at R \textless{} R\_e} --- the literature-standard
-  σ\_e (Cappellari et al.~2006 eq. 1; the KH13 / Greene+20 / SAURON /
-  ATLAS3D / MaNGA convention). \textbf{R\_e = 2.305″ = 16.23 kpc}
-  (§2.1.2).
+  aperture spectrum at R \textless{} R\_e} --- the co-add-then-fit
+  method of \textbf{Cappellari et al.~2006 (SAURON IV, §2.3)}, the
+  literature-standard σ\_e (KH13 / Greene+20 / SAURON / ATLAS3D / MaNGA
+  convention). \textbf{R\_e = 2.097″ = 14.76 kpc} (best mask; §2.1.2).
 \item
-  \textbf{Center:} HST-mean \texttt{photutils.centroid\_2dg} of
-  F140W+F200LP cores, propagated through the KCWI WCS; adopted RA =
+  \textbf{Center:} HST-mean
+  \BreakablePath{photutils.\discretionary{}{}{}centroid\_\discretionary{}{}{}2dg}
+  of F140W+F200LP cores, propagated through the KCWI WCS; adopted RA =
   31.55613°, Dec = −1.23819° (ICRS). F140W↔F200LP offset 0.36″ (F200LP
   shifted by the UV-bright arc; F140W is the clean bulge centroid).
 \item
@@ -624,16 +1273,39 @@ Dispersion}\label{stellar-kinematics-velocity-dispersion}}
 \begin{itemize}
 \tightlist
 \item
-  \textbf{ppxf v9.x} (Cappellari \& Emsellem 2004; Cappellari 2017,
-  2023), \textbf{moments = 2} (first two velocity moments V, σ).
-  {[}METHODS §I.5/I.6; scripts/bootstrap\_ppxf.py{]}
+  \textbf{What ppxf does} --- \textbf{Penalized Pixel-Fitting}
+  (Cappellari \& Emsellem 2004, PASP 116, 138; upgraded in Cappellari
+  2017, MNRAS 466, 798; Cappellari 2023 --- \emph{volume/page not
+  re-verified here}). It forward-models the observed galaxy spectrum, in
+  \textbf{pixel space on a log-rebinned (constant km/s per pixel) grid},
+  as a \textbf{non-negative linear combination of stellar templates
+  convolved with a parametrised line-of-sight velocity distribution
+  (LOSVD)}, plus low-order additive Legendre polynomials that absorb
+  continuum/template mismatch. The template weights are solved by
+  non-negative least-squares and the LOSVD parameters by
+  Levenberg--Marquardt, alternately, to minimise χ². The
+  \emph{``penalized''} is an optional bias that pulls the higher
+  Gauss--Hermite moments toward a Gaussian at low S/N ---
+  \textbf{inactive here}, since we fit a pure Gaussian LOSVD.
 \item
-  \textbf{Polynomial degrees:} additive Legendre \texttt{degree} swept
-  over \textbf{15--29 (15 values)} and pooled; \texttt{mdegree\ =\ 0}.
-  σ-vs-degree is flat within the bootstrap envelope (no LOSVD absorption
-  by the polynomial). \emph{(Note: METHODS §I.5 prose mis-labels these
-  ``multiplicative'' --- the code passes
-  \texttt{degree=\ldots{},\ mdegree=0}, i.e.~additive. Describe them as
+  \textbf{ppxf v9.4.5}, \textbf{\BreakablePath{moments = 2}} (fit only V
+  and σ; no h₃/h₄), \BreakablePath{bias} left at the default (irrelevant
+  at moments=2), \BreakablePath{clean = False} (cosmic rays are handled
+  by the
+  \BreakablePath{BAD\_\discretionary{}{}{}PIXELS\_\discretionary{}{}{}REST}
+  mask instead --- ppxf's internal σ-clip rejects 0 pixels here because
+  the KCWI noise array is over-estimated vs the residual scatter),
+  \BreakablePath{velscale} set to the cube's native sampling,
+  \BreakablePath{trig = False}. {[}scripts/bootstrap\_ppxf.py,
+  \BreakablePath{run\_\discretionary{}{}{}wide\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e.\discretionary{}{}{}py};
+  METHODS §I.5/I.6{]}
+\item
+  \textbf{Polynomial degrees:} additive Legendre \BreakablePath{degree}
+  swept over \textbf{15--29 (15 values)} and pooled;
+  \BreakablePath{mdegree = 0}. σ-vs-degree is flat within the bootstrap
+  envelope (no LOSVD absorption by the polynomial). \emph{(Note: METHODS
+  §I.5 prose mis-labels these ``multiplicative'' --- the code passes
+  \BreakablePath{degree=…, mdegree=0}, i.e.~additive. Describe them as
   additive.)}
 \item
   \textbf{Three SPS libraries, pooled at the posterior level:} FSPS,
@@ -647,10 +1319,18 @@ Dispersion}\label{stellar-kinematics-velocity-dispersion}}
   \textasciitilde110 → \textasciitilde15--18 km/s (σ shift ≤2 km/s).
   {[}reference\_ppxf\_vacair\_handling.md{]}
 \item
-  \textbf{Per-SPS V\_sys subtracted before pooling} (σ is V-invariant;
-  V\_sys medians FSPS −19, EMILES −4, XSL −1 km/s). A single global
-  V\_sys would inflate σ\_e by \textasciitilde10--15 km/s in the
-  discrete cross-check.
+  \textbf{Per-SPS V\_sys subtracted before pooling} (σ is V-invariant; a
+  single global V\_sys would inflate σ\_e by \textasciitilde10--15 km/s
+  in the discrete cross-check). \textbf{All three libraries now converge
+  to the same redshift} --- at the headline R\_e=2.097″ aperture the
+  per-SPS V\_sys are FSPS −15.7 / EMILES −19.1 / XSL −14.9 km/s → z =
+  0.67555 / 0.67553 / 0.67556 (a \textasciitilde4 km/s, Δz≈3×10⁻⁵
+  spread; mean \textbf{z\_ppxf = 0.67555 ± 0.00001}). This convergence
+  is \emph{the} signature that the air↔vacuum frame fix worked: the
+  legacy ``convert all three to air'' left FSPS (the vacuum-native
+  library) \textasciitilde90--110 km/s discrepant from EMILES/XSL;
+  per-SPS native framing collapses it to the \textasciitilde4 km/s seen
+  here (residual folded into the ±5 km/s frame systematic).
 \item
   \textbf{Emission-line handling (sigma clipping / removing emission
   lines):}
@@ -659,52 +1339,333 @@ Dispersion}\label{stellar-kinematics-velocity-dispersion}}
   \tightlist
   \item
     Custom \textbf{no-Balmer goodpixels}
-    (\texttt{\_determine\_goodpixels\_no\_balmer}): masks only the
-    forbidden lines ({[}O II{]}, {[}O III{]}, {[}O I{]}, {[}N II{]},
-    {[}S II{]}) and \textbf{keeps Hδ, Hγ, Hβ IN the fit} (they are
-    absorption in this passive deflector; masking them discards
-    \textasciitilde120 stellar pixels). \textbf{TODO flag:} Hδ may still
-    need targeted masking --- open item.
+    (\BreakablePath{\_\discretionary{}{}{}determine\_\discretionary{}{}{}goodpixels\_\discretionary{}{}{}no\_\discretionary{}{}{}balmer}):
+    masks only the forbidden lines ({[}O II{]}, {[}O III{]}, {[}O I{]},
+    {[}N II{]}, {[}S II{]}) and \textbf{keeps Hδ, Hγ, Hβ IN the fit}
+    (they are absorption in this passive deflector; masking them
+    discards \textasciitilde120 stellar pixels). \textbf{Hδ: keep
+    unmasked --- RESOLVED (M12/nb16):} Hδ is well-fit (local-MAD not an
+    outlier), and masking it shifts σ\_e by +6--8 km/s = LOSVD
+    \emph{information}, not contamination (the M9 ``it's signal''
+    pattern); the
+    \BreakablePath{bootstrap\_\discretionary{}{}{}ppxf.\discretionary{}{}{}py}
+    TODO is closed.
   \item
-    \textbf{z = 1.302 source-emission masks} (\texttt{ARC\_MASKS\_REST},
+    \textbf{z = 1.302 source-emission masks}
+    (\BreakablePath{ARC\_\discretionary{}{}{}MASKS\_\discretionary{}{}{}REST},
     mapped by (1+z\_s)/(1+z\_l)=1.374): Mg II 2796/2803 (def-rest
     3835--3855 Å), {[}O II{]} 3727/3729 (5115--5135), {[}Ne III{]} 3869
     (5260--5340), \textbf{He I 3819} (5237--5253, added 2026-05-27 as
-    test M8). Plus an O₂ A-band telluric residual at def-rest 4525--4545
-    (not source --- confirmed 2026-05-18).
+    test M8).
+  \item
+    \textbf{Tellurics --- handled by masking, not correction.} One band
+    is masked: the \textbf{O₂ A-band leading-edge residual} at
+    \textbf{obs 7593--7626 Å = def-rest 4525--4545 Å}
+    (\BreakablePath{ARC\_\discretionary{}{}{}MASKS\_\discretionary{}{}{}REST}).
+    Confirmed telluric, not z=1.302 source, on 2026-05-18 by the
+    same-observed-λ test (the spike sits at the \emph{same obs λ} in the
+    deflector aperture, the sky box, and a 4--8″ off-deflector
+    spectrum). No full telluric correction is applied; the M10 OH/sky
+    bands (below) catch sky-emission residuals.
   \item
     \textbf{M10 sky-line audit:} bad-pixel catalog
-    \texttt{BAD\_PIXELS\_REST} = 35 entries (26 CR residuals + 9 OH
-    airglow/sky bands), all verified non-source via the arc spectrum.
+    \BreakablePath{BAD\_\discretionary{}{}{}PIXELS\_\discretionary{}{}{}REST}
+    = 35 entries (26 CR residuals + 9 OH airglow/sky bands), all
+    verified non-source via the arc spectrum.
   \end{itemize}
 \item
-  \textbf{Wild bootstrap errors:} hybrid \textbf{Rademacher sign-flip ×
-  local-residual scaling} (75-pixel rolling-window residual rescale,
-  clipped {[}0.2,5.0{]}); \textbf{N = 500 production} per (SPS ×
-  degree), N = 50 smoke (agree within 1 km/s). Errors = 16/84
-  percentiles (asymmetric). joblib parallel, \textbf{BLAS pinned to 1
-  thread/worker}.
+  \textbf{Wild bootstrap errors (→ paper §3.2.4; full detail in §2.2.3.4
+  below).} Hybrid \textbf{Rademacher sign-flip × local-residual
+  scaling}, N = 500 production per (SPS × degree), errors = 16/84
+  percentiles. See §2.2.3.4 for the exact algorithm and the no-σ-clip
+  note.
+\end{itemize}
+
+\hypertarget{bootstrap-error-analysis-paper-3.2.4}{%
+\subsubsection{§2.2.3.4 Bootstrap error analysis (paper
+§3.2.4)}\label{bootstrap-error-analysis-paper-3.2.4}}
+
+\emph{This is the σ\_e \textbf{statistical} error. It is computed by a
+hybrid wild bootstrap on the I-weighted R \textless{} R\_e aperture
+spectrum, run independently for every (SPS library × additive polynomial
+degree) and then pooled.
+{[}\BreakablePath{scripts/\discretionary{}{}{}bootstrap\_\discretionary{}{}{}ppxf.\discretionary{}{}{}py}:
+\BreakablePath{compute\_\discretionary{}{}{}local\_\discretionary{}{}{}residual\_\discretionary{}{}{}scaling},
+\BreakablePath{run\_\discretionary{}{}{}bootstrap\_\discretionary{}{}{}single\_\discretionary{}{}{}degree},
+\BreakablePath{run\_\discretionary{}{}{}bootstrap}{]}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{The algorithm, per (SPS × degree):}
+
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \tightlist
+  \item
+    \textbf{Residuals} r = galaxy − best-fit, where best-fit is the
+    original (un-resampled) ppxf fit at that degree.
+  \item
+    \textbf{Heteroskedastic local rescale (the ``local-residual''
+    half).} A 75-pixel rolling window
+    (\BreakablePath{uniform\_\discretionary{}{}{}filter1d},
+    \BreakablePath{mode='reflect'}) gives the \textbf{local} residual
+    std at each pixel; the scale factor = local\_std / global\_std,
+    \textbf{clipped to {[}0.2, 5.0{]}}. scaled\_r = r × scale. This
+    preserves the \textbf{wavelength-dependent noise structure} (sharp
+    line cores vs smooth continuum) that a flat resample would erase.
+  \item
+    \textbf{Rademacher draw (the ``wild'' half).} Each pixel gets an
+    independent sign s ∈ \{−1, +1\} with equal probability; the
+    synthetic spectrum is \textbf{galaxy\_boot = best-fit + scaled\_r ×
+    s}. The sign-flip keeps the pixel grid, the LOSVD line shape, and
+    the local noise amplitude intact --- you cannot resample pixels
+    independently here without destroying the line profile that σ is
+    measured from.
+  \item
+    \textbf{Re-fit} ppxf on galaxy\_boot with the \emph{same}
+    \BreakablePath{goodpixels}, \BreakablePath{moments=2},
+    \BreakablePath{degree}, \BreakablePath{mdegree=0}; record V, σ, χ²,
+    and z = (1+z₀)·exp(V/c) − 1.
+  \end{enumerate}
+\item
+  \textbf{N = 500 production} per (SPS × degree); \textbf{N = 50 smoke}
+  agrees to within 1 km/s. RNG \textbf{seeded}
+  (\BreakablePath{np.\discretionary{}{}{}random.\discretionary{}{}{}default\_\discretionary{}{}{}rng(seed)})
+  for reproducibility. Errors = \textbf{16th/84th percentiles}
+  (asymmetric).
+\item
+  \textbf{Pooling = the systematic-marginalisation step.} All three SPS
+  (FSPS+EMILES+XSL) × 15 polynomial degrees (15--29) bootstrap samples
+  are \textbf{pooled into one posterior}. The pooled width therefore
+  \textbf{already marginalises over the SPS-library and
+  polynomial-degree systematics} --- between-SPS spread ±2.04,
+  within-SPS bootstrap ±4.22, quadrature 4.73 ≈ pooled \textbf{4.64} →
+  \textbf{no separate SPS or degree line is added to the budget (§3.1).}
+\item
+  \textbf{Headline stat error: ±4.6 km/s} (asymmetric \textbf{−5.16 /
+  +4.13}) at the R\_e = 2.097″ aperture.
+\item
+  \textbf{No in-fit σ-clipping --- \BreakablePath{clean=False}} (the
+  ppxf default; \BreakablePath{clean=} is \textbf{not} passed,
+  \BreakablePath{bootstrap\_\discretionary{}{}{}ppxf.\discretionary{}{}{}py:434}).
+  Rationale: \BreakablePath{clean=True} rejects \textbf{0 pixels} here
+  because the KCWI noise array is \textbf{over-estimated} relative to
+  the actual residual scatter, so iterative σ-clipping is a no-op.
+  Outliers are instead removed \textbf{up front} by the explicit
+  \textbf{35-entry
+  \BreakablePath{BAD\_\discretionary{}{}{}PIXELS\_\discretionary{}{}{}REST}}
+  mask (26 CR residuals + 9 OH/sky bands, all verified non-source via
+  the arc spectrum), so every bootstrap iteration fits the \textbf{same
+  fixed \BreakablePath{goodpixels} set} --- no per-iteration rejection
+  that could bias σ.
+\item
+  \textbf{How the bad pixels were flagged (the reportable σ-clip
+  number).}
+  \BreakablePath{BAD\_\discretionary{}{}{}PIXELS\_\discretionary{}{}{}REST}
+  was built by a \textbf{rolling 75-pixel local-MAD on the canonical
+  ppxf-fit residuals, clipping at \textbar residual\textbar/local-MAD
+  \textgreater{} 3σ} (rest 3800--5400 Å) → 52 outlier pixels in 26
+  contiguous ranges (\textasciitilde46 Å, padded ±0.5 Å to survive
+  log-rebinning); biggest outlier = a 6-pixel cluster at def-rest
+  5232--5236 Å (obs 8768--8774 Å) at \textbf{26σ} in local-MAD units.
+  \textbf{Intrinsic to the data} (same pixels in both
+  \BreakablePath{\_\discretionary{}{}{}mtwdo\_\discretionary{}{}{}} and
+  original reductions). The \textbf{M10 sky-line audit} then added
+  \textbf{9 OH/airglow bands} by a separate threshold ---
+  \textbf{\textgreater{} 2.5× the median sky std} --- all arc-verified
+  non-source.
+  {[}\BreakablePath{scripts/\discretionary{}{}{}run\_\discretionary{}{}{}window\_\discretionary{}{}{}sweep.\discretionary{}{}{}py:112–155}{]}
+  \emph{Report as:} ``cosmic-ray residuals flagged at \textbf{3σ} in a
+  75-pixel rolling local-MAD; sky/OH bands added above \textbf{2.5× the
+  median sky noise} (35-entry catalog) --- distinct from the in-fit
+  \BreakablePath{clean=False}.''
+\item
+  \textbf{Performance:} \BreakablePath{joblib} parallel, \textbf{BLAS
+  pinned to 1 thread/worker} (avoids oversubscription);
+  \textasciitilde12 min per SPS library at N=500. \textbf{Outputs:}
+  \BreakablePath{results/\discretionary{}{}{}ppxf\_\discretionary{}{}{}bootstrap\_\discretionary{}{}{}errors\_\discretionary{}{}{}\{sps\}[\_\discretionary{}{}{}suffix].\discretionary{}{}{}npz},
+  arrays shape (n\_degree, 500) for V/σ/χ²/z plus p16/p50/p84 summaries
+  and asymmetric errors.
+\item
+  \textbf{Citation TODO (honest):} the repo cites \textbf{no}
+  wild-bootstrap reference. The standard statistics precedents for the
+  Rademacher-weight wild bootstrap are \textbf{Wu (1986), Mammen (1993),
+  Davidson \& Flachaire (2008)} --- \emph{not yet in Zotero; verify +
+  add before drafting, do not assert a specific one as the method source
+  until checked.}
 \end{itemize}
 
 \textbf{σ\_e definition \& wavelength window}
 
 \begin{itemize}
 \item
-  \textbf{σ\_e definition} (Gültekin et al.~2009; Kormendy \& Ho 2013
-  eq. 3; Greene et al.~2020 ARA\&A; 2D IFU form Cappellari et al.~2006
-  eq. 1):
+  \textbf{σ\_e definition --- the luminosity-weighted second moment of
+  the LOSVD within R\_e.} (Defined as the radial integral in
+  \textbf{Gültekin et al.~2009, eq. (1)} {[}verified 2026-06-12{]}; the
+  relation we place it on is \textbf{Kormendy \& Ho 2013 eq. 3}.) Two
+  mathematically-equivalent representations:
 
-  \[\sigma_e^2 = \frac{\int_0^{R_e} (V^2 + \sigma^2)\, I(r)\, dr}{\int_0^{R_e} I(r)\, dr}.\]
+  \begin{itemize}
+  \item
+    \textbf{Analytic / luminosity-weighted integral --- Gültekin et
+    al.~2009 eq. (1)} (their 1D form; generalised to the 2D axisymmetric
+    area element dA = 2πr dr):
 
-  The \textbf{headline path is the cumulative I-weighted single-ppxf
-  fit} on the R\textless R\_e aperture spectrum (preserves LOSVD shape;
-  matches what KH13/Greene+20 compute), not the discrete annular sum.
+    \[\sigma_e^2 = \frac{\int_0^{R_e} (V^2 + \sigma^2)\, I(r)\, 2\pi r\, dr}{\int_0^{R_e} I(r)\, 2\pi r\, dr}.\]
+  \item
+    \textbf{Discrete spaxel/bin sum} --- the same moment evaluated over
+    the \(N\) spaxels (or Voronoi bins) \(i\) inside \(R_e\), with
+    \(F_i\) = the I-band flux (luminosity weight) of spaxel \(i\); the
+    2πr factor is captured implicitly because the number of spaxels per
+    annulus scales with area:
+
+    \[\sigma_e^2 = \frac{\sum_{i=1}^{N} F_i\,[(V_i - V_\mathrm{sys})^2 + \sigma_i^2]}{\sum_{i=1}^{N} F_i}.\]
+
+    This discrete spaxel/bin sum \textbf{is Cappellari et al.~2013
+    (ATLAS3D XV, MNRAS 432, 1709) eq. 29} ---
+    \(\langle v_{\rm rms}^2\rangle_e \equiv \langle V^2+\sigma^2\rangle_e \equiv \sum_i F_i(V_i^2+\sigma_i^2)/\sum_i F_i\)
+    --- equivalently the discretised form of the Gültekin 2009 eq. 1
+    integral. (Their eq. 29 also carries an
+    \textbf{inclination/projection element} in the dynamical-model
+    framework; our §7 uses the \emph{observed-plane} projected
+    \(V_n,\sigma_n\) directly and omits that term.) \textbf{It is NOT
+    ``Cappellari 2006 eq. 1''} --- a prior draft mis-cited it there;
+    Cappellari 2006 eq. 1 is the aperture correction
+    \((\sigma_R/\sigma_e)=(R/R_e)^{-0.066}\), and its σ\_e (SAURON IV
+    §2.3) is the co-add-then-fit method below. {[}eq. numbers verified
+    2026-06-12: Cappellari 2006 eq. 1, Cappellari 2013 eq. 29, Gültekin
+    2009 eq. 1{]}
+  \end{itemize}
+\item
+  \textbf{Both forms are implemented and cross-checked here} (do not
+  re-derive). The \textbf{headline} (§6cum/nb09) is the
+  \textbf{co-add-then-fit method of Cappellari et al.~2006 (SAURON IV,
+  §2.3)} --- co-add the I-weighted R\textless R\_e spectra into one
+  effective spectrum and fit a single LOSVD with pPXF; the width of that
+  co-added spectrum \emph{equals} the luminosity-weighted second moment
+  above (this is what KH13/Greene+20/ATLAS\(^{\rm 3D}\) report). The
+  \textbf{discrete annular sum (Gültekin 2009 eq. 1)} is the §7 / nb07c
+  cross-check
+  (\BreakablePath{run\_\discretionary{}{}{}gultekin\_\discretionary{}{}{}mc},
+  F\_j = Σ I over each unmasked annulus). The two agree at
+  \textbf{\textless1σ}: co-add-fit (§6cum, narrow) 267.32 ± 24 vs
+  discrete annular (§7, arc-filtered to R\textless R\_safe=3R\_e/4)
+  256.17 −13.0/+12.7. Full implementation + subtleties in
+  \BreakablePath{reference\_\discretionary{}{}{}gultekin\_\discretionary{}{}{}implementation.\discretionary{}{}{}md}.
+\item
+  \textbf{★ What the headline code ACTUALLY computes}
+  (\BreakablePath{final\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e.\discretionary{}{}{}extract\_\discretionary{}{}{}aperture\_\discretionary{}{}{}spectrum}
+  → pPXF; this is the number we report, 267.31). \textbf{We do NOT
+  evaluate either σ\_e² sum or integral above.} We form the
+  \textbf{I(r)-weighted co-added aperture spectrum}
+
+  \[S_e(\lambda) \;=\; \sum_{i=1}^{N} w_i\, S_i(\lambda), \qquad
+    w_i = \frac{I_i}{I_{\rm tot}}, \quad I_{\rm tot} \equiv \sum_{i=1}^{N} I_i, \qquad
+    I_i \equiv 0 \ \text{for arc-masked spaxels (mask\_weight=0)},\]
+
+  where \(i\) indexes the \(N\) spaxels inside \(R_e\) (\(r_i < R_e\)),
+  \(S_i(\lambda)\) is the spaxel spectrum, and \(I_i\) its 6500--7500 Å
+  observed-band IFU flux (the luminosity weight; arc-masked spaxels
+  carry \(I_i=0\) so \(w_i=0\)). The denominator \(I_{\rm tot}\) is the
+  single normalisation constant (total in-aperture flux) so
+  \(\sum_i w_i = 1\). \textbf{The choice of weight map \(I_i\) is itself
+  a budgeted systematic --- the ``I-shape'' term (±2.29 km/s; §2.4.3,
+  \BreakablePath{run\_\discretionary{}{}{}isource\_\discretionary{}{}{}shape\_\discretionary{}{}{}sweep.\discretionary{}{}{}py}
+  +
+  \BreakablePath{ishape\_\discretionary{}{}{}arcfree\_\discretionary{}{}{}pooled.\discretionary{}{}{}py}).}
+  Holding the spaxel selection fixed, we re-measure σ\_e with \textbf{14
+  alternative weight maps}: the 10 of
+  \BreakablePath{run\_\discretionary{}{}{}isource\_\discretionary{}{}{}shape\_\discretionary{}{}{}sweep}
+  --- (1) the headline 6500--7500 Å IFU band,
+
+  \begin{enumerate}
+  \def\labelenumi{(\arabic{enumi})}
+  \setcounter{enumi}{1}
+  \tightlist
+  \item
+    full IFU white-light, (3--4) HST F140W / F200LP reprojected (raw),
+    (5--6) the same arc-masked, (7--8) their 1-D curve-of-growth annular
+    means, (9--10) their 2-D Sérsic-model fits --- \textbf{plus 4
+    arc-free PSF-matched maps} (11--14: F140W/F200LP single-Sérsic and
+    arc-filled, each convolved to the 1.27″ KCWI PSF; see below).
+    Peak-to-peak/2 of the full 14-shape spread (266.79--271.37 km/s, NEW
+    cube + M10) = \textbf{±2.29 km/s}. So \(I_i\) = IFU white-light is
+    the \emph{headline} choice, not an assumption: σ\_e moves ≤±2.29
+    km/s across this whole family of luminosity weightings.
+  \end{enumerate}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{PSF resolution of the HST weight maps (FOLDED into I-shape
+    2026-06-12).} The HST F140W/F200LP (and Sérsic) weight maps are
+    reprojected at native HST resolution, not convolved to the KCWI
+    \textasciitilde1.27″ seeing. To test resolution-matching
+    \textbf{correctly the arc must be removed first} --- using the
+    \emph{arc-free deflector model} (single-Sérsic, or the HST image
+    with the masked arc filled by that model) and only \emph{then}
+    convolving to the KCWI PSF
+    (\BreakablePath{scripts/\discretionary{}{}{}ishape\_\discretionary{}{}{}arcfree\_\discretionary{}{}{}psf\_\discretionary{}{}{}test.\discretionary{}{}{}py},
+    \BreakablePath{ishape\_\discretionary{}{}{}arcfree\_\discretionary{}{}{}pooled.\discretionary{}{}{}py}).
+    On the 3-SPS-pooled footing these arc-free, PSF-matched weights give
+    σ\_e = \textbf{266.79--268.78} km/s (F140W Sérsic 266.79 / filled
+    267.38; F200LP Sérsic 268.29 / filled 268.78) --- i.e.~they fall
+    \textbf{inside} the existing 10-shape spread (266.83--271.37).
+    Folding them in (14 shapes) moves the I-shape term \textbf{±2.27 →
+    ±2.29} (negligible) and σ\_e is unchanged. \emph{(Cautionary
+    cross-check: naively convolving the \textbf{raw} arc-containing HST
+    images instead gives a spurious +7--8 km/s --- that is arc
+    \textbf{leakage} (the 1.27″ kernel spreads the masked arc light into
+    unmasked arc-adjacent spaxels, worst for the UV-bright F200LP) plus
+    high-σ-outskirt up-weighting, NOT a resolution effect; not used.)}
+    The \textbf{headline IFU white-light} weight is already at KCWI
+    resolution AND arc-masked AND deflector-light- weighted, so the
+    resolution choice is bounded within the I-shape term. pPXF then fits
+    a \textbf{single Gaussian LOSVD} (\BreakablePath{moments=2}) to
+    \(S_e(\lambda)\),
+  \end{itemize}
+
+  \[S_e(\lambda) \;\approx\; \Big[\textstyle\sum_k a_k\, T_k(\lambda)\Big] \otimes \mathcal{G}(v;\,V,\sigma)
+    \;+\; \text{(additive Legendre poly, deg 15–29)},\]
+
+  and \textbf{\(\sigma_e \equiv \sigma\)}, the fitted LOSVD dispersion.
+  Because superposing spaxel spectra at different line-of-sight
+  velocities \(V_i\) broadens the co-add, the width \(\sigma\) of that
+  single fit \emph{equals} the luminosity-weighted second moment
+  \(\sqrt{\langle (V_i-V_{\rm sys})^2 + \sigma_i^2\rangle}\) --- so it
+  \textbf{measures} the Cappellari 2013 eq. 29 / Gültekin 2009 eq. 1
+  quantity \textbf{without ever forming the explicit sum} (and with
+  \(V_{\rm sys}\) absorbed automatically into the fitted \(V\); §2.4.1).
+  Code:
+  \BreakablePath{extract\_\discretionary{}{}{}aperture\_\discretionary{}{}{}spectrum}
+  (the weighted sum) +
+  \BreakablePath{bootstrap\_\discretionary{}{}{}ppxf.\discretionary{}{}{}setup\_\discretionary{}{}{}ppxf\_\discretionary{}{}{}inputs\_\discretionary{}{}{}from\_\discretionary{}{}{}spectrum}
+  +
+  \BreakablePath{ppxf(.\discretionary{}{}{}.\discretionary{}{}{}.\discretionary{}{}{}, moments=2)}.
+  The explicit discrete sum \(\sum_j F_j(V_j^2+\sigma_j^2)/\sum_j F_j\)
+  is computed \textbf{only} in the §7 annular cross-check
+  (\BreakablePath{run\_\discretionary{}{}{}gultekin\_\discretionary{}{}{}mc}),
+  never in the headline.
+\item
+  \textbf{Why the integral path is the headline} (not the discrete sum):
+  the discrete spaxel-sum is (i) per-spaxel-S/N-limited and (ii)
+  sensitive to arc contamination in the outer spaxels --- an
+  \emph{unfiltered} discrete sum over the resolved PowerBins out to
+  \textasciitilde3.4″ is dominated by the z=1.302 arc (outer bins carry
+  σ ≳ 300--440 km/s, V swings of ±150--270; the σ\_e blows up to
+  \textasciitilde350). The I-weighted aperture auto-suppresses the arc
+  (bright deflector core dominates the weight) and avoids the S/N floor,
+  so it implements the same Cappellari definition robustly. The discrete
+  §7 sum is therefore arc-filtered to R\textless R\_safe and used only
+  as the architecture-independent cross-check / for the σ(R) profile.
 \item
   \textbf{Standard wavelength range (headline): rest 3800--5400 Å}
-  (\texttt{wR3800\_5400\_arcmask}) --- Ca H+K through Mg b / Fe5270 /
-  Fe5335; 2161 good pixels (\textasciitilde2.6× the narrow window). The
-  fit is constrained by the highest-S/N features --- \textbf{Ca H, Ca K,
-  G-band} (3800--4400) --- and is \textbf{consistent across windows}.
+  (\BreakablePath{wR3800\_\discretionary{}{}{}5400\_\discretionary{}{}{}arcmask})
+  --- Ca H+K through Mg b / Fe5270 / Fe5335; 2161 good pixels
+  (\textasciitilde2.6× the narrow window). The fit is constrained by the
+  highest-S/N features --- \textbf{Ca H, Ca K, G-band} (3800--4400) ---
+  and is \textbf{consistent across windows}.
 
   \begin{itemize}
   \tightlist
@@ -718,8 +1679,9 @@ Dispersion}\label{stellar-kinematics-velocity-dispersion}}
     retracted.}
   \item
     Cross-check window: \textbf{rest 4000--5400 Å}
-    (\texttt{wR4000\_5400\_arcmask}, Hβ + Mg b, \textbf{no Ca H+K}) ---
-    orthogonal Lick-tradition feature set.
+    (\BreakablePath{wR4000\_\discretionary{}{}{}5400\_\discretionary{}{}{}arcmask},
+    Hβ + Mg b, \textbf{no Ca H+K}) --- orthogonal Lick-tradition feature
+    set.
   \item
     Narrow legacy window: obs 6500--7500 Å = rest 3879--4476 Å (Ca H+K +
     G); σ\_e = 267.95 ± 30.10.
@@ -740,21 +1702,522 @@ not contamination); masking it drops σ\_e by 7 km/s.
 \subsection{§2.3 Lens Modeling}\label{lens-modeling}}
 
 \begin{quote}
-\textbf{GAP G1 --- not in this repo.} The companion-paper (Ferrami et
-al.) lens-modeling content (multiple lens models, PSF construction,
-joint shear+subhalo constraints, potential-correction triple-checks, BPL
-vs point-mass differentiating models) is \textbf{not present in this
-kinematics+ photometry repo}. Source it from the lens-modeling repo
-(\texttt{\textasciitilde{}/Documents/AGEL/202509\_DESJ0206\_modeling/},
-\texttt{20251112\_DESJ0206\_Pyauto\_PRONTO/}) or the Ferrami draft. The
-only on-hand pointer: PROJECT\_BRIEF.md notes the lens-model enclosed
-mass combines with (σ, M⋆, z) to give a 4D constraint on the central BH
-+ bulge scaling relations.
+\textbf{G1 --- now sourced from the companion-paper draft (2026-06-12).}
+The lens-modeling content below is summarised from the \textbf{Ferrami
+et al.~draft} (G. Ferrami, MPA Garching; lead-author email
+gferrami@mpa-garching.mpg.de), \emph{``A supermassive black hole in the
+Einstein spiral DES J0206−0114''}, file
+\BreakablePath{\~/\discretionary{}{}{}Documents/\discretionary{}{}{}AGEL/\discretionary{}{}{}AGEL\_\discretionary{}{}{}0206\_\discretionary{}{}{}ApJL\_\discretionary{}{}{}Figures/\discretionary{}{}{}SMBH\_\discretionary{}{}{}in\_\discretionary{}{}{}Einstein\_\discretionary{}{}{}Spiral\_\discretionary{}{}{}DESJ0206\_\discretionary{}{}{}0114\_\discretionary{}{}{}June12/\discretionary{}{}{}main.\discretionary{}{}{}md}.
+\textbf{This is a live draft with explicit
+\BreakablePath{PLACEHOLDER UNTIL FINAL RUNS ARE COMPLETED} flags on the
+evidence table, the M•--σ figure, and the potential-correction figure
+--- every numeric BH/evidence value here is provisional.} The
+complementary on-hand pointer: PROJECT\_BRIEF.md notes the lens-model
+enclosed mass combines with (σ, M⋆, z) to give a 4D constraint on the
+central BH + bulge scaling relations. \emph{This is OUR
+(kinematics+photometry) paper; the lens model is the companion paper ---
+cite it, do not reproduce its results as ours.}
 \end{quote}
+
+\textbf{⚠ Cross-paper reconciliation flags (resolve before any joint
+number is quoted):}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Cosmology --- RESOLVED 2026-06-12: we adopted Planck 2015 to
+  match Ferrami} (Planck Collaboration 2016): \textbf{H₀ = 67.7
+  km/s/Mpc, Ω\_m,0 = 0.302}. (Previously our paper used H₀=70,
+  Ω\_m=0.3.) Impact on our numbers is small and documented in the
+  headline ``Cosmology switch --- impact'' box: R\_e 14.76→15.26 kpc,
+  log M⋆ 11.47→11.50 (+0.028 dex, exact D\_L² rescale), σ\_e and all
+  angular quantities unchanged. Now both papers share a cosmology → a
+  Ferrami M\_• and our M⋆/σ\_e can be co-plotted directly. The Ferrami
+  draft still carries its own standing TODO \emph{``Check all mass
+  values to be corrected for the different deflector redshift''} ---
+  that is the redshift (not cosmology) reconciliation below, and our z
+  is the canonical one.
+\item
+  \textbf{Redshifts differ slightly.} Ferrami quotes \textbf{z\_l =
+  0.675, z\_s = 1.303}; our systemic values (notebook 04) are
+  \textbf{z\_l = 0.67564, z\_s = 1.30263}. Minor, but the σ\_inst/V\_sys
+  frame and the M• conversion both use z\_l --- reconcile to our
+  line-fit values when combining.
+\item
+  \textbf{System identity (agreed):} \textbf{AGEL J020613−011417} = DES
+  J0206−0114, AGEL DR2 (Barone et al. 2026); ICRS RA = 31.55611°, Dec =
+  −1.23817°. Discovered in DES via a CNN (Jacobs et al.). HST WFC3
+  \textbf{F200LP + F140W}, SNAP program \textbf{16773 (PI Glazebrook)},
+  two 300 s exposures per filter --- the same imaging this paper uses
+  for photometry. The lens forms a \textbf{radial arc} (three
+  star-forming source galaxies near a fold + a cusp); the shallow,
+  sub-isothermal total slope is what makes the radial image bright.
+\end{itemize}
+
+\hypertarget{modelling-code-pronto}{%
+\subsubsection{\texorpdfstring{§2.3.1 Modelling code ---
+\BreakablePath{pronto}}{§2.3.1 Modelling code --- }}\label{modelling-code-pronto}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{\BreakablePath{pronto}} (Vegetti \& Koopmans 2009; Rybak et
+  al.~2015; Rizzo et al.~2018; Ritondale et al.~2019; Powell et
+  al.~2020; Ndiritu et al.~2025). Simultaneously recovers a
+  \textbf{resolved background source} (regularised on a \textbf{Delaunay
+  adaptive tessellation}) and the non-linear parameters of the smooth
+  deflector \textbf{light + mass} distributions. The smooth potential
+  can additionally be perturbed by \textbf{regularised pixellated
+  potential corrections} (a.k.a. \emph{gravitational imaging}).
+  Hierarchical Bayesian framework; \textbf{evidence ln 𝓔} computed by
+  exploring the posterior with \textbf{MultiNest} (Feroz et al.;
+  importance-nested-sampling variant). {[}Ferrami draft §Method{]}
+\end{itemize}
+
+\hypertarget{mass-density-profiles}{%
+\subsubsection{§2.3.2 Mass density
+profiles}\label{mass-density-profiles}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Main lens = main elliptical parametric profile + mass
+  multipoles + 2 secondary SIS deflectors + external shear.} Three trial
+  forms for the main elliptical component:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{sEPL} --- singular elliptical power-law (the cEPL limit r\_c
+    → 0). \emph{This is the main halo of the best model.}
+  \item
+    \textbf{cEPL} --- cored elliptical power-law: κ(ξ) =
+    κ₀·(4−γ)/(4√q)·(r\_c² + ξ²)\^{}((1−γ)/2), ξ = √(x²+y²/q²) the
+    elliptical radius, r\_c the core radius, γ the 3D slope, q the axis
+    ratio. Deflection via \textbf{\BreakablePath{fastell}} (Barkana).
+    Einstein-radius definition for the cEPL from \textbf{Enzi et
+    al.~(cEPL θ\_E)}.
+  \item
+    \textbf{bEPL} --- broken elliptical power-law: piecewise κ with
+    break radius θ\_B, break convergence κ\_B, inner/outer 2D slopes
+    t₁/t₂ (O'Riordan, BPL derivation).
+  \end{itemize}
+\item
+  \textbf{Two companion galaxies} within \textasciitilde4″ of the main
+  lens → \textbf{singular isothermal spheres (SIS)} (cEPL with q=1, γ=2,
+  r\_c=0).
+\item
+  \textbf{Multipoles of order m = 1, 3, 4}, \emph{circular
+  slope-matched}: κ(θ,φ) = θ\^{}(1−γ)·{[}a\_m sin(mφ) + b\_m cos(mφ){]}.
+  Choice of circular (not elliptical-isothermal) multipoles justified
+  via Paugnat et al.
+
+  \begin{enumerate}
+  \def\labelenumi{(\arabic{enumi})}
+  \setcounter{enumi}{2024}
+  \tightlist
+  \item
+    eq. B10: at the recovered γ≈1.3, q≈0.7, circular multipoles are the
+    better approximation for θ outside the band (1 ± 0.15)·θ\_E --- and
+    the science target is the BH perturbation at \textbf{θ ≪ θ\_E}.
+  \end{enumerate}
+\item
+  \textbf{External shear} of strength Γ and PA θ\_Γ.
+\end{itemize}
+
+\hypertarget{central-perturber-the-bh-test}{%
+\subsubsection{§2.3.3 Central perturber (the BH
+test)}\label{central-perturber-the-bh-test}}
+
+\begin{itemize}
+\tightlist
+\item
+  After fixing the smooth-model parameters, the draft tests whether the
+  data \textbf{require an extra concentrated central mass} by comparing
+  Bayesian evidence across perturber choices:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{Point mass (PM)} --- κ(θ) =
+    (θ\_\{E,•\}²/2)·θ/\textbar θ\textbar², θ\_\{E,•\} the Einstein
+    radius of a point mass M\_• at z\_l. Run \textbf{twice}: (i)
+    \textbf{fixed} to the centre of the foreground mass, and (ii)
+    \textbf{free} within a \textbf{0.5″} radius of the light centre.
+  \item
+    \textbf{SPL} --- spherical power-law (EPL with q=1, r\_c=0).
+  \item
+    \textbf{NFW} --- Navarro--Frenk--White with \textbf{free
+    concentration c} (κ\_s = ρ\_s r\_s Σ\_c). The PM is the SMBH
+    hypothesis; SPL/NFW are the extended-mass (dark-subhalo)
+    alternatives it is tested against. {[}Ferrami draft §Method →
+    Central black hole{]}
+  \end{itemize}
+\end{itemize}
+
+\hypertarget{lens-light-source-regularisation}{%
+\subsubsection{§2.3.4 Lens light + source
+regularisation}\label{lens-light-source-regularisation}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Lens light = a single Sérsic with m = 1,3,4 multipole
+  perturbations}, fit \emph{simultaneously} with the lens + BH mass in
+  \BreakablePath{pronto}. Evidence comparison disfavoured both a 2nd/3rd
+  Sérsic and the no-multipole model. During burn-in, \textbf{3 sets of
+  multiple images} are required to focus to a tolerance shrinking to
+  \textbf{0.05″}.
+\item
+  \textbf{Source = Delaunay adaptive tessellation with adaptive,
+  SNR-weighted regularisation} (O'Riordan, Euclid lens): two forms
+  tested --- penalising the \textbf{gradient} vs the \textbf{curvature}
+  of the source surface brightness; per-pixel weight log(λ\_i/λ\_s) =
+  −w\_a·x\_i\^{}(−w\_b), x\_i the log-SNR normalised over all pixels,
+  with w\_a, w\_b free. \textbf{Curvature regularisation wins by Δln 𝓔 ≈
+  100} over gradient → the paper uses \textbf{curvature} throughout.
+  {[}Ferrami draft §Adaptive source regularisation{]}
+\end{itemize}
 
 System identity for the summary sentence: \textbf{AGEL J020613−011417}
 (DES J0206−01), AGEL DR2; source z = 1.302 (spiral), deflector z =
 0.67564.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{end-to-end-procedures-ordered-walkthroughs}{%
+\subsection{§2.4 End-to-end procedures (ordered
+walkthroughs)}\label{end-to-end-procedures-ordered-walkthroughs}}
+
+\emph{This section spells out the actual step order of each pipeline ---
+what runs, in what sequence, with which script --- so the Methods
+section and a referee can reconstruct every headline number. Numeric
+results are the M12 headline
+(\BreakablePath{results/\discretionary{}{}{}PAPER\_\discretionary{}{}{}VALUES.\discretionary{}{}{}json}).}
+
+\hypertarget{spectroscopic-ux3c3_e-pipeline-step-by-step}{%
+\subsubsection{§2.4.1 Spectroscopic σ\_e pipeline --- step by
+step}\label{spectroscopic-ux3c3_e-pipeline-step-by-step}}
+
+Driver for the headline:
+\BreakablePath{scripts/\discretionary{}{}{}run\_\discretionary{}{}{}wide\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e.\discretionary{}{}{}py -\discretionary{}{}{}-\discretionary{}{}{}cube new\_\discretionary{}{}{}clean\_\discretionary{}{}{}hei -\discretionary{}{}{}-\discretionary{}{}{}n\_\discretionary{}{}{}bootstrap 500}
+(calls
+\BreakablePath{final\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e.\discretionary{}{}{}load\_\discretionary{}{}{}setup}
+→
+\BreakablePath{extract\_\discretionary{}{}{}aperture\_\discretionary{}{}{}spectrum}
+→ \BreakablePath{bootstrap\_\discretionary{}{}{}ppxf} machinery).
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Reduction (upstream).} Keck II / KCWI, KCRM red arm, Red-Low
+  grating, Medium slicer, 2×2 binning, dithered PA 0/45/90°. The
+  headline cube is the NEW
+  \textbf{\BreakablePath{\_\discretionary{}{}{}mtwdo\_\discretionary{}{}{}}}
+  reduction (Master-Twilight+Dome hybrid flats, K. R. Gupta),
+  \BreakablePath{Nov17\_\discretionary{}{}{}2025\_\discretionary{}{}{}DESJ0206\_\discretionary{}{}{}RL\_\discretionary{}{}{}combined\_\discretionary{}{}{}mtwdo\_\discretionary{}{}{}icubes\_\discretionary{}{}{}wcs.\discretionary{}{}{}fits}.
+  The
+  pre-\BreakablePath{\_\discretionary{}{}{}mtwdo\_\discretionary{}{}{}}
+  cube is the OLD reduction (second-reduction cross-check). Cube axes
+  \BreakablePath{[λ, y, x]}; 0.30″/spaxel; seeing FWHM 1.27″
+  (\BreakablePath{GUIDFWHM}); σ\_inst ≈ 12.6 km/s; R ≈ 10000.
+\item
+  \textbf{Geometry + R\_e.} HST-mean centre =
+  \BreakablePath{photutils.\discretionary{}{}{}centroid\_\discretionary{}{}{}2dg}
+  of the F140W+F200LP cores (offset 0.36″; F200LP pulled by the UV arc,
+  so F140W is the clean bulge centroid), propagated through the KCWI WCS
+  to a sub-pixel IFU centre. R\_e = mean of the F140W (1.912″) + F200LP
+  (2.281″) \textbf{best-mask} curves-of-growth = \textbf{2.097″}
+  (\BreakablePath{final\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e.\discretionary{}{}{}curve\_\discretionary{}{}{}of\_\discretionary{}{}{}growth},
+  r\_max=6″; photutils-validated ±0.002″).
+\item
+  \textbf{Spatial arc mask → IFU grid.} The F200LP
+  \BreakablePath{\_\discretionary{}{}{}mask.\discretionary{}{}{}fits}
+  (2512 HST px, arc-only) is reprojected onto the 0.30″ IFU grid with
+  \BreakablePath{scipy.\discretionary{}{}{}ndimage.\discretionary{}{}{}map\_\discretionary{}{}{}coordinates(order=0)}
+  (nearest-neighbour) →
+  \BreakablePath{arc\_\discretionary{}{}{}spax\_\discretionary{}{}{}mask}.
+  \textbf{Mask coverage within R\_e (PSF caveat;
+  \BreakablePath{scripts/\discretionary{}{}{}psf\_\discretionary{}{}{}mask\_\discretionary{}{}{}fraction.\discretionary{}{}{}py}):}
+  this \emph{geometric} mask flags \textbf{35/154 = 23\% of spaxels
+  (28\% by I-weight)} inside R\_e=2.097″. But the arc light is spread by
+  the \textbf{1.27″ KCWI seeing}, so the geometric fraction is a
+  \textbf{lower bound}: growing the mask by the PSF (binary dilation)
+  raises the masked fraction to \textbf{71\% / 81\%} (by FWHM/2 = 0.64″)
+  or \textbf{96\% / 98\%} (by the full FWHM = 1.27″) --- i.e.~a hard
+  seeing-grown mask removes nearly the entire aperture and is
+  \textbf{infeasible}. (Convolving the binary mask with the PSF and
+  cutting at \textgreater25\% / \textgreater10\% arc-light contamination
+  gives 42\% / 75\% by count; the \textgreater50\% cut, 1\%, is a
+  thin-arc dilution artifact.) This is precisely why we instead (i)
+  \textbf{I-weight} the aperture --- the bright deflector core
+  dominates, the arc-contaminated outskirts are down-weighted --- and
+  (ii) carry the \textbf{mask-weight systematic (±6.65 km/s, w=0→1;
+  §2.4.3)} to bracket the residual arc dilution rather than attempt a
+  hard PSF-grown mask.
+\item
+  \textbf{I-weighted aperture extraction.} Build the 6500--7500 Å
+  white-light I-map; the R\textless R\_e aperture spectrum = Σ\_spaxel
+  cube · w, w = I-weight with arc spaxels \textbf{hard-masked
+  (mask\_weight=0)} and re-normalised. Spectra are summed (not averaged)
+  so the bootstrap preserves per-spaxel noise.
+  (\BreakablePath{extract\_\discretionary{}{}{}aperture\_\discretionary{}{}{}spectrum},
+  \BreakablePath{final\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e.\discretionary{}{}{}py}.)
+\item
+  \textbf{Spectral masking (goodpixels).} (a) \textbf{no-Balmer} mask
+  --- forbidden lines only ({[}O II{]}, {[}O III{]}, {[}O I{]}, {[}N
+  II{]}, {[}S II{]}); \textbf{Hδ, Hγ, Hβ kept} (absorption; M12/nb16
+  confirmed keep-unmasked).
+
+  \begin{enumerate}
+  \def\labelenumii{(\alph{enumii})}
+  \setcounter{enumii}{1}
+  \tightlist
+  \item
+    \textbf{z=1.302 source-emission} masks
+    \BreakablePath{ARC\_\discretionary{}{}{}MASKS\_\discretionary{}{}{}REST}
+    (Mg II, {[}O II{]}, {[}Ne III{]}, \textbf{He I 3819}) + the O₂
+    A-band telluric. (c)
+    \textbf{\BreakablePath{BAD\_\discretionary{}{}{}PIXELS\_\discretionary{}{}{}REST}}
+    = 35 entries (26 CR residuals + 9 M10 OH/sky bands). All in
+    deflector rest-frame Å.
+  \end{enumerate}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{Outlier rejection / sigma-clipping decision:} ppxf's in-fit
+    \textbf{\BreakablePath{clean=False}} --- \BreakablePath{clean=True}
+    rejects 0 pixels here (the KCWI noise array is overestimated vs the
+    actual residual scatter), so it is inert. Instead, cosmic-ray/bad
+    pixels are flagged by a \textbf{3σ local-MAD clip} (rolling 75-pixel
+    window, \textbar residual\textbar/local-MAD \textgreater{} 3σ) on
+    the canonical residuals → 52 CR-like spikes, curated into the 26 CR
+    entries of
+    \BreakablePath{BAD\_\discretionary{}{}{}PIXELS\_\discretionary{}{}{}REST};
+    the 9 M10 sky bands were flagged separately at \textgreater2.5×
+    median sky-noise. \textbf{Caveats (carried as a stated sensitivity,
+    not a budget term):} the 3σ threshold is not strongly motivated vs
+    alternatives, and cleaning shifts σ\_e by only +1.4 km/s (below stat
+    1σ); the same pixels replicate the shift on the OLD cube (M6) → real
+    CR residuals.
+  \end{itemize}
+\item
+  \textbf{Per-SPS frame-aware ppxf.} For each of FSPS / EMILES / XSL:
+  match the galaxy frame to the SPS native frame (FSPS=vacuum,
+  EMILES/XSL=air; scalar-median vac↔air via Ciddor 1996), run
+  \BreakablePath{ppxf} (Cappellari) with \textbf{moments=2},
+  \textbf{additive Legendre \BreakablePath{degree} swept 15--29 (15
+  values)}, \BreakablePath{mdegree=0}, over the wide window (rest
+  3800--5400 Å). Subtract the per-SPS V\_sys before pooling.
+\item
+  \textbf{Wild-bootstrap errors.} Per (SPS × degree), \textbf{N=500}
+  hybrid wild bootstrap
+  (\BreakablePath{bootstrap\_\discretionary{}{}{}ppxf.\discretionary{}{}{}compute\_\discretionary{}{}{}local\_\discretionary{}{}{}residual\_\discretionary{}{}{}scaling}):
+  residuals r = galaxy − bestfit; a rolling \textbf{75-pixel} window
+  estimates the local (wavelength-dependent) noise scale s(λ) (clipped
+  to \textbf{{[}0.2, 5.0{]}}); each iteration applies a
+  \textbf{Rademacher} ±1 sign-flip to the locally-rescaled residual,
+  adds it back to the best fit, and re-fits → one σ draw. Seeds are
+  deterministic
+  (\BreakablePath{BOOT\_\discretionary{}{}{}SEED=42 + 50000 + 10000·W\_\discretionary{}{}{}IDX + 100·sps\_\discretionary{}{}{}idx + degree\_\discretionary{}{}{}i})
+  so caches bit-reproduce. joblib \BreakablePath{loky}, \textbf{BLAS
+  pinned to 1 thread/worker}; N=50 smoke before N=500 production.
+\item
+  \textbf{Pool + budget.} Concatenate all σ samples (3 SPS × 15 degrees
+  × 500) → 16/50/84 percentiles = central + asymmetric stat. The pooled
+  width already marginalises SPS + polynomial degree. Add the §2.4.3
+  systematic components in quadrature → \textbf{σ\_e = 267.31
+  −12.98/+12.61 (sym ±12.79) km/s} (at the best-mask R\_e=2.097″
+  aperture; cache
+  \BreakablePath{results/\discretionary{}{}{}run\_\discretionary{}{}{}wide\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e/\discretionary{}{}{}resys\_\discretionary{}{}{}best\_\discretionary{}{}{}mean/\discretionary{}{}{}}).
+\end{enumerate}
+
+\hypertarget{photometry-m-pipeline-step-by-step}{%
+\subsubsection{§2.4.2 Photometry / M⋆ pipeline --- step by
+step}\label{photometry-m-pipeline-step-by-step}}
+
+Drivers:
+\BreakablePath{scripts/\discretionary{}{}{}photometry\_\discretionary{}{}{}systematics.\discretionary{}{}{}py}
+(masking + photometry),
+\BreakablePath{bagpipes\_\discretionary{}{}{}sersic\_\discretionary{}{}{}refit.\discretionary{}{}{}py}
+(SED), orchestrated/displayed in notebook 12. Recipe = \textbf{F200LP
+locates, IR extends, fill-in recovers}.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Locate the arc on F200LP} (best source contrast): a 2D Sérsic
+  deflector model is subtracted and a pixel is flagged as arc where its
+  positive residual exceeds \textbf{k·σ\_sky} --- i.e.~\textbf{k is the
+  detection threshold in units of the sky noise σ\_sky} (so k=3 means
+  residual \textgreater{} 3σ\_sky), with a parallel S/N floor (the
+  pixel's own S/N \textgreater{} SNR\_thresh). We adopt \textbf{k = 3}
+  (\BreakablePath{arc\_\discretionary{}{}{}mask\_\discretionary{}{}{}verification.\discretionary{}{}{}py}):
+  this \textbf{objective Sérsic-residual mask reproduces the expert hand
+  mask to 0.016 mag}, R\_e to 3\%. \textbf{k = 3 is the clean saturation
+  point} of a 2-D sweep over the two thresholds (SNR\_thresh ∈ \{2..20\}
+  × k ∈ \{2..8\}) --- below k≈3 it grabs noise, above it the masked-flux
+  fraction stops changing.
+\item
+  \textbf{Reproject the F200LP footprint to every band} (WCS +
+  \BreakablePath{map\_\discretionary{}{}{}coordinates}) --- reproduces
+  the expert JWST aperture mags to 0.01--0.02 mag.
+\item
+  \textbf{IR-extend with a COLOR GATE.} In the deeper/sharper JWST
+  bands, region-grow the arc seed into pixels that are \textbf{(a)}
+  significant positive residual above the single-Sérsic deflector model
+  (data−model \textgreater{} 3σ\_sky), \textbf{(b)} bluer than the
+  deflector core by ≥0.5 mag in F200LP−F140W, and \textbf{(c)}
+  contiguous with the seed within R\textless5″. The \textbf{color gate
+  (b) is essential}: a single Sérsic slightly under-fits the bright IR
+  body, so residual-only growth would sweep the \emph{red} galaxy body
+  and companions into the mask; the \emph{blue} z=1.302 source vs
+  \emph{red} passive deflector contrast keeps only genuine source
+  pixels. See §2.1.1b for the detailed rationale + caveats.
+\item
+  \textbf{Deflector model = single-component Sérsic} --- physically
+  motivated for the elliptical (per user 2026-06-10); not a bulge+disk
+  decomposition. Fit gotcha:
+  \BreakablePath{Sersic2D.\discretionary{}{}{}amplitude} is I(r\_eff)
+  not the peak --- init \textasciitilde peak·exp(−b\_n), bound to
+  (peak·1e-3, peak·1.5), else LevMar collapses to ≈0. PSF-convolved fill
+  quantified at ≤0.004 mag
+  (\BreakablePath{psf\_\discretionary{}{}{}fill\_\discretionary{}{}{}model.\discretionary{}{}{}py})
+  --- negligible.
+\item
+  \textbf{Two photometry estimators per band/mask:} \textbf{raw}
+  \BreakablePath{photutils} aperture (masked → discards under-arc
+  deflector light → biased low, mask-size-dependent) vs
+  \textbf{single-Sérsic fill-in} (replace masked pixels with the model →
+  recovers it). Fill-in correction \textbf{−0.19 to −0.27 mag} under the
+  color-gated masks (smaller than the old 2-component +0.18--0.96 mag
+  --- cleaner masks remove less).
+\item
+  \textbf{AB magnitudes} from per-image header zeropoints (never
+  hardcoded): HST \BreakablePath{PHOTFLAM/\discretionary{}{}{}PHOTPLAM},
+  JWST \BreakablePath{PIXAR\_\discretionary{}{}{}SR}. Four bands:
+  F200LP, F140W (HST WFC3), F150W2, F322W2 (JWST NIRCam).
+\item
+  \textbf{Bagpipes SED}
+  (\BreakablePath{02\_\discretionary{}{}{}streamlined\_\discretionary{}{}{}Bagpipes\_\discretionary{}{}{}SED}):
+  exponential-τ SFH, Calzetti dust (A\_V 0--2), free Z (0--2.5 Z☉), z
+  prior (0.674,0.676); \textbf{Nautilus} sampler n\_live=400, 500-sample
+  posterior. A \textbf{10\% fractional flux floor} per band covers
+  photon noise + the drizzle pixel-correlation under-estimate (empirical
+  noise ≈1.3--2× CCD-equation); \textbf{20\%} is run as a conservative
+  variant.
+\item
+  \textbf{M⋆ budget} = 8 fits \{per-band, global\} × \{raw, filled\} ×
+  \{10\%, 20\%\} (script-reproducible via
+  \BreakablePath{scripts/\discretionary{}{}{}mstar\_\discretionary{}{}{}masking\_\discretionary{}{}{}budget.\discretionary{}{}{}py}
+  →
+  \BreakablePath{Mstar\_\discretionary{}{}{}masking\_\discretionary{}{}{}systematic.\discretionary{}{}{}npz},
+  \BreakablePath{photometry\_\discretionary{}{}{}systematics\_\discretionary{}{}{}Mstar.\discretionary{}{}{}npz})
+  → headline (empirical, raw-central with the best per-band color-gated
+  mask, one-sided +sys, user choice): \textbf{log M⋆ = 11.36 ± 0.08
+  (stat) +0.14 (sys) at 10\%} {[}11.26 ± 0.14 +0.18 at 20\%{]}, fill-in
+  reach 11.47; explicit masking-approach systematic \textbf{±0.086 dex}
+  (was ±0.16 under the 2-component masks). Central consistent with the
+  validated expert hand-mask 11.33.
+\end{enumerate}
+
+\hypertarget{systematic-audit-procedures-how-each-budget-term-was-measured}{%
+\subsubsection{§2.4.3 Systematic-audit procedures (how each budget term
+was
+measured)}\label{systematic-audit-procedures-how-each-budget-term-was-measured}}
+
+Each σ\_e systematic is a \textbf{dedicated sweep} re-using the §2.4.1
+machinery, varying ONE axis and quoting \textbf{peak-to-peak/2} (or
+half-Δ for two-point axes), all on the headline cube + masks:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{I-shape (±2.27):} 10 alternative I-weight maps
+  (\BreakablePath{run\_\discretionary{}{}{}isource\_\discretionary{}{}{}shape\_\discretionary{}{}{}sweep.\discretionary{}{}{}py})
+  × 3 SPS × 15 deg × N=250; peak-to-peak/2 of the 10 central σ\_e
+  (266.83--271.37).
+\item
+  \textbf{F200 mask-weight (±6.65):} down-weight the arc spaxels at
+  w∈\{0,0.5,1\} × 3 SPS × N=500; (w00 269.69 − w100 256.39)/2.
+  \emph{(This is the mask-\textbf{strength} axis. The
+  mask-\textbf{definition} axis --- expert/sersic/perband/global
+  reprojected to the IFU grid,
+  \BreakablePath{run\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e\_\discretionary{}{}{}mask\_\discretionary{}{}{}systematic.\discretionary{}{}{}py}
+  --- gives ±4.58, which overlaps this; larger-of-two is kept, not
+  added.)}
+\item
+  \textbf{Fit-window (±3.82):} 3 windows (wR3800\_5400 / wR4000\_5400 /
+  w6500\_7500) × 3 SPS × N=500; peak-to-peak/2 (269.66 / 268.58 /
+  276.22).
+\item
+  \textbf{Frame (±5.0):} structural --- vac/air per-SPS native-frame
+  choice.
+\item
+  \textbf{Centering (±4.0):} 5 perturbed HST-mean centres (±0.4″ sweep;
+  \BreakablePath{NOTES\_\discretionary{}{}{}centering\_\discretionary{}{}{}investigation}).
+\item
+  \textbf{Reduction-pass (±3.45):} half-Δ between the NEW and OLD
+  cleaned cubes (269.62 vs 262.72); 2 reductions only --- refine if a
+  3rd lands.
+\item
+  \textbf{R\_e-source (±5.13):} σ\_e re-measured over a 7-point R\_e
+  grid bracketing the 2.097″ best-mask headline
+  (\BreakablePath{run\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e\_\discretionary{}{}{}Re\_\discretionary{}{}{}grid.\discretionary{}{}{}py}).
+  \textbf{Adopted} = best-mask CoG family \{1.912/2.097/2.281″\}
+  peak-to-peak/2 = (269.99−259.73)/2. The full grid incl.~CaHK+G 2.90″
+  (±9.98) and CaHK+G's +12.4 deviation are cross-checks, NOT folded
+  (CaHK+G is a different I-map definition, not an error on the
+  photometric R\_e). Was ±6.13 at the old expert-mask headline.
+\end{itemize}
+
+Quote the budget table (§3.1) as the result; the iterative history that
+\emph{led} to this masking + component set is the \textbf{internal audit
+trail (M8→M12)} at the end of this document --- not for the manuscript
+Methods section.
+
+\hypertarget{reproducibility-infrastructure}{%
+\subsubsection{§2.4.4 Reproducibility /
+infrastructure}\label{reproducibility-infrastructure}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Architecturally-independent estimators} (must not share
+  intermediate state): \textbf{§6cum} cumulative I-weighted single-ppxf
+  aperture (the Cappellari 2006 co-add-then-fit method = headline) ·
+  \textbf{§7} discrete \textbf{Gültekin (2009) eq. 1} annular spaxel-sum
+  (\BreakablePath{run\_\discretionary{}{}{}gultekin\_\discretionary{}{}{}mc},
+  arc-filtered to R\textless R\_safe) · \textbf{nb07e} arc-spectrum
+  subtraction. The three agree at \textless1σ (267.32 co-add-fit vs
+  256.17 discrete, narrow).
+\item
+  \textbf{Caching + seed discipline.} Every expensive bootstrap writes a
+  \BreakablePath{.\discretionary{}{}{}npz} keyed by its parameters
+  (\BreakablePath{results/\discretionary{}{}{}<sweep>/\discretionary{}{}{}<params>\_\discretionary{}{}{}N\{N\}.\discretionary{}{}{}npz});
+  a cached result is \textbf{never} re-run. Seeds are deterministic
+  (§2.4.1 step 7) so re-runs bit-reproduce; \textbf{N=50 smoke before
+  N=500 production}; joblib with BLAS=1/worker to avoid
+  oversubscription.
+\item
+  \textbf{Deterministic values registry (single source of truth).}
+  \BreakablePath{scripts/\discretionary{}{}{}paper\_\discretionary{}{}{}values.\discretionary{}{}{}py}
+  recomputes \textbf{every} headline number from the result caches (with
+  per-entry provenance + formula) → emits
+  \BreakablePath{results/\discretionary{}{}{}PAPER\_\discretionary{}{}{}VALUES.\discretionary{}{}{}json}.
+  The ApJL figures \textbf{load} that JSON (no hard-coded literals); the
+  summary docs are validated by
+  \BreakablePath{paper\_\discretionary{}{}{}values.\discretionary{}{}{}py -\discretionary{}{}{}-\discretionary{}{}{}check <files>},
+  an anchored, precision-aware \textbf{drift linter} (parses only the
+  canonical \BreakablePath{σ\_\discretionary{}{}{}e = N ± M} /
+  \BreakablePath{log M⋆ = N} statements; dated snapshots carry a
+  \BreakablePath{pv-\discretionary{}{}{}skip-\discretionary{}{}{}file}
+  marker). Regenerate + verify:
+  \BreakablePath{python scripts/\discretionary{}{}{}paper\_\discretionary{}{}{}values.\discretionary{}{}{}py \&\& python scripts/\discretionary{}{}{}paper\_\discretionary{}{}{}values.\discretionary{}{}{}py -\discretionary{}{}{}-\discretionary{}{}{}check *.\discretionary{}{}{}md}.
+\end{itemize}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -774,10 +2237,13 @@ SED}\label{figure-2-left-panel-the-integrated-spectrum-sed}}
   from the wide-window fit + bootstrap pool.
 \item
   \textbf{Right:} HST+JWST four-band SED + Bagpipes posterior model.
-  Loads \texttt{results/bagpipes\_sed\_results.npz}.
+  Loads
+  \BreakablePath{results/\discretionary{}{}{}bagpipes\_\discretionary{}{}{}sed\_\discretionary{}{}{}results.\discretionary{}{}{}npz}.
 \item
-  Figure file: \texttt{AGEL0206\_sigma\_e\_SED\_final\_wide.pdf} (per
-  outline) / \texttt{results/AGEL0206\_spectra\_SED\_fit.pdf}.
+  Figure file:
+  \BreakablePath{AGEL0206\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e\_\discretionary{}{}{}SED\_\discretionary{}{}{}final\_\discretionary{}{}{}wide.\discretionary{}{}{}pdf}
+  (per outline) /
+  \BreakablePath{results/\discretionary{}{}{}AGEL0206\_\discretionary{}{}{}spectra\_\discretionary{}{}{}SED\_\discretionary{}{}{}fit.\discretionary{}{}{}pdf}.
 \end{itemize}
 
 \hypertarget{velocity-dispersion-measurement}{%
@@ -787,65 +2253,113 @@ Measurement}\label{velocity-dispersion-measurement}}
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Headline: σ\_e(\textless R\_e) = 269.62 ± 11.77 km/s} (asym
-  −11.98/+11.57), via the Gültekin (2009) luminosity-weighted formalism
-  evaluated with the Cappellari ppxf implementation on the I(r)-weighted
-  R\textless R\_e aperture spectrum, plus the wild-bootstrap error pool.
+  \textbf{Final redshifts (to quote in Results).} The deflector systemic
+  redshift from \textbf{Gaussian line fits} (6 absorption features,
+  §2.2.2) is \textbf{z = 0.67564 ± 0.00033}, in agreement with the
+  independent \textbf{ppxf stellar-kinematic} redshift \textbf{z =
+  0.67555 ± 0.00002} (V\_sys = −16 ± 4 km/s relative to the line-fit
+  value; headline R\_e=2.097″ aperture). \textbf{All three SPS libraries
+  converge:} FSPS 0.67555 / EMILES 0.67553 / XSL 0.67556
+  (\textasciitilde4 km/s spread) --- the signature of the air↔vacuum
+  per-SPS frame fix (§2.4.1), which collapsed the legacy
+  \textasciitilde110 km/s FSPS-vs-air offset. The 16 km/s line-fit↔ppxf
+  offset is well within the ±59 km/s line-fit uncertainty (and the ppxf
+  formal ±4 km/s carries an additional \textasciitilde±5 km/s per-SPS
+  frame systematic). \textbf{We adopt z = 0.67564} (the line-fit value
+  supersedes AGEL DR2 z = 0.67511). The lensed-\textbf{source} redshift
+  is \textbf{z = 1.30263 ± 0.00003} (red-cube {[}O II{]} λλ3726,3729
+  doublet). {[}§2.2.2;
+  \BreakablePath{scripts/\discretionary{}{}{}redshift\_\discretionary{}{}{}verify.\discretionary{}{}{}py},
+  \BreakablePath{run\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e\_\discretionary{}{}{}Re\_\discretionary{}{}{}grid.\discretionary{}{}{}py}{]}
 \item
-  \textbf{Reproduce:}
-  \texttt{scripts/run\_wide\_sigma\_e.py\ -\/-cube\ new\_clean\_hei\ -\/-n\_bootstrap\ 500}.
-  Caches:
-  \texttt{results/run\_wide\_sigma\_e/new\_clean\_hei/wR3800\_5400\_arcmask\_\{fsps,emiles,xsl\}\_T*\_N500.npz}.
+  \textbf{Headline: σ\_e(\textless R\_e) = 267.31 ± 12.79 km/s} (asym
+  −12.98/+12.61), the luminosity-weighted σ\_e within R\_e (Gültekin et
+  al.~2009 eq. 1 definition) measured by the \textbf{Cappellari et
+  al.~2006 (SAURON IV §2.3) co-add-then-fit method} --- a single pPXF
+  fit to the I(r)-weighted R\textless R\_e aperture spectrum (R\_e =
+  2.097″ best-mask CoG) --- plus the wild-bootstrap error pool.
+  \textbf{Supersedes 269.62 ± 13.27 at R\_e=2.305″} --- the ``best mask
+  throughout'' cascade (2026-06-11) adopts the best-mask R\_e=2.097″,
+  lowering σ\_e by 2.3 km/s along the rising σ(R) profile (well within
+  errors).
+\item
+  \textbf{Reproduce:} σ\_e at the headline aperture is
+  \BreakablePath{results/\discretionary{}{}{}run\_\discretionary{}{}{}wide\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e/\discretionary{}{}{}resys\_\discretionary{}{}{}best\_\discretionary{}{}{}mean/\discretionary{}{}{}}
+  (R\_e=2.097″), produced by
+  \BreakablePath{scripts/\discretionary{}{}{}run\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e\_\discretionary{}{}{}Re\_\discretionary{}{}{}grid.\discretionary{}{}{}py -\discretionary{}{}{}-\discretionary{}{}{}n\_\discretionary{}{}{}bootstrap 500};
+  the R\_e-source systematic (±5.13, best-mask CoG family) is from the
+  same grid
+  (\BreakablePath{results/\discretionary{}{}{}sigma\_\discretionary{}{}{}e\_\discretionary{}{}{}Re\_\discretionary{}{}{}grid\_\discretionary{}{}{}N500.\discretionary{}{}{}npz}).
 \end{itemize}
 
 \textbf{R\_e measurement and checks} (for the §3.1 paragraph): R\_e =
-2.305″ = 16.23 kpc, the F140W (2.168″) + F200LP (2.441″) masked-CoG
-mean; supersedes IFU-only 2.61″; masked CoG removes arc/companion bias.
+2.097″ = 14.76 kpc, the F140W (1.912″) + F200LP (2.281″)
+\textbf{best-mask}-CoG mean (photutils-validated ±0.002″); supersedes
+expert-mask 2.305″ and IFU-only 2.61″; masked CoG removes arc/companion
+bias.
 
-\textbf{Systematic error budget (post-M11, 2026-05-27):}
+\textbf{σ\_e systematic budget} --- \emph{generated by
+\BreakablePath{scripts/\discretionary{}{}{}paper\_\discretionary{}{}{}values.\discretionary{}{}{}py -\discretionary{}{}{}-\discretionary{}{}{}render};
+do not hand-edit inside the markers.}
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.33}}
   >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.33}}
   >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.33}}@{}}
 \toprule
-Component & ± km/s & Why \\
+Component & ± km/s & Note \\
 \midrule
 \endhead
-stat (N=500) & 4.6 (−5.16/+4.13) & wild-bootstrap pool over 3 SPS × 15
-degrees; already marginalizes SPS (between-SPS ±2.04) + degree spread \\
-I-shape (10 shapes) & 2.27 & peak-to-peak/2 of 10 I-weight-map shapes
-(266.83--271.37) \\
-F200 mask (3 weights) & 6.65 & (w00 269.69 − w100 256.39)/2; cleaned
-cube has more signal pixels → more arc-dilution leverage \\
-frame (vac/air) & 5.0 & structural per-SPS native-frame choice \\
-centering (HST WCS) & 4.0 & 5-center ±0.4″ sweep;
-reduction-independent \\
-fit-window (3 windows) & 3.82 & wR3800\_5400 269.66 / wR4000\_5400
-268.58 / w6500\_7500 276.22; \textbf{dropped from carried ±15} on the
-cleaned cube \\
-reduction-pass & 3.45 & (269.62 − 262.72)/2, NEW vs OLD cleaned cube;
-\textbf{only 2 reductions --- refine if a 3rd lands} \\
-\textbf{TOTAL (sym)} & \textbf{11.77} & quadrature \\
-\textbf{TOTAL (asym)} & \textbf{−11.98 / +11.57} & preserves stat
+stat (N=500) & 4.51 & asym −5.04/+3.98; pooled 3 SPS × 15 deg
+(marginalizes SPS + degree) \\
+I-shape & 2.29 & 14-shape peak-to-peak/2 (266.79-271.37): the 10 raw
+maps + 4 arc-free PSF-matched (Sérsic/filled→1.27" conv); was ±2.27 over
+10 \\
+F200 mask & 6.65 & (w00-w100)/2; larger-of-two vs mask-approach 5.85 (no
+double-count) \\
+frame (vac/air) & 5.00 & carried constant \\
+centering & 4.00 & carried constant \\
+fit-window & 3.82 & peak-to-peak/2 across 3 fit windows \\
+reduction-pass & 3.45 & half-Δ between NEW and OLD reductions \\
+R\_e-source (best-mask grid) & 5.13 & peak-to-peak/2 across best-mask
+CoG family \{F140W 1.91``, mean 2.10'', F200LP 2.28``\} at the 2.097''
+headline (user 2026-06-11; CaHK+G \& full grid are cross-checks, not
+folded) \\
+\textbf{TOTAL (sym)} & \textbf{12.79} & quadrature (sys ±11.97 ⊕
+stat) \\
+\textbf{TOTAL (asym)} & \textbf{−12.98 / +12.61} & preserves stat-side
 skew \\
 \bottomrule
 \end{longtable}
+
+Cross-checks (not added): arc-mask-definition ±4.58 (overlaps F200 mask)
+· full-grid R\_e-source ±9.98 (incl.~CaHK+G, conservative ceiling) ·
+CaHK+G(2.90″) deviation +12.38 km/s.
+
+\emph{(Per-component sweep detail --- the per-window / per-estimator
+values behind each ± --- is in §2.4.3.)}
 
 \begin{itemize}
 \tightlist
 \item
   \textbf{No separate SPS line} is folded in: the SPS-library spread
-  \textbf{collapsed from \textasciitilde26 km/s (narrow: FSPS 253.0
-  \textless{} EMILES 267.5 \textless{} XSL 279.7) to \textasciitilde4
-  km/s (wide)} --- a key argument for the wide window; it now sits
-  inside the pooled stat width.
+  \textbf{collapsed from \textasciitilde26 km/s at the narrow window}
+  (FSPS 253.0 \textless{} EMILES 267.5 \textless{} XSL 279.7) \textbf{to
+  \textasciitilde4 km/s at the wide window} (FSPS 271.3 / EMILES 267.2 /
+  XSL 270.4;
+  \BreakablePath{PAPER\_\discretionary{}{}{}VALUES.\discretionary{}{}{}json:per\_\discretionary{}{}{}sps\_\discretionary{}{}{}p50})
+  --- a key argument for the wide window; it now sits inside the pooled
+  stat width (between-SPS ±2.04).
 \item
   Quadrature is deliberately conservative (components not strictly
   independent).
 \item
-  \textbf{FLAG: R\_e-source systematic (±16.9 km/s at narrow window) is
-  NOT yet folded in} --- flagged for a wide-window re-measurement.
+  \textbf{R\_e-source systematic IS now folded in (±6.13, M12
+  2026-06-08):} re-measured at the wide window (nb15) and included in
+  the budget above --- the narrow-window ±16.9 is superseded. The full
+  4-estimator spread was adopted (user decision); the CaHK+G 2.90″
+  estimator drives it (+10 km/s = rising σ(R), see below), while the
+  light-R\_e family alone gives ±2.50.
 \end{itemize}
 
 \textbf{Systematics paragraph order} (per outline): first R\_e and I(r)
@@ -874,18 +2388,20 @@ superseded for headline but valid):
 \end{itemize}
 
 \textbf{Headline evolution} (mask-audit arc): 268.98 (clean) → 271.87
-(+He I, M8) → 269.62 (+M10 sky audit) → ±11.77 (M11 re-derivation). He I
-pushes σ up \textasciitilde2.9, the 9 sky bands pull it down
-\textasciitilde2.2 (near-cancel).
+(+He I, M8) → 269.62 (+M10 sky audit) → ±11.77 (M11 re-derivation) →
+\textbf{±13.27 (M12, +R\_e-source ±6.13, 2026-06-08)}. He I pushes σ up
+\textasciitilde2.9, the 9 sky bands pull it down \textasciitilde2.2
+(near-cancel); central value 269.62 stable across M10→M12 (only the
+error grew).
 
 \textbf{Compare with Greene (2016/2020) and KH13 choices:}
-σ\_e(\textless R\_e) here uses the Cappellari et al.~2006 eq. 1
-luminosity-weighted single-aperture definition, exactly as adopted by
-Kormendy \& Ho 2013 (M•--σ eq. 3) and Greene et al.~2020 ARA\&A
-(fig.~5). We dropped R\textless R\_e/8 (JFK95 σ\_c) because seeing
-under-resolves it. For a pure elliptical, galaxy R\_e ≈ bulge R\_e, so
-KH13's ``bulge R\_e'' equals the measured total R\_e --- no bulge/disk
-decomposition needed.
+σ\_e(\textless R\_e) here uses the luminosity-weighted single-aperture
+σ\_e (Cappellari et al.~2006 SAURON IV §2.3 co-add-then-fit; Gültekin
+2009 eq. 1 definition), exactly as adopted by Kormendy \& Ho 2013 (M•--σ
+eq. 3) and Greene et al.~2020 ARA\&A (fig.~5). We dropped
+R\textless R\_e/8 (JFK95 σ\_c) because seeing under-resolves it. For a
+pure elliptical, galaxy R\_e ≈ bulge R\_e, so KH13's ``bulge R\_e''
+equals the measured total R\_e --- no bulge/disk decomposition needed.
 
 \textbf{σ\_e physical-meaning discussion:} the deflector is a
 dispersion-supported \textbf{elliptical bulge}; σ(r) should
@@ -901,72 +2417,507 @@ above noise.
 \begin{itemize}
 \tightlist
 \item
-  \textbf{log(M⋆/M☉) = 11.16 ± 0.08 (stat) +0.31 (sys)} at 10\% flux
-  errors {[}\textbf{11.04 ± 0.14 +0.32} at 20\%{]} --- NEW headline from
-  the principled F200LP-located + IR-extended arc masking with
-  \textbf{raw} aperture photometry
-  (\texttt{scripts/photometry\_systematics.py};
-  \texttt{results/photometry\_systematics\_Mstar.npz}; fig
-  \texttt{results/figures/Mstar\_budget.png}). \textbf{Empirical /
-  conservative:} raw masked photometry discards the deflector light
-  under the (now IR-extended) arc, so the central is biased LOW and the
-  systematic is \textbf{one-sided UP}.
+  \textbf{HEADLINE: log(M⋆/M☉) = 11.50 +0.09/−0.14} (aperture-corrected
+  total, \textbf{matched 2 R\_e aperture}, 10\% flux floor; Planck 2015;
+  \BreakablePath{scripts/\discretionary{}{}{}aperture\_\discretionary{}{}{}matched\_\discretionary{}{}{}photometry.\discretionary{}{}{}py},
+  \BreakablePath{results/\discretionary{}{}{}aperture\_\discretionary{}{}{}matched\_\discretionary{}{}{}photometry.\discretionary{}{}{}npz}).
+  Total-light mass: empirical flux in a \textbf{matched 2 R\_e
+  elliptical aperture} (same physical region all 4 bands; single-Sérsic
+  deflector model; color/morph-gated WCS-registered arc mask + companion
+  mask), corrected to total by \textbf{adding the Sérsic model's
+  beyond-aperture light} (the GAMA/Taylor+2011 \BreakablePath{fluxscale}
+  approach; additive variant). Methodologically: \textbf{Taylor et
+  al.~2011} (GAMA aperture→total for M⋆), \textbf{Sonnenfeld et
+  al.~2013} (SL2S lens-deflector Sérsic photometry, mask arc +
+  interlopers), \textbf{Graham \& Driver 2005} (Sérsic total formalism).
 \item
-  \textbf{The systematic is intentionally uneven (could be higher):} the
-  Sérsic fill-in --- which restores the deflector light under the masked
-  arc and is \textbf{mask-definition-independent} (per-band vs global
-  agree to 0.01 dex) --- gives log(M⋆/M☉) = \textbf{11.46 (10\%) / 11.36
-  (20\%)}, i.e.~the +0.31 dex upper reach. The mask-definition term is
-  negligible (±0.003--0.034 dex).
-\item
-  \textbf{Flux-error choice matters at \textasciitilde0.10 dex:}
-  10\%→20\% lowers the central (11.16→11.04, looser likelihood lets the
-  prior pull mass down) and widens stat (±0.08→±0.14). Both quoted.
-\item
-  \textbf{Explicit masking-approach systematic on M⋆ = ±0.16 dex} (10\%:
-  ±0.160, 20\%: ±0.162) --- peak-to-peak/2 across all masking approaches
-  \{expert-aperture, per-band/global × raw/filled\}
-  (\texttt{results/Mstar\_masking\_systematic.npz}, fig
-  \texttt{Mstar\_masking\_systematic.png}). Decomposition:
-  \textbf{under-arc light (raw↔filled) ±0.15} (dominant; the adopted
-  one-sided +0.31), \textbf{mask-definition (per-band↔global) ±0.004}
-  (negligible --- filled is mask-def-independent), \textbf{mask-extent
-  (expert↔IR-extended) 0.18}. This ±0.16 is the symmetric statement of
-  the same effect quoted one-sided (+0.31) in the headline.
-\item
-  \textbf{Superseded values (cross-checks, smaller masks):} older
-  expert-aperture log(M⋆/M☉)=11.33 +0.07/−0.09 (sits mid-range);
-  2D-Sérsic-total refit 11.40 +0.11/−0.15. Consistent with the new
-  raw↔filled bracket {[}11.16, 11.46{]}.
-\item
-  \textbf{``Typical elliptical at z\textasciitilde0.7'':} M⋆ ≈ 1.4 ×
-  10¹¹ M☉ (raw headline) to ≈ 2.9 × 10¹¹ (fill-in upper) at z = 0.6756,
-  passive/quiescent SFH (mass-weighted age \textasciitilde5 Gyr, low
-  sSFR). Place on the z≈0.5--1.0 mass-size relation (van der Wel et al.
-  2014; Mowla et al.~2019) and the strong-lens-deflector analog sample
-  (Sonnenfeld et al.~2015, SL2S V --- best z-match). {[}notebook 10
-  verified citations{]}
-\item
-  \textbf{X-ray / quiescence:} \textbf{GAP G2 --- no X-ray data in
-  repo.} Source externally if you want the ``truly quiescent'' claim;
-  otherwise frame from the passive SED only.
+  \textbf{Report FIVE estimators (empirical → model), M⋆ for each, at 2
+  R\_e:} \textbar{} estimator \textbar{} log M⋆ \textbar{} what it adds
+  \textbar{}
+  \textbar-----------\textbar--------\textbar--------------\textbar{}
+  \textbar{} raw (empirical aperture, masked) \textbar{} \textbf{11.21}
+  \textbar{} nothing --- lower bound \textbar{} \textbar{} raw + apcorr
+  (most-empirical total) \textbar{} \textbf{11.38} \textbar{} model
+  \textbf{wings} only (masked interior NOT filled) \textbar{} \textbar{}
+  filled (within aperture) \textbar{} \textbf{11.38} \textbar{} model
+  \textbf{fill} of masked pixels \textbar{} \textbar{} \textbf{total
+  (aperture-corrected) --- headline} \textbar{} \textbf{11.50}
+  \textbar{} fill + wings \textbar{} \textbar{} Sérsic-total (pure
+  model) \textbar{} \textbf{11.43} \textbar{} everything modeled
+  \textbar{} (all five on Planck 2015 --- the +0.0282 dex D\_L² rescale
+  vs the prior H₀=70 values 11.22/11.35/11.36/11.47/11.41.) The
+  \textbf{total converges across 1/2/2.5 R\_e} (11.51/11.50/11.49) → the
+  aperture correction is internally consistent. raw converges 2↔2.5 R\_e
+  (11.21/11.23).
 \end{itemize}
+
+\textbf{M⋆ error budget} --- \emph{generated by
+\BreakablePath{scripts/\discretionary{}{}{}paper\_\discretionary{}{}{}values.\discretionary{}{}{}py -\discretionary{}{}{}-\discretionary{}{}{}render};
+do not hand-edit inside the markers.} Unlike σ\_e (a single
+named-component quadrature), M⋆ is reported in \textbf{two framings}:
+the headline error carried on the adopted total-light estimator, and the
+Sérsic-only named-component quadrature kept as a model-systematic
+cross-check (so model choices are not double-counted into the
+empirical-aperture mass).
+
+\textbf{(1) Headline --- log(M⋆/M☉) = 11.50 (aperture-corrected total,
+matched 2 R\_e, 10\% floor):}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.33}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.33}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.33}}@{}}
+\toprule
+Component & ± dex & Note \\
+\midrule
+\endhead
+stat (Bagpipes posterior) & +0.094 / −0.141 & asymmetric; age--dust--M/L
+outshining low-tail (present in all 5 estimators incl.~raw) \\
+masking-approach & 0.086 & under-arc (raw↔filled) 0.057 ⊕ mask-def
+(per-band↔global) 0.028 \\
+\textbf{REPORTED} & \textbf{+0.09 / −0.14} & the posterior is quoted as
+the headline error; the ±0.09 dex masking systematic is reported
+alongside \\
+\bottomrule
+\end{longtable}
+
+\textbf{(2) Sérsic-only estimator (log(M⋆/M☉) = 11.43) --- model-path
+systematic envelope (cross-check), the named-component analogue of the
+σ\_e budget:}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+Component & ± dex & Note \\
+\midrule
+\endhead
+stat & 0.121 & Bagpipes posterior width \\
+mask & 0.125 & arc-mask choice (expert↔global Sérsic-total) ---
+dominant \\
+model-form & 0.057 & single-Sérsic vs alternative model form \\
+flux-floor & 0.034 & 10\%↔20\% flux floor \\
+fit-param & 0.029 & Sérsic-n / fit-parameter spread \\
+apcorr-recon & 0.026 & apcorr ↔ pure-model reconstruction \\
+\textbf{TOTAL} & \textbf{0.19} & stat ±0.12 ⊕ sys ±0.15
+(mask-dominated) \\
+\bottomrule
+\end{longtable}
+
+Five M⋆ estimators (empirical→model, matched 2 R\_e, Planck 2015): raw
+\textbf{11.21} (empirical lower bound) · raw+apcorr \textbf{11.38} ·
+filled \textbf{11.38} · \textbf{total 11.50 (headline)} · Sérsic-total
+\textbf{11.43}.
+
+\emph{(Per-component provenance --- which cache + sweep produced each ±
+--- is in the bullets below and in §2.1.1b / §2.4.3. The σ\_e budget is
+in §3.1.)}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Sérsic-only (full-model) systematic budget = ±0.19 dex}
+  (\BreakablePath{scripts/\discretionary{}{}{}sersic\_\discretionary{}{}{}total\_\discretionary{}{}{}systematic.\discretionary{}{}{}py};
+  elliptical multi-start fit, 2026-06-11): stat ±0.121 ⊕ sys ±0.147,
+  with \textbf{arc-mask choice ±0.125 dominant}, model-form ±0.057,
+  flux-floor ±0.034, Sérsic-fit-n ±0.029, apcorr↔pure-model ±0.026. (Was
+  ±0.17 with the circular fit; the mask term grew because the elliptical
+  model widens the expert↔global Sérsic-total gap.)
+\item
+  \textbf{Apcorr chain validated vs established codes (2026-06-11,
+  \BreakablePath{scripts/\discretionary{}{}{}validate\_\discretionary{}{}{}apcorr\_\discretionary{}{}{}established.\discretionary{}{}{}py};
+  petrofit/statmorph absent → photutils + scipy incomplete-gamma
+  references):} (1) b\_n Ciotti\&Bertin99 vs exact
+  \BreakablePath{gammaincinv(2n,½)} ≤0.05\%; (2) the Sérsic total-flux
+  formula (Graham\&Driver05 eq.4) vs a numeric render-to-20 R\_e
+  ≤0.03\%; (3) the aperture correction --- rendered-model enclosed light
+  vs the \textbf{analytic Sérsic incomplete-gamma law}
+  \BreakablePath{γ(2n, b\_\discretionary{}{}{}n·2\^\{1/\discretionary{}{}{}n\})/\discretionary{}{}{}Γ(2n)}
+  (Graham\&Driver05) --- Δ≤0.0007;
+
+  \begin{enumerate}
+  \def\labelenumi{(\arabic{enumi})}
+  \setcounter{enumi}{3}
+  \tightlist
+  \item
+    the empirical hard-edge aperture sum
+    (\BreakablePath{in\_\discretionary{}{}{}aperture}) vs photutils
+    \BreakablePath{EllipticalAperture(method='exact')} ≤0.09\%; (5) the
+    finite-cutout truncation of
+    \BreakablePath{sum(model\_\discretionary{}{}{}full)} (the apcorr
+    denominator) vs the to-∞ total ≤0.19\% (≤0.002 mag). \textbf{No
+    production bug; M⋆ unchanged.}
+  \end{enumerate}
+\item
+  \textbf{Single-Sérsic ellipticity fix (2026-06-11).} The deflector
+  light model is a single Sérsic per band fit on the best mask. The
+  fitter originally had a single low-ellipticity start that railed into
+  a spurious \textbf{circular} χ² minimum (b/a=1 for all bands),
+  under-reporting the shape and biasing the \BreakablePath{(1−ellip)}
+  total flux. Fixed with a \textbf{multi-start} (flux-weighted-moment
+  seed à la SExtractor/GALFIT
+
+  \begin{itemize}
+  \tightlist
+  \item
+    a PA grid + circular fallback, lowest-residual). It recovers the
+    true shape; \textbf{M⋆ headline (total) is unchanged at 11.47}
+    (empirical-aperture-dominated). Validated by injection-recovery
+    against astropy's peer-reviewed \BreakablePath{Sersic2D}
+    (\BreakablePath{scripts/\discretionary{}{}{}validate\_\discretionary{}{}{}sersic\_\discretionary{}{}{}fitter\_\discretionary{}{}{}synthetic.\discretionary{}{}{}py}):
+    clean recovery for the deflector regime (n≈1.2--1.6, b/a≤0.85), with
+    a realistic \textbf{b/a uncertainty \textasciitilde±0.06} (the
+    formal bootstrap is too tight). GALFIT/imfit/petrofit/statmorph are
+    not installed (conda-env policy).
+  \end{itemize}
+\item
+  \textbf{The M⋆ posterior has a longer LOW tail} (total 11.50
+  +0.09/−0.14). This is \textbf{NOT} the total-Sérsic estimator --- it
+  is present in all five estimators including the purely empirical
+  \BreakablePath{raw}. It is the \textbf{age--dust--M/L ``outshining''
+  degeneracy} in the 4-band Bagpipes fit: the low-M⋆ tail correlates
+  with young age (r=+0.90), high dust (r=−0.58), and high sSFR (r=−0.83)
+  --- young+dusty low-M/L solutions reproduce the same broadband points.
+  We keep the exponential-SFH prior and report the asymmetric posterior
+  as-is (the tail is real model uncertainty, not an estimator artifact).
+\item
+  \textbf{Per-band single-Sérsic parameters (appendix table;
+  \BreakablePath{scripts/\discretionary{}{}{}sersic\_\discretionary{}{}{}parameter\_\discretionary{}{}{}table.\discretionary{}{}{}py}):}
+\end{itemize}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.11}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.11}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.11}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.11}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.11}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.11}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.11}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.11}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.11}}@{}}
+\toprule
+Band & \(\lambda_{\rm piv}\) (Å) & \(r_e\) (″) & \(r_e\) (kpc) & \(n\) &
+\(b/a\) & PA (°) & \(\mu_e\) (mag/″²) & \(m_{\rm AB}^{\rm tot}\) \\
+\midrule
+\endhead
+F200LP & 4972 & 2.002±0.122 & 14.09±0.86 & 1.24±0.15 & ≳0.95† & ---† &
+25.23 & 20.92±0.07 \\
+F140W & 13923 & 1.765±0.015 & 12.42±0.11 & 1.44±0.15 & 0.86±0.06 & 4±20
+& 22.36 & 18.42±0.01 \\
+F150W2 & 16720 & 1.643±0.005 & 11.57±0.03 & 1.22±0.15 & 0.80±0.06 &
+11±20 & 21.91 & 18.29±0.00 \\
+F322W2 & 32470 & 1.757±0.010 & 12.37±0.07 & 1.59±0.15 & 0.85±0.06 & 6±20
+& 21.79 & 17.82±0.01 \\
+\bottomrule
+\end{longtable}
+
+† F200LP: the deflector is faint in this band, so the single-Sérsic
+ellipticity/PA are unconstrained (consistent with circular); the IR
+bands set the shape. Errors are bootstrap, with \(b/a\)/PA/\(n\) floored
+by the injection-recovery scatter; the mask-choice systematic (§2.1.1b)
+dominates and is separate. The deflector is \textbf{mildly elliptical
+(b/a≈0.80--0.86, PA≈4--11° E of N)} with low Sérsic index (n≈1.2--1.6)
+--- consistent with the b/a=0.75 adopted for the aperture from the
+independent light fit. - \textbf{Aperture provenance / why this
+supersedes 11.36:} the old per-band apertures were hand-drawn in the GUI
+and \textbf{inconsistent} --- F200LP a=1.19″ (\textasciitilde0.5 R\_e)
+captured only \textbf{17\%} of the light vs IR \textasciitilde46\% ---
+so F200LP was under-measured → SED artificially red → M⋆ biased
+\textbf{HIGH} (11.36). The matched aperture measures the same region in
+every band → bluer SED → lower M/L → the empirical raw drops to 11.22. -
+\textbf{Flux uncertainties:} the \emph{propagated statistical} errors
+are \textbf{0.03--1.6\%} (F322W2 0.03\%, F150W2 0.05\%, F140W 0.4\%,
+F200LP 1.6\%) --- 6--362× below the adopted \textbf{10\% floor}. The
+10\% is a deliberate \textbf{systematic floor} (zeropoint, aperture,
+drizzle correlated noise \textasciitilde1.3--2×, SED-model mismatch),
+not the measurement error --- report the true errors and state the floor
+(\textasciitilde5\% is better-motivated; precedent in GAMA/Taylor+2011,
+whose error budgets are calibration-dominated, not photon-noise).
+\textbf{Floor sensitivity
+(\BreakablePath{results/\discretionary{}{}{}aperture\_\discretionary{}{}{}floor5\_\discretionary{}{}{}check.\discretionary{}{}{}npz}):}
+5\%↔10\% shifts every estimator's central by ≤+0.02 dex (headline total
+10\%=11.50, 5\%=11.52, Planck 2015) with tighter stat at 5\% --- well
+within the ±0.12 systematic, so the headline is robust to the floor;
+10\% kept for the headline. - \textbf{Superseded values (cross-checks):}
+mismatched-aperture 11.36 (F200LP-biased high); 2-component-mask 11.16
++0.31 (over-masked → biased low); expert-aperture 11.33. -
+\textbf{``Typical elliptical at z\textasciitilde0.7'':} M⋆ ≈ 1.6 × 10¹¹
+M☉ (empirical raw) to ≈ 3.2 × 10¹¹ (aperture-corrected total headline)
+at z = 0.6756, passive/quiescent SFH (mass-weighted age \textasciitilde5
+Gyr, low sSFR). Place on the z≈0.5--1.0 mass-size relation (van der Wel
+et al. 2014; Mowla et al.~2019) and the strong-lens-deflector analog
+sample (Sonnenfeld et al.~2015, SL2S V --- best z-match). {[}notebook 10
+verified citations{]} - \textbf{X-ray / quiescence:} \textbf{GAP G2 ---
+no X-ray data in repo.} Source externally if you want the ``truly
+quiescent'' claim; otherwise frame from the passive SED only.
 
 \hypertarget{mass-estimates-from-lens-modeling}{%
 \subsection{§3.3 Mass Estimates from Lens
 Modeling}\label{mass-estimates-from-lens-modeling}}
 
 \begin{quote}
-\textbf{GAP G1 --- see §2.3.} The range of lens-model results, the
-joint-posterior mass + uncertainty, the BPL vs point-mass
-differentiating models, M(\textless r\_break), the pedagogical-figure
-intuition, the small table reproduced from Ferrami et al., the
-comparison to local galaxies, and the ``shape of the mass profile
-matters'' argument are all \textbf{in the lens-modeling repo / Ferrami
-draft, not here.} The only in-repo pointer is the 4D-constraint sentence
-in PROJECT\_BRIEF.md. Pull these numbers from the companion paper before
-drafting §3.3.
+\textbf{G1 --- sourced from the Ferrami et al.~draft (2026-06-12); see
+§2.3 for method + caveats.} \textbf{Every number below is PROVISIONAL}
+--- the draft stamps the evidence table, the M•--σ figure, and the
+potential-correction figure
+\BreakablePath{PLACEHOLDER UNTIL FINAL RUNS ARE COMPLETED}. The draft is
+also internally inconsistent on the headline BH mass (several values
+coexist, see flag) because the final sampling has not landed. \textbf{Do
+not freeze any lens-model number into our draft until Ferrami's final
+runs complete.} All masses on Ferrami's \textbf{Planck-2015 cosmology
+(H₀=67.7, Ω\_m=0.302)} --- convert to our (H₀=70, Ω\_m=0.3) frame before
+any joint M•--σ / M•--M⋆ plot (§2.3 reconciliation flags).
 \end{quote}
+
+\hypertarget{headline-result}{%
+\subsubsection{§3.3.1 Headline result}\label{headline-result}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Canonical BH mass = the combined free-BH posterior:}
+  \textbf{M\_• = 5.2 ₋₁.₃/+₁.₅ × 10⁸ M☉} (≈ \textbf{5.2 ± 1.4 × 10⁸
+  M☉}). This is the model-averaged posterior across the three
+  \textbf{free-BH} models (BH position free within 0.5″ of the light
+  centre), which are the \textbf{highest-evidence family} in Table 1 ---
+  cEPL+free BH (Δln𝓔 = 0), bEPL+free (−0.08), sEPL+free (−1.43).
+  Per-model medians: cEPL \textbf{5.51 ± 1.40}, sEPL \textbf{5.01
+  ₋₁.₂₀/+₁.₅₀}, bEPL \textbf{5.11 ₋₁.₃₀/+₁.₅₀} (×10⁸ M☉); they agree to
+  \textasciitilde10 \%, so equal-weight and evidence-weighted averaging
+  give the same answer (5.22 vs 5.29 ×10⁸). \textbf{Conservative 2σ
+  envelope across the three: 2.6--8.3 × 10⁸ M☉} (the draft's own
+  ``min/max of the 2σ percentiles'' prescription). Uniform prior
+  \textbf{{[}10⁸, 10¹¹{]} M☉}. \emph{{[}User decision 2026-06-12: adopt
+  the free-BH combined posterior, NOT the fixed-BH
+  \textasciitilde2×10⁹.{]}}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{Provenance / caveat:} combined here from the Ferrami
+    \textbf{Table 1} summary medians ± errors as a split-normal mixture
+    (\BreakablePath{scripts/\discretionary{}{}{}bh\_\discretionary{}{}{}mass\_\discretionary{}{}{}combine.\discretionary{}{}{}py},
+    seeded; equal-weight median 5.22, evidence-weighted 5.29 ×10⁸). The
+    \textbf{rigorous} combination stacks Giovanni's actual
+    \textbf{MultiNest chains} --- flagged as a TODO, but the three
+    free-BH posteriors are near-identical so the summary-level result is
+    robust.
+  \end{itemize}
+\item
+  \textbf{Detection significance \textgreater{} 4σ:} models with a
+  central \textbf{point mass} have higher Bayesian evidence than
+  smooth-only (no-BH) models at \textbf{\textgreater{} 4σ} --- the
+  radial image \emph{requires} a central point-like mass. (The no-BH and
+  extended-mass SIS/NFW perturbers are all disfavoured by Δln𝓔 ≈ −4 to
+  −6; §3.3.3.)
+\item
+  \textbf{⚠ Supersedes the earlier ``\textasciitilde2×10⁹ fixed-BH''
+  framing.} The Ferrami draft \emph{prose} (intro/results + best-model
+  figure caption) is written around the \textbf{fixed}-BH solutions
+  (\textasciitilde1.6--2.62×10⁹ M☉), but those have \textbf{lower
+  evidence} than the free-BH runs. We adopt the free-BH combined
+  posterior (5.2×10⁸); the fixed-BH values are kept below only as the
+  lower-evidence alternative. \textbf{Giovanni's prose still calls
+  sEPL+fixed-PM the ``best model'' --- this must be reconciled} (the
+  data, when the BH is free to move, prefer a \textasciitilde3--4× lower
+  mass).
+\end{itemize}
+
+\hypertarget{best-model-why-the-slope-matters}{%
+\subsubsection{§3.3.2 Best model + why the slope
+matters}\label{best-model-why-the-slope-matters}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Highest-evidence model = a FREE point mass on the cEPL (or
+  bEPL) main halo} --- Δln𝓔 = 0 (cEPL+free) / −0.08 (bEPL+free) in Table
+  1, BH free within 0.5″ of the light centre → our canonical M\_• =
+  5.2×10⁸ (§3.3.1). \textbf{⚠ The draft prose instead designates sEPL +
+  a FIXED point mass as the ``best model''} (and the best-model figure
+  caption shows 2.62×10⁹) --- a \textbf{fixed-vs-free inconsistency}:
+  the fixed runs have \emph{lower} evidence (Δln𝓔 ≈ −3.0 to −3.65) yet
+  are what the prose/figure quote. We adopt the free-BH result; the
+  final runs / Giovanni's prose must resolve this. (Evidence is quoted
+  as Δln𝓔; the placeholder table is not renormalised to any single
+  reference.)
+\item
+  \textbf{The main halo is markedly sub-isothermal: γ ≈ 1.31 ± 0.08}
+  (θ\_E ≈ 1.36″). A shallow total slope is \emph{what produces the
+  bright radial arc extending to the deflector centre} --- the lens
+  environment (it sits \textasciitilde100 kpc from the cluster
+  \textbf{ACT-CL J0206.2−0114}) flattens the projected mass. This is the
+  ``shape of the mass profile matters'' argument: the radial image only
+  stays bright down to the centre for a shallow slope, and it is the
+  radial image that the BH perturbs. {[}Ferrami draft §Data, §Mass model
+  comparison{]}
+\end{itemize}
+
+\hypertarget{model-comparison-table-15-models-placeholder-ferrami-draft-table-1}{%
+\subsubsection{§3.3.3 Model-comparison table (15 models --- PLACEHOLDER,
+Ferrami draft Table
+1)}\label{model-comparison-table-15-models-placeholder-ferrami-draft-table-1}}
+
+3 smooth main-halo families (sEPL/cEPL/bEPL) × 5 perturbers (free BH /
+fixed BH / free NFW / free SIS / no BH). Δln 𝓔 are as printed in the
+draft (NOT yet renormalised to the sEPL+fixed-PM reference):
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.25}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.25}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.25}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.25}}@{}}
+\toprule
+Smooth model & Δln 𝓔 & d.o.f. & Perturber posterior \\
+\midrule
+\endhead
+\textbf{cEPL + free BH} \emph{(highest evidence → canonical family)} &
+\textbf{0} & 37 & \textbf{M\_• = 5.51 ± 1.40 ×10⁸ M☉} \\
+cEPL + fixed BH & −3.25 & 35 & M\_• = 1.61 ± 0.21 ×10⁹ M☉ \\
+cEPL + free NFW & −4.88 & 38 & M\_vir = 6.48 ×10⁹, c\_vir = 40 \\
+cEPL + free SIS & −5.26 & 38 & θ\_E = 0.041″, γ = 2.59 \\
+cEPL (no BH) & −5.06 & 34 & --- \\
+\textbf{sEPL + free BH} \emph{(canonical family)} & −1.43 & 36 &
+\textbf{M\_• = 5.01 ₋₁.₂₀/+₁.₅₀ ×10⁸ M☉} \\
+sEPL + fixed BH \emph{(draft prose ``best model'' --- lower evidence)} &
+−3.65 & 34 & M\_• = 2.10 ⁺⁰·¹⁹₋₀.₃₀ ×10⁹ M☉ \\
+sEPL + free NFW & −4.76 & 37 & M\_vir = 2.65 ×10⁹, c = 91 \\
+sEPL + free SIS & −5.80 & 37 & θ\_E = 0.027″, γ = 2.47 \\
+sEPL (no BH) & −4.78 & 33 & --- \\
+\textbf{bEPL + free BH} \emph{(canonical family)} & −0.08 & 38 &
+\textbf{M\_• = 5.11 ₋₁.₃₀/+₁.₅₀ ×10⁸ M☉} \\
+bEPL + fixed BH & −3.04 & 36 & M\_• = 1.86 ×10⁹ M☉ \\
+bEPL + free NFW & −4.35 & 39 & M\_vir = 5.78 ×10⁹, c = 127 \\
+bEPL + free SIS & −4.82 & 39 & θ\_E = 0.025″, γ = 2.46 \\
+bEPL (no BH) & −5.14 & 35 & --- \\
+\bottomrule
+\end{longtable}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Pattern (robust across all 3 halo families):} the
+  \textbf{no-BH} and \textbf{free-SIS/free-NFW} (extended central mass)
+  models are all disfavoured by Δln𝓔 ≈ −4 to −6; a \textbf{point mass}
+  is preferred. \textbf{The FREE-BH runs carry the HIGHEST evidence}
+  (Δln𝓔 0 / −0.08 / −1.43) and cluster at \textbf{\textasciitilde5×10⁸
+  M☉ → the canonical combined value (§3.3.1)}; the \emph{fixed}-BH runs
+  have \textbf{lower} evidence (Δln𝓔 −3.0 to −3.65) and land
+  \textasciitilde3--4× higher (1.6--2.1×10⁹). Earlier drafts of this
+  fact sheet treated the fixed value as headline --- \textbf{corrected
+  2026-06-12 to the free-BH combined posterior.}
+\end{itemize}
+
+\hypertarget{best-model-parameters-ferrami-draft-table-2-placeholder-headed-cepl-fixed-bh-run}{%
+\subsubsection{\texorpdfstring{§3.3.4 Best-model parameters (Ferrami
+draft Table 2 --- PLACEHOLDER; headed ``cEPL'', \textbf{FIXED-BH
+run})}{§3.3.4 Best-model parameters (Ferrami draft Table 2 --- PLACEHOLDER; headed ``cEPL'', FIXED-BH run)}}\label{best-model-parameters-ferrami-draft-table-2-placeholder-headed-cepl-fixed-bh-run}}
+
+\begin{quote}
+\textbf{Note:} this parameter table is a \textbf{fixed-BH} solution
+(M\_• = 1.61×10⁹, the lower-evidence run); the \textbf{canonical} BH
+mass is the \textbf{free-BH combined posterior 5.2×10⁸} (§3.3.1). The
+smooth-halo parameters below (θ\_E, γ, shear, light) are essentially
+common to the free-BH solution --- only the point-mass row differs.
+\end{quote}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.33}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.33}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.33}}@{}}
+\toprule
+Component & Parameter & Posterior \\
+\midrule
+\endhead
+Main deflector & θ\_E & 1.360 ⁺⁰·¹⁰₋₀.₀₈ ″ \\
+& γ (slope) & \textbf{1.31 ± 0.08} (sub-isothermal) \\
+& r\_c (core) & 0.0012″ \\
+& f (axis ratio) & 0.826 \\
+& φ & 10.8° \\
+Secondary deflector (SIS) & θ\_E & 0.194″ \\
+Tertiary deflector (SIS) & θ\_E & 0.017″ \\
+External shear & Γ & 0.095 ± 0.003 \\
+& θ\_Γ & −14.8° \\
+\textbf{Point mass} \emph{(fixed-BH; NOT canonical)} & \textbf{M\_•} &
+1.61 ⁺⁰·²¹₋₀.₂₁ ×10⁹ M☉ → \textbf{use free-BH 5.2×10⁸ (§3.3.1)} \\
+Lens light (Sérsic) & R\_eff & 0.051″ \\
+& n\_s & 1.372 \\
+& f (axis ratio) & 0.834 \\
+Source light (Delaunay) & λ & 46798 \\
+& w\_a, w\_b & 1.728, 0.451 \\
+\bottomrule
+\end{longtable}
+
+(Circular multipole and lens-light multipole coefficients a\_m/b\_m,
+m=1,3,4 are all \textbar a\textbar,\textbar b\textbar{} ≲ 0.012 with
+Gaussian{[}0,0.01{]} priors --- see draft Table 2 for the full list.)
+
+\hypertarget{mux3c3-placement-and-prior-radial-arc-bh-lenses}{%
+\subsubsection{§3.3.5 M•--σ placement and prior radial-arc BH
+lenses}\label{mux3c3-placement-and-prior-radial-arc-bh-lenses}}
+
+\begin{itemize}
+\tightlist
+\item
+  The draft places M\_• against the \textbf{local M•--σ relation of van
+  den Bosch (2016, M\_σ FP)}, with the only two prior \textbf{radial-arc
+  / radial-image SMBH lens} measurements overplotted:
+  \textbf{Nightingale et al. (z = 0.17)} and \textbf{Melo-Carneiro et
+  al.~(z = 0.45)} --- both \textasciitilde2σ \emph{above} the local
+  relation. \textbf{DES J0206−0114 (z = 0.675) is the highest-redshift
+  and most centrally-extended} of the three.
+\item
+  \textbf{⚠ With the canonical M\_• = 5.2×10⁸ (free-BH), the placement
+  SENSE flips vs the old \textasciitilde2×10⁹.} Rough \textbf{KH13
+  cross-check} (log M• = 8.49 + 4.38·log(σ\_e/200), intrinsic scatter
+  0.29 dex): at σ\_e = 267 km/s KH13 predicts M• ≈ \textbf{1.1×10⁹}, so
+  our 5.2×10⁸ (log M• = 8.72) sits \textbf{≈0.3 dex (\textasciitilde1σ)
+  BELOW} the local relation --- i.e.~\emph{slightly under-massive} for
+  its σ, the \textbf{opposite} of the fixed-BH \textasciitilde2×10⁹
+  (which would sit \emph{above}, like Nightingale/Melo-Carneiro).
+  \emph{(This is a labeled rough calc on KH13, NOT the paper result; the
+  actual placement vs vdB16 is Giovanni's figure --- the narrative
+  ``above the relation'' framing in the draft prose needs reconciling
+  with the free-BH value.)}
+\item
+  The M•--σ figure is a \textbf{PLACEHOLDER}; the σ comes from
+  \textbf{our companion paper} (Córdova Rosado et al., in prep. --- σ\_e
+  = \textbf{267 ± 13 km/s}, this repo). The draft's conservative SMBH
+  estimate is the min/max of the \textbf{2σ percentiles} across the
+  perturber posteriors (= our \textbf{2.6--8.3×10⁸} envelope, §3.3.1).
+  \textbf{This is exactly the 4D (M•, σ, M⋆, z) joint constraint
+  PROJECT\_BRIEF.md flags} --- and now that both papers share the
+  Planck-2015 cosmology (§2.3), the join is direct.
+\end{itemize}
+
+\hypertarget{quiescence-evidence-also-fills-gap-g2-x-ray-radio}{%
+\subsubsection{§3.3.6 Quiescence evidence (also fills gap G2 --- X-ray /
+radio)}\label{quiescence-evidence-also-fills-gap-g2-x-ray-radio}}
+
+The Ferrami draft §Data carries the multiwavelength quiescence argument
+that was gap \textbf{G2} in this repo (no longer external-only):
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{No AGN emission lines} in the KCWI IFU central spectrum
+  (Córdova Rosado et al., in prep.).
+\item
+  \textbf{X-ray:} no Chandra source at the galaxy position;
+  \textbf{0.5--7 keV flux upper limit 1.8×10⁻¹⁵ erg s⁻¹ cm⁻²} (Chandra
+  DR2; field obs PI Hughes, ID 16229, 30 ks) → \textbf{L\_X \textless{}
+  10⁴³ erg s⁻¹ ≈ 10⁻⁴ × L\_Edd} (the draft uses a 10⁹ M☉ BH; for our
+  canonical \textbf{5.2×10⁸} M☉, L\_Edd halves → ≈2×10⁻⁴ L\_Edd, still
+  order 10⁻⁴ --- the quiescence conclusion is unchanged).
+\item
+  \textbf{Radio-quiet:} below the \textbf{LOFAR DR3} detection limit.
+\item
+  → The central gravitational perturbation is from a \textbf{quiescent
+  (non-accreting) SMBH} --- the headline novelty (a dynamical-equivalent
+  mass for a quiescent BH at cosmological distance). \textbf{G2 is now
+  partly internal}, but the X-ray flux limit and the Chandra/LOFAR
+  program details should still be cross-checked against the actual
+  Chandra DR2 / LOFAR DR3 sources before we assert them in \emph{our}
+  paper.
+\end{itemize}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -980,18 +2931,26 @@ drafting §3.3.
   \textbf{ppxf:} Cappellari \& Emsellem (2004); Cappellari (2017, MNRAS
   466, 798); Cappellari (2023).
 \item
-  \textbf{σ\_e aperture definition:} Cappellari et al.~(2006, MNRAS 366,
-  1126) eq. 1; \textbf{Gültekin et al.~(2009)} eq. 1; \textbf{Kormendy
-  \& Ho (2013, ARA\&A 51, 511)} eq. 3 (scatter 0.29 dex);
-  \textbf{Greene, Strader \& Ho (2020, ARA\&A 58, 257)} fig.~5; Saglia
-  et al.~(2016).
+  \textbf{σ\_e definition:} \textbf{Gültekin et al.~(2009)} eq. 1 (the
+  luminosity-weighted second-moment integral --- verified 2026-06-12);
+  co-add-then-fit method \textbf{Cappellari et al.~(2006, MNRAS 366,
+  1126, SAURON IV §2.3)} {[}NB: that paper's eq. 1 is the \emph{aperture
+  correction}, NOT σ\_e --- do not cite ``Cappellari 2006 eq. 1'' for
+  σ\_e{]}; the discrete spaxel/bin sum (§7) is \textbf{Cappellari et
+  al.~(2013, ATLAS3D XV, MNRAS 432, 1709) eq. 29} (= the discretised
+  Gültekin 2009 eq. 1; eq. 29 also has an inclination/projection term
+  that our observed-plane sum omits) {[}verified 2026-06-12{]};
+  \textbf{Kormendy \& Ho (2013, ARA\&A 51, 511)} eq. 3 (scatter 0.29
+  dex); \textbf{Greene, Strader \& Ho (2020, ARA\&A 58, 257)} fig.~5
+  \textbf{{[}⚠ AUDIT FLAG --- see below{]}}; Saglia et al.~(2016).
 \item
   \textbf{z=0 IFS calibration:} Cappellari et al.~(2013, ATLAS3D XV \&
   XX); Krajnović et al.~(2013, XVII); Zhu et al.~(2024, MaNGA DynPop
   III).
 \item
   \textbf{Mass--size / analogs:} van der Wel et al.~(2014); Mowla et
-  al.~(2019); Ge et al.~(2021); Sonnenfeld et al.~(2015, SL2S V).
+  al.~(2019); Ge et al.~(2021); Sonnenfeld et al.~(2015, SL2S V)
+  \textbf{{[}⚠ AUDIT FLAG --- see below{]}}.
 \item
   \textbf{Vacuum↔air:} Ciddor (1996). \textbf{Wide-window precedent:}
   Bezanson et al.~(2018); van der Wel et al.~(2021).
@@ -999,6 +2958,100 @@ drafting §3.3.
   \textbf{Source-z catalog:} AGEL DR2 (Carleton et al., in prep).
   \textbf{Cluster:} Hilton et al.~(2021, ACT DR5).
 \end{itemize}
+
+\hypertarget{citation-audit-referee-challenges-2026-06-08}{%
+\section{Citation audit + referee challenges
+(2026-06-08)}\label{citation-audit-referee-challenges-2026-06-08}}
+
+\textbf{Citation audit} (vs the user's Zotero library; ``not in
+library'' ≠ fabricated --- most are real foundational papers simply not
+yet added to Zotero, flagged so the .bib can be completed):
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Verified in-library, metadata exact:} Cappellari (2017, MNRAS
+  466, 798) ✓; Kormendy \& Ho (2013, ARA\&A 51, 511) ✓; Greene, Strader
+  \& Ho (2020, ARA\&A 58, 257) ✓ \emph{(metadata only --- see flag)};
+  Hilton et al.~(2021, ApJS 253, 3 = ACT SZ-cluster catalog) ✓;
+  Cappellari (2023, MNRAS 526, 3273) ✓. Also in-library and relevant:
+  \textbf{McConnell \& Ma (2013)} --- a massive-BH M•--σ / M•--M\_bulge
+  anchor.
+\item
+  \textbf{⚠ FLAG 1 --- Greene, Strader \& Ho (2020, ARA\&A 58, 257):}
+  bibliographic metadata is CORRECT, but this review is titled
+  \textbf{``Intermediate-Mass Black Holes.''} It does provide M•--σ /
+  M•--M★ relations (legitimately citable as a \emph{comparison}
+  relation, as Fig. 4 uses it), but for a \textasciitilde10⁹ M☉ SMBH the
+  \emph{primary} anchors should be KH13 / McConnell \& Ma 2013 /
+  Saglia+2016, with Greene+20 as one of the overplotted comparison
+  relations. \textbf{ACTION: verify the ``fig.~5'' number} (the
+  scaling-relation figure in Greene+20 may not be fig.~5) and ensure the
+  text frames it as a comparison, not the primary massive-BH relation.
+  \emph{(Not a fabrication --- a framing/figure-number check.)}
+\item
+  \textbf{⚠ FLAG 2 --- Sonnenfeld ``SL2S V'' (2015):} the library
+  contains SL2S \textbf{IV} (Sonnenfeld et al. \textbf{2013}, ApJ 777,
+  98), not paper \textbf{V} (2015, ApJ 800, 94). \textbf{ACTION: decide
+  which you mean} and either correct to ``IV (2013)'' or add the 2015 V
+  paper to Zotero. Do not let the 2013 record stand in for a 2015
+  citation.
+\item
+  \textbf{⚠ FLAG 3 --- Bezanson et al.~(2018):} no Bezanson-first-author
+  2018 item in the library. If you mean the LEGA-C velocity-dispersion
+  paper (Bezanson et al.~2018, ApJ 858, 60), \textbf{add it} / verify.
+\item
+  \textbf{To add to Zotero before the .bib is complete} (real papers,
+  just absent; metadata NOT independently verified here --- confirm on
+  add): Cappellari \& Emsellem (2004), Cappellari et al. (2006, SAURON
+  IV), Gültekin et al.~(2009), Saglia et al.~(2016), Cappellari et
+  al.~(2013, ATLAS3D), Krajnović et al.~(2013), Zhu et al.~(2024, MaNGA
+  DynPop III), van der Wel et al.~(2014), Mowla et al.~(2019), Ge et
+  al.~(2021), Ciddor (1996), van der Wel et al.~(2021, LEGA-C DR3).
+\end{itemize}
+
+\textbf{Referee challenges to the current doc} (anticipate / address in
+drafting):
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{R\_e method family (was ``non-converged''; largely ADDRESSED
+  2026-06-11).} Headline R\_e = 2.097″ (best-mask raw CoG, r\_max=6″) is
+  now \textbf{photutils-validated to ±0.002″}
+  (\BreakablePath{validate\_\discretionary{}{}{}Re\_\discretionary{}{}{}photutils.\discretionary{}{}{}py}:
+  independent \BreakablePath{RadialProfile} integration), and the raw
+  CoG sits at the \textbf{top} of a tight best-mask method family ---
+  sky-sub CoG 1.922″, Sérsic r\_eff 1.897″ → method systematic
+  \textbf{±0.100″} carried explicitly. The raw-CoG-is-top-of-family
+  caveat remains (no sky pedestal subtraction), but it is now bounded
+  and documented, not a flagged unknown. Knock-on: R\_e sets the σ\_e
+  aperture and (weakly) M★; both effects are inside their systematic
+  budgets.
+\item
+  \textbf{R\_e-source budget term (RESOLVED 2026-06-11).} Now uses the
+  \textbf{best-mask CoG light family only} \{1.912/2.097/2.281″\} →
+  ±5.13 --- the referee-preferred light-family treatment. CaHK+G 2.90″
+  (a different I-map definition) and the full grid (±9.98) are reported
+  as cross-checks, NOT folded, so the budget no longer conflates
+  aperture-uncertainty with σ(R)-physics.
+\item
+  \textbf{Rising outer σ(r) attributed to arc dilution.} The claim
+  ``σ(r) should decrease; any rise is the z=1.302 arc'' is the right
+  physical call, but it is \emph{also} what lets us drop the high-σ
+  outer bins; make the arc-contamination evidence explicit (EW /
+  continuum-dilution diagnostic, nb07e) so it does not read as motivated
+  reasoning.
+\item
+  \textbf{He I 3819 source-emission mask} rests on a 3-pixel residual
+  cluster --- defensible (consistent across reductions, matches
+  z=1.302), but small; a referee may probe it. The M8/M9/M10 audit trail
+  covers this.
+\item
+  \textbf{σ\_inst = 12.6 km/s vs σ\_e ≈ 270:} well-resolved, not a
+  challenge --- but state the LSF treatment.
+\end{enumerate}
 
 \hypertarget{flagged-open-items-carry-into-drafting}{%
 \section{Flagged open items (carry into
@@ -1008,17 +3061,26 @@ drafting)}\label{flagged-open-items-carry-into-drafting}}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  R\_e-source systematic (±16.9 km/s) NOT folded into the wide-window
-  budget --- wide re-measurement pending.
+  \sout{R\_e-source systematic not folded in} \textbf{RESOLVED
+  2026-06-08 (M12, nb15):} re-measured at the wide window (±6.13) and
+  folded into the budget → headline ±11.77 → \textbf{±13.27}.
 \item
   Reduction-pass ±3.45 rests on only 2 reductions --- refine if a 3rd
   lands.
 \item
-  Hδ may still need targeted masking (TODO in
-  \texttt{bootstrap\_ppxf.py}).
+  \sout{Hδ may still need targeted masking} \textbf{RESOLVED 2026-06-08
+  (M12, nb16):} decision = \textbf{keep unmasked} (Hδ is well-fit, not a
+  contaminant; masking it would discard LOSVD information). TODO in
+  \BreakablePath{bootstrap\_\discretionary{}{}{}ppxf.\discretionary{}{}{}py}
+  closed. 3b. \textbf{NEW (A3c, nb14):} raw CoG R\_e is
+  r\_max-non-convergent; headline 2.305″ is the top of a 2.1--2.5″
+  family (\textbf{R\_e method systematic ±0.08″}), not folded into
+  σ\_e/M★ --- flagged for a decision.
 \item
   Asymmetric-error tables: older 4-corner/M10 tables print −17.92/+17.65
-  (pre-M11); current is −11.98/+11.57 (±11.77). Quote the M11 value.
+  (pre-M11), M11 was −11.98/+11.57 (±11.77); \textbf{current (M12) is
+  −13.45/+13.10 (±13.27). Quote the M12 value} (canonical:
+  \BreakablePath{results/\discretionary{}{}{}PAPER\_\discretionary{}{}{}VALUES.\discretionary{}{}{}json}).
 \item
   No X-ray / quiescent data in repo (G2). 6. No lens-model content in
   repo (G1).
@@ -1026,11 +3088,80 @@ drafting)}\label{flagged-open-items-carry-into-drafting}}
   ``We do not account for peculiar velocities'' needs to be written in
   (G3 --- true, just add it).
 \item
-  Source-z (1.302) error bar + its cache are a \texttt{{[}TBD{]}}
+  Source-z (1.302) error bar + its cache are a \BreakablePath{[TBD]}
   placeholder.
 \item
   K409 (Aug-30) PI and per-night DIMM seeing still TBD for
   acknowledgements.
 \end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{internal-appendix-ux3c3_e-measurement-audit-trail-m8m12-not-for-the-manuscript}{%
+\section{Internal appendix --- σ\_e measurement audit trail (M8→M12) ---
+NOT for the
+manuscript}\label{internal-appendix-ux3c3_e-measurement-audit-trail-m8m12-not-for-the-manuscript}}
+
+\begin{quote}
+\textbf{Superseded by ``best mask throughout'' (2026-06-11).} The
+numbers in THIS appendix (σ\_e=269.62, total ±13.27, R\_e-source ±6.13,
+R\_e=2.305″) are the \textbf{M12 (2026-06-08) state}. They were the
+headline until the best-mask cascade adopted R\_e=2.097″ (best-mask CoG,
+photutils-validated), which moved σ\_e → \textbf{267.31 ± 12.79} and
+re-derived R\_e-source → \textbf{±5.13} (best-mask CoG family;
+\BreakablePath{run\_\discretionary{}{}{}sigma\_\discretionary{}{}{}e\_\discretionary{}{}{}Re\_\discretionary{}{}{}grid.\discretionary{}{}{}py}).
+The current state is §2.1.2 / §2.4.3 / §3.1 above. This trail is kept
+verbatim as M12 provenance; do not quote its numbers as current.
+\end{quote}
+
+\emph{This is the iterative history of how the final §2.4.3 masking +
+systematic-component set was reached. The Methods section should present
+the \textbf{final} procedure (§2.4) and the budget (§3.1), not this
+trail. Kept here as internal provenance / referee-rebuttal backup. Each
+step is also a \BreakablePath{TESTS} row with its own cache.}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{M8 --- He I 3819 (added as a source-emission mask).} A 3-pixel
+  positive-residual cluster at def-rest 5244--5248 Å = source-rest
+  3818--3820 Å matches He I 3819.6 from the z=1.302 source; consistent
+  across both reductions → astrophysical, not a CR. Masked. σ\_e (NEW)
+  268.98 → 271.87.
+\item
+  \textbf{M9 --- 5193--5204 Å bump (deliberately NOT masked).} A +5--7\%
+  feature; checked against the arc spectrum (no source counterpart) and
+  the noise spectrum (no sky counterpart) → it is the \textbf{Mg b LOSVD
+  wing} (signal). Smoke-masking it drops σ\_e by 7 km/s → \textbf{DO NOT
+  mask.} (Same ``it's signal, not contamination'' logic later applied to
+  Hδ in M12.)
+\item
+  \textbf{M10 --- full sky-line audit.} Flag every band with cube
+  \BreakablePath{noise\_\discretionary{}{}{}sky} \textgreater{} 2.5×
+  median across the fit window, and cross-check each against the arc
+  spectrum to confirm no source counterpart → 9 OH/sky bands added to
+  \BreakablePath{BAD\_\discretionary{}{}{}PIXELS\_\discretionary{}{}{}REST}
+  (26 → 35 entries). σ\_e (NEW) 271.87 → 269.62.
+\item
+  \textbf{M11 --- cube-matched systematic re-derivation.} Re-ran the
+  I-shape / mask-weight / fit-window sweeps on the NEW cube + M10 masks
+  (replacing carried OLD-cube values). The fit-window term collapsed ±15
+  → ±3.82 on the cleaned cube; total sys ±17.16 → ±10.81 (total ±11.77).
+\item
+  \textbf{M12 (2026-06-08) --- R\_e-source fold-in + two cross-checks.}
+  Folded the wide-window R\_e-source systematic (±6.13) into the budget
+  → sys ±12.43, \textbf{total ±13.27}. Added the
+  arc-mask-\textbf{definition} cross-check (±4.58; overlaps the
+  F200-mask term, not double-counted) and resolved the Hδ open item
+  (\textbf{keep unmasked} --- well-fit, masking it discards LOSVD
+  information). Central σ\_e 269.62 unchanged across M10→M12; only the
+  error grew.
+\end{itemize}
+
+\textbf{Net effect of the trail:} central σ\_e settled at 269.62 km/s by
+M10 and has not moved since; the error bar evolved ±17.78 (pre-M11) →
+±11.77 (M11) → ±13.27 (M12). The mask set (He I + 35-entry sky/CR +
+no-Balmer) and the 7-component budget that the final §2.4 procedure uses
+are the M12 result.
 
 \end{document}

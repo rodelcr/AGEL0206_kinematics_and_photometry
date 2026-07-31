@@ -3,9 +3,9 @@
 **Last updated:** 2026-06-11 (M13 "best mask throughout" — best-mask R_e=2.097" cascade)
 
 **Headline (NEW `_mtwdo_` + bad-pixel mask + Balmer-unmasked + He I 3819 mask + M10 sky audit + M11 systematic re-derivation + M13 best-mask R_e=2.097" aperture, wide arc-masked window):**
-σ_e(<R_e) = **267 ± 13 km/s** = 267.31 ± 12.79 km/s
-(stat ±4.6 ⊕ I-shape ±2.29 ⊕ mask ±6.65 ⊕ frame ±5 ⊕ centering ±4 ⊕ window ±3.82 ⊕ reduction ±3.45 **⊕ R_e-source ±5.13**)
-Asymmetric form: 267.31 −12.98 / +12.61 km/s.
+σ_e(<R_e) = **267 ± 12 km/s** = 267.31 ± 11.77 km/s
+(stat ±4.6 ⊕ I-shape ±2.29 ⊕ mask ±6.65 ⊕ centering ±4 ⊕ window ±3.82 ⊕ reduction ±3.45 **⊕ R_e-source ±5.13**)
+Asymmetric form: 267.31 −11.98 / +11.58 km/s.
 **All headline numbers are emitted deterministically by `scripts/paper_values.py` → `results/PAPER_VALUES.json` (single source of truth; do not hand-edit).**
 Source (headline aperture): `results/run_wide_sigma_e/resys_best_mean/` (R_e=2.097"), via `scripts/run_sigma_e_Re_grid.py --n_bootstrap 500`. **M13:** adopting the best-mask R_e=2.097" (was 2.305") moved σ_e −2.3 km/s along σ(R) and re-derived R_e-source ±6.13→±5.13 (best-mask CoG family).
 
@@ -66,6 +66,10 @@ script/notebook that runs it and the result file or note it produced.
 | A5d | Sérsic fitter validation vs published reference (synthetic) | `scripts/validate_sersic_fitter_synthetic.py`, `results/validate_sersic_fitter_synthetic.npz` | Injection-recovery vs astropy `Sersic2D` (peer-reviewed ref; GALFIT/imfit not installed). Validated for the deflector regime n≈1.2–1.6: strong ellip (b/a≤0.80) clean at all n; mild (b/a~0.85) clean at n≥2, borderline at n=1 (detectability limit). Realistic **b/a uncertainty ~±0.06** (bootstrap too tight). | ✓ |
 | A5e | M★ low-mass tail = outshining (not the estimator) | `/tmp` analysis on `aperture_matched_photometry.npz` + Bagpipes posterior (2026-06-11) | Longer low tail present in **all 5 estimators incl. empirical raw** → not the total-Sérsic default. Age–dust–M/L degeneracy: low-M★ tail corr with age +0.90, dust −0.58, sSFR −0.83. Keep exponential-SFH prior, report as-is. | ✓ |
 | A5f | Sérsic appendix parameter table (4 bands) | `scripts/sersic_parameter_table.py`, `results/sersic_parameter_table.{md,tex,npz}` | Per-band r_eff, n, b/a, PA, μ_e, m_tot; b/a/PA/n errors floored by A5d scatter; F200LP flagged circular. Deflector mildly elliptical b/a≈0.80–0.86, PA≈4–11° E of N, n≈1.2–1.6. DRAFTING §3.2. | ✓ |
+| A5g | M★ band-drop sensitivity — drop F200LP (bluest band) | `scripts/mstar_drop_f200lp.py`, `results/mstar_drop_f200lp.npz` (2026-06-17) | Refit validated-total photometry on **F140W + F150W2 + F322W2 only** (no F200LP, the only band blueward of the rest-4000Å break). **Quiescent (headline) prior: log M★ = 11.56 (Planck), +0.10 dex vs 4-band headline 11.46 — within the ±0.17 sys budget**; stays passive (age 4.9 Gyr, SFR 0.9). M★ robust to removing the near-UV lever arm → NOT a new systematic term, reported as a cross-check. **Fiducial flat-age prior: 11.29, SFR≈56** — without F200LP *and* without the spectrum-motivated prior the 3-band fit collapses harder onto the spurious young+dusty branch, reconfirming the spectrum (not any single band) selects the physical solution. | ✓ cross-check |
+| A5h | Quiescence-constrained SFH prior — operational definition | `scripts/mstar_headline_quiescent.py`, `scripts/sed_quiescence_check.py` | Headline prior = fiducial prior with **3 bounds tightened** (all uniform/top-hat, same exponential-τ model): `age` (0.1,15)→**(4,15)** Gyr [old onset, z_form≳1.5–2], `tau` (0.3,10)→**(0.1,1.5)** Gyr [fast-declining/early-quenched], `Av` (0,2)→**(0,0.6)** mag [breaks age–dust degeneracy]. `massformed`/`metallicity`/Calzetti/z unchanged. Motivated by the **independent** KCWI absorption spectrum (no emission), not the photometry being fit (ΔlnZ=−0.18, identical χ² between branches → photometry alone cannot break it). DRAFTING §3.2. | ✓ |
+| A6 | PSF models built (all 4 bands, in-env) | `scripts/psf_star_census.py`, `scripts/build_psf_models.py`, `results/psf_models/<band>_psf.npz` (2026-06-17) | Env has **no webbpsf/stpsf/grizli**; TinyTim present but uncompiled → built PSFs without a synthetic generator. **F140W:** STScI `PSFSTD_WFC3IR_F140W.fits` (4×-oversampled empirical library, central detector position), FWHM **0.103″**. **F200LP/F150W2/F322W2:** empirical EPSF (photutils `EPSFBuilder`) from isolated unsaturated field stars — HST from the **full-frame** drc/drz (146/102 stars; the 25″ lens cutout has 0), JWST from the i2d mosaic (3 SW / 13 LW high-S/N). FWHM **F200LP 0.085″** (UVIS critically undersampled → ov=2 + quadratic kernel; ov=4 over-sharpens), **F150W2 0.049″**, **F322W2 0.112″** — all match instrument values. PSF is a detector+drizzle property → full-frame PSF applies to the lens cutout. Unblocks #9 (core-Sérsic) + a real-PSF Sérsic-convolution check (supersedes the Gaussian psf_fill_model approximation). | ✓ |
+| A7 | Core-Sérsic vs single-Sérsic (PSF-convolved) | `scripts/core_sersic_test.py`, `results/core_sersic_test.npz`, `results/figures/core_sersic_test.png` (2026-06-17) | PSF-convolved 2D fit on F150W2 (finest PSF) + F140W. A free core-Sérsic (Trujillo+2004) "prefers" ΔBIC=386/43, BUT the fitted **r_b = 0.50″/0.34″ (3.6/2.5 kpc)** is ~10–50× too large for a depleted core (expected r_b~0.005–0.05″ for M•~5e8; Lauer+2007/Rusli+2013) and the single-Sérsic inner residual does **NOT deepen toward r=0** (flat ~−6%, oscillating ±5–15%) → the "core" is the core-Sérsic absorbing a **global single-Sérsic mismatch** (n rails to 0.9–1.1 vs validated 1.2–1.6 = the OUTER cD-envelope of Test A), **not a nuclear core. VERDICT: a real depleted core is UNRESOLVED** at every PSF (finest HWHM 0.024″=0.17 kpc) → cannot distinguish cored vs coreless. **r_b < 0.024″ (0.17 kpc) upper limit.** Single-Sérsic is the pragmatic inner model; a depleted core removes <1% of the light → **negligible for M⋆** (the envelope ambiguity is already in the budget). ⚠️ **methodological caution:** a free core-Sérsic ΔBIC "preference" is NOT a core detection when the baseline single-Sérsic mis-fits globally. | ✓ |
 | **B. Pipeline correctness audits** | | | | |
 | B1 | Instrumental LSF audit (DISPSCAL=0.294) | `scripts/ifu_spectral_resolution.py` | FWHM=0.692 Å; σ_v_inst≈12-14 km/s | ✓ |
 | B2 | σ_inst sensitivity (×0.5 to ×2.0 LSF) | `scripts/sigma_inst_sensitivity.py`, audit 3 | max \|Δσ\| = 0.83 km/s | ✓ |
@@ -147,12 +151,15 @@ script/notebook that runs it and the result file or note it produced.
 | M10 | Full sky-line audit across fit window 3800–5400 Å (2026-05-27) | `BAD_PIXELS_REST` updated to 35 entries (26 original + 9 added). Caches `results/run_wide_sigma_e/{new,headline}_clean_hei/`; per-band rationale inline in `scripts/run_window_sweep.py`. Identification via cube `noise_sky` thresholded at >2.5× median; each added band cross-checked against arc spectrum (`AGEL0206_arc_source_spectrum.pdf`) to confirm no source-emission counterpart. | Found 9 unmasked OH airglow / sky-residual bands in the fit window after user-flagged def-rest ~4600 Å structure: (4380.0-4384.0), (4553.0-4554.6), **(4602.0-4610.0)** ← the 4600 Å feature, (4687.3-4688.3), (4691.5-4693.6) merged, (4770.8-4771.8), (4951.6-4955.0), (5011.9-5015.3), (5029.8-5033.8). All in def-rest Å, sky_noise 2.5–4× median. NEW cube σ_e: 271.87 → **269.62** (−2.25 km/s). OLD cube σ_e: 264.16 → **262.72** (−1.44 km/s). Reduction-pass gap shrinks 7.71 → 6.90 → refined ±3.86 → **±3.45**. New TOTAL sys = ±17.16; new paper headline **σ_e(<R_e) = 269.62 ± 17.78 km/s** (asym −17.92/+17.65). | ✓ HEADLINE update |
 | M11 | Rigorous re-derivation of carried I-shape, F200-mask, fit-window systematics on NEW cube + M10 masks (2026-05-27) | Caches `results/ishape_sweep_wR3800_5400_arcmask_M10/` (10 I-shapes × 3 SPS × N=250), `results/maskweight_sweep_wR3800_5400_arcmask_M10/` (3 weights × 3 SPS × N=500), `results/nb09a_wavelength_sweep_M10/` (3 windows × 3 SPS × N=500). Total compute ~1.5 h via `/tmp/run_full_systematics_barrage.sh`. | **I-shape:** range 266.83–271.37 km/s → peak-to-peak/2 = **±2.27** (was ±1.5 carried). **F200 mask:** w00=269.69, w50=261.95, w100=256.39 → peak-to-peak/2 = **±6.65** (was ±3.8 carried; bigger because cleaned NEW cube + Balmer-unmasked is more arc-sensitive). **Fit-window:** wR3800_5400_arcmask=269.66, wR4000_5400_arcmask=268.58, w6500_7500=276.22 → peak-to-peak/2 = **±3.82** (was ±15 carried; cleaned NEW cube + M10 brings wide/narrow into agreement). **Net:** sys total ±17.16 → **±10.81**; TOTAL ±17.78 → **±11.77** (drop of −6.0 km/s). **NEW HEADLINE: σ_e(<R_e) = 269.62 ± 11.77 km/s (asym −11.98/+11.57).** | ✓ HEADLINE update |
 | M12 | R_e-source fold-in + masking-approach + Hδ cross-checks (2026-06-08, N=500) | `scripts/run_sigma_e_Re_systematic_wide.py` (nb15), `run_sigma_e_mask_systematic.py` (nb13), `run_sigma_e_hdelta_test.py` (nb16); registry `scripts/paper_values.py`→`results/PAPER_VALUES.json` | **(1) D7 R_e-source folded in: ±6.13** (wide-window, 4 estimators; user chose full spread 2026-06-08) → sys ±10.81 → **±12.43**; **HEADLINE σ_e = 269.62 ± 13.27 km/s (asym −13.45/+13.10).** **(2) Arc-masking-approach systematic = ±5.85** (expert/sersic/perband/global reprojected to IFU grid; spectroscopic analogue of the M★ ±0.16 dex term) — overlaps F200-mask ±6.65, NOT added (larger-of-two). **(3) Hδ: KEEP UNMASKED** — local-MAD shows Hδ well-fit (max\|resid/noise\| 0.44 < global 0.81), masking shifts σ_e +6–8 km/s = LOSVD information not contamination (M9 pattern); TODO in `bootstrap_ppxf.py` closed. | ✓ HEADLINE update |
-| **M13** | **"Best mask throughout" — best-mask R_e=2.097" cascade (2026-06-11, N=500)** | `scripts/run_sigma_e_Re_grid.py`, `validate_Re_photutils.py`, `Re_bestmask_reconciliation.py`, `aperture_{matched_photometry,2re_companions}.py`; registry `paper_values.py` | **Adopt the best-mask (single-Sérsic + color/morph + WCS-reg) CoG R_e=2.097" (was 2.305") as the headline everywhere.** **(1) σ_e re-measured at R_e=2.097" → 267.31 −12.98/+12.61 (sym ±12.79)** (was 269.62 ± 13.27; −2.3 along rising σ(R)). **(2) R_e-source re-derived** on a 7-pt grid → **adopted best-mask CoG light family ±5.13** (CaHK+G/full-grid ±9.98 = cross-checks, not folded; user 2026-06-11). **(3) R_e/CoG photutils-validated ±0.002"** (A3d). **(4) M★ re-measured at 2 R_e=4.19" → total 11.47 (unchanged, R_e-robust).** R_e method sys ±0.100". | ✓ HEADLINE update |
+| **M13** | **"Best mask throughout" — best-mask R_e=2.097" cascade (2026-06-11, N=500)** | `scripts/run_sigma_e_Re_grid.py`, `validate_Re_photutils.py`, `Re_bestmask_reconciliation.py`, `aperture_{matched_photometry,2re_companions}.py`; registry `paper_values.py` | **Adopt the best-mask (single-Sérsic + color/morph + WCS-reg) CoG R_e=2.097" (was 2.305") as the headline everywhere.** **(1) σ_e re-measured at R_e=2.097" → 267.31 −11.98/+11.58 (sym ±11.77)** (was 269.62 ± 13.27; −2.3 along rising σ(R)). **(2) R_e-source re-derived** on a 7-pt grid → **adopted best-mask CoG light family ±5.13** (CaHK+G/full-grid ±9.98 = cross-checks, not folded; user 2026-06-11). **(3) R_e/CoG photutils-validated ±0.002"** (A3d). **(4) M★ re-measured at 2 R_e=4.19" → total 11.47 (unchanged, R_e-robust).** R_e method sys ±0.100". | ✓ HEADLINE update |
 | **L. Figure preparation (2026-05-13)** | | | | |
+| L0 | **⚠ L1–L4 document the now-SUPERSEDED `figures.ipynb`** | live figures: `figures_paper4_2026-06-08.ipynb` (registry-driven) | **Current values (rows below are historical, kept for provenance): σ_e = 267 +4/−5 (stat) ± 11 (sys) km/s; log M⋆ = 11.5 ± 0.1 (stat) ± 0.2 (sys); M_• = 5.2 +1.7/−1.4 ×10⁸; M⋆-inset now shows stat ± sys.** | ✓ 2026-06-16 |
 | L1 | Figure 2 (narrow) — single posterior inset | `AGEL_0206_ApJL_Figures/figures.ipynb` cell `a546db7f`, `Mbh_sigma_SED_final.pdf` (was AGEL0206_sigma_e_SED_final.pdf) | Title shows σ_e = 267 ± 24(stat) ± 18(sys) km/s; no-arc-mask overlay removed | ✓ |
 | L2 | Figure 2 (wide, headline) — single posterior inset | figures.ipynb cell `fig2_wide`, `AGEL0206_sigma_e_SED_final_wide.pdf` | σ_e = 255 ± 6(stat) ± 17(sys); residuals panel; 9 absorption features labeled; 4 arc-emission masks shaded | ✓ |
 | L3 | Figure 3 (M_BH-M_star) cleanup | figures.ipynb cell `fig3_clean_no_err`, `Mbh_Mstar_relation_clean.pdf` | No per-object error bars; uniform color for local sample; filtered to Greene+2020 E+S0 list (60 unique, 4 KH13 suffix variants matched; 19 post-KH13 extras dropped) | ✓ |
 | L4 | Figures 2 + 4 updated to principled-mask M★ (2026-05-29) | figures.ipynb cells 19/35/36; `AGEL0206_sigma_e_SED_final_wide.pdf`, `Mbh_Mstar_relation{,_clean}.pdf` | Fig2 inset posterior → perband_raw_10pct (median 11.16) + asymmetric title 11.16 +0.32/−0.08 + shaded fill-in reach to 11.46; Fig4 AGEL point → 10^11.16, asymmetric xerr −0.08/+0.32. Backup `figures.ipynb.bak.Mstar_principled_2026-05-29` | ✓ |
+| **O. M•–σ / M•–M⋆ relation placement (2026-06-17)** | | | | |
+| O1 | Offset from the Greene+2020 relations + pythagorean significance | `scripts/relation_offset_significance.py`, `results/relation_offset_significance.npz` | Greene+2020 params from the paper figure code: M•–σ α=8.03,β=4.24,ε=0.43 (pivot 160); M•–M⋆ α=7.89,β=1.33,ε=0.65 (pivot 3e10). **Distance to the scatter-free mean line:** ΔlogM• = **−0.26 dex (M•–σ)** / **−0.49 dex (M•–M⋆)** (mildly undermassive BH) → **1.75σ / 1.79σ** using measurement errors only. **Consistency vs the relation incl. intrinsic scatter** (the population dispersion — the correct single-object test; σ_tot = σ_M• ⊕ β·σ_x ⊕ ε_int): **N_σ = 0.57 (M•–σ) / 0.69 (M•–M⋆)** → **fully within the relations' intrinsic scatter** (incl. relation-param errors: 0.56/0.67σ). M_BH PROVISIONAL. ⚠️ registry `mbh_sigma_offset`=−0.69 added ε to the mean (≠ mean-line offset −0.26); not reconciled per user (figure band = mean-locus 1σ, kept). | ✓ |
 
 | **N — Photometry arc-mask verification + principled masking (2026-05-29)** | | | | |
 | N1 | F200LP hand mask reproducible from objective selectors | `scripts/arc_mask_verification.py`, `notebooks/12` Part I | Color (m_F200LP−m_F140W) + Sersic-residual reproduce the expert F200LP mask; Sersic-residual (k=3) matches expert photometry to **0.016 mag**, R_e to 3% | ✓ |
@@ -186,7 +193,7 @@ script/notebook that runs it and the result file or note it produced.
 | Statistical (bootstrap pooled 1σ) | ±6.1 | ±23.9 | wild-bootstrap N=500, FSPS+EMILES+XSL pool |
 | I-shape spread (10 shapes, post-Sersic2D-bound-fix) | ±1.5 | ±3.7 | `results/ishape_sweep_wR3800_5400_arcmask/` + `results/annular_bootstrap_07c_ishape/` |
 | F200 mask on/off Δ (peak-to-peak / 2) | ±3.8 | ±7.5 | `results/maskweight_sweep_wR3800_5400_arcmask/` + `results/mask_weight_sweep.npz` |
-| Frame fix (max σ shift across SPS, carried) | ±5 | ±5 | NOTES addendum + audit 1 |
+| ~~Frame fix (max σ shift across SPS)~~ **DROPPED 2026-06-14** | ~~±5~~ → 0 | ~~±5~~ → 0 | deterministic per-SPS correction (<0.5 km/s σ impact, D4); the ±5 was the inter-SPS spread, already in pooled stat → double-count |
 | Centering (5-center sweep ±0.4", carried) | ±4 | ±4 | `NOTES_centering_investigation_2026-04-27.md` |
 | Fit-window (3-window spread from §9) | ±15 | ±15 | nb09 §9: w6500_7500 / wR3800_5400_arcmask / wR4000_5400_arcmask (orthogonal Hβ+Mg b) |
 | **Quadrature total** | **±17.87** | **±30.10** | `results/sigma_e_final_systematics_nb09d.npz` |
@@ -235,7 +242,7 @@ Keck observing logs):
 
 | Night (UT) | Program | PI | DESJ0206 frames | On-source RED + BLUE |
 |---|---|---|---|---|
-| 2025 Aug 30 | K409 | TBD | 12 RED `kr250830_00090–00101`, 4 BLUE `kb250830_00052–00055` | 60 min + 66 min |
+| 2025 Aug 30 | K409 | **Alcorn** (Airtable, 2026-07-06) | 12 RED `kr250830_00090–00101`, 4 BLUE `kb250830_00052–00055` | 60 min + 66 min |
 | 2025 Nov 17 | U002 | Jones | 20 RED `kr251117_00129–00148`, 5 BLUE `kb251117_00087–00091` | 90 min + 110 min |
 | 2024 Dec 29 | TBD | (Yuguang Chen) | 4 RED `kr241229_00092–00095` per local stack list | **NOT confirmed as DESJ0206 pointings** — only the 44 MB image-only PDF `kcwi-241228-written-log.pdf` (Drive id `16zWO8yaCIvRtoCGenNTndvB7dYdrCkMH`) exists; no machine-readable log. Pending raw-frame header dump. |
 
@@ -336,6 +343,51 @@ Cache: `results/bagpipes_sed_results.npz` (aperture, 500-sample
 posterior), `results/bagpipes_sersic_refit.npz` (Sersic-total),
 `results/sersic_total_photometry.npz` (Sersic fit parameters).
 Figure: `results/AGEL0206_spectra_SED_fit.pdf`.
+
+**A5h Quiescence-constrained SFH prior — how it is defined**
+(`scripts/mstar_headline_quiescent.py`). The 4-band broadband SED is
+age–dust–M/L **degenerate**: an old+passive and a young+dusty solution fit
+the colours equally well (ΔlnZ = −0.18, identical χ²;
+`scripts/sed_quiescence_check.py`), and the unconstrained flat-age prior
+slides onto the spurious young+dusty branch (SFR ≈ 57 M☉/yr). The headline
+fit keeps the **same model family** (single exponential-τ SFH, SFR∝exp(−t/τ);
+Calzetti dust; free Z; z bracketing the line-fit) and the **same prior shape**
+(every parameter has a uniform/top-hat prior set by a `(lo, hi)` tuple in
+Bagpipes). "Quiescent" is enforced by tightening **three** bounds to the region
+the KCWI absorption-line spectrum (no emission) independently confirms:
+
+| Bagpipes parameter | fiducial (flat) | quiescent (headline) | role |
+|---|---|---|---|
+| `exponential:age` [Gyr] | (0.1, 15) | **(4, 15)** | old onset (z_form ≳ 1.5–2; Universe is ≈7.4 Gyr at z=0.676) |
+| `exponential:tau` [Gyr] | (0.3, 10) | **(0.1, 1.5)** | fast-declining / early-quenched → low present sSFR |
+| `dust:Av` [mag] | (0, 2.0) | **(0, 0.6)** | breaks age–dust degeneracy (young branch needs A_V≈0.75) |
+| `exponential:massformed` | (1, 15) | (1, 15) | unchanged |
+| `exponential:metallicity` [Z☉] | (0, 2.5) | (0, 2.5) | unchanged |
+| `dust:type` / `redshift` | Calzetti / (0.674,0.676) | Calzetti / (0.674,0.676) | unchanged |
+
+The bounds come from an **independent** dataset (the spectrum), not the
+photometry being fit, so the choice is not circular — the photometry alone
+cannot break the degeneracy (ΔlnZ=−0.18). The fiducial↔quiescent M⋆ spread
+(0.08 dex) is carried as the SFH-prior systematic. DRAFTING §3.2.
+
+**A5g M★ band-drop sensitivity — drop F200LP**
+(`scripts/mstar_drop_f200lp.py`, `results/mstar_drop_f200lp.npz`,
+2026-06-17). F200LP (pivot 4923 Å → rest ≈2940 Å) is the only band blueward
+of the rest-frame 4000 Å break — the near-UV / young-star + dust lever arm.
+Refit the validated-total photometry on **F140W + F150W2 + F322W2 only**:
+
+| fit (Planck 2015) | log M⋆ | age [Gyr] | SFR [M☉/yr] | A_V |
+|---|---|---|---|---|
+| 4-band headline (quiescent) | 11.46 | 3.8 | 8 | 0.21 |
+| 3-band, quiescent prior | **11.56 +0.08/−0.09** | 4.9 | 0.9 | 0.27 |
+| 3-band, fiducial (flat-age) | 11.29 +0.14/−0.22 | 2.3 | 56 | 0.75 |
+
+With the headline (quiescent) prior, M⋆ moves +0.10 dex — **within the ±0.17
+sys budget** — and stays passive → M⋆ is robust to dropping the bluest band;
+reported as a cross-check, **not** a new systematic term. Under the fiducial
+prior the 3-band fit collapses *harder* onto the young+dusty branch
+(SFR≈56) than the 4-band fiducial did, reconfirming that the spectrum-motivated
+prior — not any single photometric point — selects the physical solution.
 
 ### B. Pipeline correctness audits (`scripts/audit_ppxf_methodology.py`)
 
@@ -797,7 +849,6 @@ table (also `results/sigma_e_final_systematics_nb09d.npz`):
 | stat (N=500) | ±23.9 | ±6.1 |
 | I-shape (10 shapes, N=250, Sersic2D bound-fix applied) | ±3.7 | ±1.5 |
 | F200 mask (peak-to-peak / 2) | ±7.5 | ±3.8 |
-| frame (vac/air, carried) | ±5.0 | ±5.0 |
 | centering (HST WCS, carried) | ±4.0 | ±4.0 |
 | fit-window (3-window from §9) | ±15.0 | ±15.0 |
 | **TOTAL** | **±30.10** | **±17.87** |
@@ -881,7 +932,8 @@ Fig 10 (mostly Saglia+2016 / Thater+2019 fills), matched 4 KH13 suffix
 variants (NGC 1316b / 2778c / 3998c / 4486A) to their Greene+2020 names
 (NGC 1316 / 2778 / 3998 / 4486A). All literature relations (Greene+20,
 Reines & Volonteri+15, Farrah+25, Sahu+24) preserved. AGEL0206 point at
-M★=10^11.3, M_BH=6.5e8 preserved. Saves to `Mbh_Mstar_relation_clean.pdf`.
+**M★=10^11.46, M_BH=5.2×10⁸** (registry; the live clean figure is now produced by
+`figures_paper4_2026-06-08.ipynb`, not the superseded `figures.ipynb`). Saves to `Mbh_Mstar_relation_clean.pdf`.
 The legacy cell 33 with per-object error bars and E vs S0 color subdivision
 is preserved as `Mbh_Mstar_relation.pdf`.
 
@@ -956,6 +1008,14 @@ analysis.
 | `scripts/analyze_mask_weight_sweep.py` | 5-point sweep analysis + linearity fit |
 | `scripts/regen_s6cum_nomask_diagnostic.py` | Centering investigation |
 | `scripts/relock_nomask_Re_N500.py` | One-off N=500 relock for the no-mask track |
+| `scripts/mstar_headline_quiescent.py` | **Headline M★** — quiescence-constrained SED prior + estimator ladder + SFH-prior/apcorr systematics |
+| `scripts/aperture_correction_validated.py` | Validated-fit aperture correction (Sérsic shape fixed to photutils table) |
+| `scripts/sed_quiescence_check.py` | Age–dust–M/L degeneracy test (fiducial vs quiescent; ΔlnZ=−0.18) |
+| `scripts/mstar_drop_f200lp.py` | **A5g** — M★ refit dropping F200LP (3-band sensitivity cross-check) |
+| `scripts/psf_star_census.py` | **A6** — field-star census (PSF feasibility per band) |
+| `scripts/build_psf_models.py` | **A6** — build empirical EPSF (field stars) + F140W PSFSTD → `results/psf_models/` |
+| `scripts/core_sersic_test.py` | **A7** — PSF-convolved core-Sérsic vs single-Sérsic (core unresolved) |
+| `scripts/relation_offset_significance.py` | **O1** — offset + pythagorean N_σ from Greene+2020 M•–σ / M•–M⋆ |
 
 ### Result files (key)
 
@@ -977,6 +1037,14 @@ analysis.
 | `results/annular_bootstrap_07c_ishape/` | Per-(shape, SPS) I-shape caches (N=500, F140W/F200LP Sersic2D refit 2026-05-11) |
 | `results/annular_bootstrap_07c_nomask/` | §6cum nomask caches |
 | `results/mask_weight_sweep.npz` | 5-point mask-weight sweep summary (narrow) |
+| **Photometry / M★** | |
+| `results/aperture_correction_validated.npz` | Validated-total photometry + M★ posteriors + SED spectrum |
+| `results/mstar_headline_quiescent.npz` | **Headline M★** (quiescent prior) — estimator ladder, SED props, systematics |
+| `results/mstar_drop_f200lp.npz` | **A5g** drop-F200LP 3-band M★ (qui 11.56 / fid 11.29, Planck) |
+| `results/psf_models/<band>_psf.npz` | **A6** PSF kernels (psf, pix_scale, oversampling, fwhm_as, source) |
+| `results/psf_star_census.npz` | **A6** field-star census per band |
+| `results/core_sersic_test.npz` | **A7** core-Sérsic vs single-Sérsic (r_b unresolved, <0.024″) |
+| `results/relation_offset_significance.npz` | **O1** offsets + N_σ (M•–σ 0.57σ, M•–M⋆ 0.69σ vs scatter) |
 | **Audits & figures** | |
 | `results/ppxf_methodology_audit.npz` | 4-audit results |
 | `results/figures/nb09_*.png` | nb09 paper figures (incl. fit windows + I-shape comparison) |

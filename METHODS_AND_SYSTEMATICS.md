@@ -1,10 +1,10 @@
 # Methods and Systematics — AGEL0206 σ_e ApJL paper
 
-**Last updated:** 2026-05-18 (narrative); **headline refreshed 2026-06-08.**
+**Last updated:** 2026-05-18 (narrative); **headline refreshed 2026-06-16 (M⋆ audit).**
 
-> **⚠ CURRENT HEADLINE (2026-06-08, post-M12) — authoritative source `results/PAPER_VALUES.json`:**
-> **σ_e(<R_e) = 269.62 ± 13.27 km/s** (asym −13.45/+13.10) · **log M★/M☉ = 11.16 +0.32/−0.08** ·
-> **R_e = 2.305″ = 16.23 kpc** · z_defl = 0.67564 · z_src = 1.302.
+> **⚠ CURRENT HEADLINE (2026-06-16, M⋆ audit: validated-fit apcorr + quiescent SED prior) — authoritative source `results/PAPER_VALUES.json`:**
+> **σ_e(<R_e) = 267.31 ± 11.77 km/s** (asym −11.98/+11.58) · **log M★/M☉ = 11.5 ± 0.1 (stat) ± 0.2 (sys) (2dp 11.46)** ·
+> **R_e = 2.097″ = 15.26 kpc** · z_defl = 0.67564 · z_src = 1.30263. (M⋆ was 11.50 pre-audit; see DRAFTING §3.2.)
 > The narrative BODY below predates the M8–M12 mask/systematic audits and prints earlier values
 > (254.85 / 268.98, total ±18) in prose — those are HISTORICAL. For current numbers read this banner,
 > `CLAUDE.md`, or `DRAFTING_FACTS_paper_2026-05-29.md`; all are emitted by `scripts/paper_values.py`.
@@ -30,7 +30,7 @@ provenance.
 
 | Quantity | Value | Source / notebook |
 |---|---|---|
-| **σ_e(<R_e)** — **paper headline**, wide arc-masked window, NEW `_mtwdo_` reduction, bad-pixel mask + Balmer kept + He I 3819 mask + M10 full sky audit + **M11 rigorous re-derivation of carried systematics** | **269.62 ± 11.77 km/s** (symmetric; asymmetric form **−11.98 / +11.57** preserves the stat-side bootstrap skew). M11 (2026-05-27) replaced the carried I-shape (±1.5), F200-mask (±3.8), and fit-window (±15) components with cube+mask-matched values (±2.27 / ±6.65 / ±3.82). The fit-window drop is the dominant change (the 3 windows now agree to ±4 km/s on the cleaned NEW cube). Reduction-pass component ±3.45 (M10). | `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/`. M11 sweep caches at `results/{ishape_sweep,maskweight_sweep}_wR3800_5400_arcmask_M10/` + `results/nb09a_wavelength_sweep_M10/` |
+| **σ_e(<R_e)** — **paper headline**, wide arc-masked window, NEW `_mtwdo_` reduction, bad-pixel mask + Balmer kept + He I 3819 mask + M10 full sky audit + **M11 rigorous re-derivation of carried systematics** | **267.31 ± 11.77 km/s** (best-mask R_e=2.097″; symmetric; asymmetric form **−11.98 / +11.58** preserves the stat-side bootstrap skew). M11 (2026-05-27) replaced the carried I-shape (±1.5), F200-mask (±3.8), and fit-window (±15) components with cube+mask-matched values (±2.27 / ±6.65 / ±3.82). The fit-window drop is the dominant change (the 3 windows now agree to ±4 km/s on the cleaned NEW cube). Reduction-pass component ±3.45 (M10). | `scripts/run_wide_sigma_e.py --cube new_clean_hei`, caches at `results/run_wide_sigma_e/new_clean_hei/`. M11 sweep caches at `results/{ishape_sweep,maskweight_sweep}_wR3800_5400_arcmask_M10/` + `results/nb09a_wavelength_sweep_M10/` |
 | σ_e(<R_e) — old reduction cross-check, cleaned + He I + M10 sky masks | 262.72 ± 17.99 km/s (asymmetric −18.10 / +17.88) | `scripts/run_wide_sigma_e.py --cube headline_clean_hei`, caches at `results/run_wide_sigma_e/headline_clean_hei/`. The 6.90 km/s Δ to the cleaned + He-I + M10-sky-masked new cube is the source of the refined ±3.45 km/s reduction-pass systematic |
 | σ_e(<R_e) — pre-M10 cross-check (cleaned + He I, NEW cube) | 271.87 −17.99/+17.74 km/s | Pre-M10 reference. +2.25 km/s shift to current headline = bias from un-masked OH/sky residuals folded into the M10 systematic |
 | σ_e(<R_e) — pre-He-I cleaned cross-check (NEW cube) | 268.98 −18.19/+17.98 km/s | `--cube new_clean`. +2.89 km/s offset (un-masked He I 3819 contamination biased σ_e *down*) |
@@ -39,9 +39,9 @@ provenance.
 | σ_e(<R_e) — legacy un-cleaned wide-window cross-check (OLD cube) | 254.85 ± 17.87 km/s | Pre-clean reference; `scripts/run_wide_sigma_e.py --cube headline`, caches at `results/run_wide_sigma_e/headline/` |
 | σ_e(<R_e) — narrow Ca H+K+G cross-check window (legacy old cube, no clean) | 267.95 ± 30.10 km/s | nb09d (`results/sigma_e_final_systematics_nb09d.npz`) |
 | σ_e(<R_e/2) — gradient diagnostic | ~225 km/s (NARROW) | nb07c §6cum |
-| **R_e** (paper headline) | **2.305″ = 16.23 kpc** | mean F140W + F200LP masked CoG; `scripts/final_sigma_e.py:curve_of_growth` |
-| **log(M★/M☉)** (paper headline, aperture SED) | **11.33 +0.07 / −0.09** | Bagpipes, nb02 |
-| log(M★/M☉) Sersic-total cross-check | 11.40 +0.11 / −0.15 | Bagpipes refit, nb08 |
+| **R_e** (paper headline) | **2.097″ = 15.26 kpc** | best-mask F140W + F200LP CoG; `scripts/final_sigma_e.py:curve_of_growth` |
+| **log(M★/M☉)** (paper headline, validated-fit apcorr + quiescent SED prior, 2 R_e) | **11.5 ± 0.1 (stat) ± 0.2 (sys)** (2dp 11.46) | Bagpipes; `mstar_headline_quiescent.py` (2026-06-16 audit; was 11.50) |
+| log(M★/M☉) Sersic-total cross-check | 11.49 | Bagpipes refit, quiescent prior |
 | z_deflector | 0.67564 | nb04 multi-line Gaussian fit (NIST air rest λ) |
 | z_source | 1.302 | AGEL DR2, independently cross-checked via Fe II UV multiplet in KCRM blue arm (I.2.2) |
 
@@ -81,7 +81,7 @@ a possible third:
 
 | Night (UT) | Program | PI | DESJ0206 frames | Source |
 |---|---|---|---|---|
-| **2025 Aug 30** | K409 | TBD | 12 RED `kr250830_00090–00101` (60 min) + 4 BLUE `kb250830_00052–00055` (66 min) | local `raw_KCWI/provenance/K409_2025-08-30_UTC.html` (Drive id `1yoH_elZqEsFHPRc6f-XCB98l-7dGJewN`) |
+| **2025 Aug 30** | K409 | **Alcorn** (resolved 2026-07-06 via Airtable `Observing Runs`, `Proposal_ID=ALCORN_2025B_K409_KCWI`) | 12 RED `kr250830_00090–00101` (60 min) + 4 BLUE `kb250830_00052–00055` (66 min) | local `raw_KCWI/provenance/K409_2025-08-30_UTC.html` (Drive id `1yoH_elZqEsFHPRc6f-XCB98l-7dGJewN`) |
 | **2025 Nov 17** | U002 | Jones | 20 RED `kr251117_00129–00148` (90 min) + 5 BLUE `kb251117_00087–00091` (110 min) | Drive `NightLog_KCWI_2025-11-17.pdf` (id `1HVNoH2CSAc214b_PieBQ_UkeEasVl6q4`) |
 | 2024 Dec 29 | TBD | TBD | 4 RED `kr241229_00092–00095` per local `dec29_2024_rl8000.list` — **NOT independently confirmed as DESJ0206 pointings**; no machine-readable observing log exists in Drive (only image-only PDF `16zWO8yaCIvRtoCGenNTndvB7dYdrCkMH`) | (raw frames on Yuguang Chen's machine; alignment QA PNGs in Drive id `1ELcTQiXV9m04Y8sA9st3OlpsNk7LE0D7`) |
 
@@ -818,7 +818,7 @@ note the Sersic-total as a +16% sensitivity check.
 ## III.1 Final tabulated systematics
 
 ```
-σ_e(<R_e)            = 269.62 ± 13.27 km/s  (paper headline, NEW _mtwdo_
+σ_e(<R_e)            = 267.31 ± 11.77 km/s  (paper headline, NEW _mtwdo_
                                               reduction, wide arc-masked window,
                                               + He I 3819 (M8) + M10 sky audit
                                               + M11 systematic re-derivation
@@ -835,10 +835,10 @@ note the Sersic-total as a +16% sensitivity check.
                        254.85 ± 17.87 km/s  (OLD reduction LEGACY un-cleaned, ref)
                        267.95 ± 30.10 km/s  (narrow Ca H+K+G, OLD cube X-check)
 σ_e budget (WIDE,M12)= stat ±4.6 ⊕ Ishape ±2.27 ⊕ mask ±6.65
-                       ⊕ frame ±5 ⊕ centering ±4 ⊕ window ±3.82
+                       ⊕ centering ±4 ⊕ window ±3.82
                        ⊕ reduction ±3.45 ⊕ R_e-source ±6.13
                        (M11 cube-matched re-derivation + M12 D7 fold-in;
-                        sys ±12.43, total ±13.27)
+                        sys ±10.87, total ±11.77)
 
 R_e                  = 2.305″ = 16.23 kpc  (HST F140W+F200LP CoG mean;
                         FLAG A3c: raw CoG non-convergent, method sys ±0.08″)
@@ -928,8 +928,8 @@ z_source             = 1.302                  (AGEL DR2; cross-checked via
    _determine_goodpixels_no_balmer`.
 1. **Manuscript kinematics section** still needs rewriting around the
    wide arc-masked window headline.
-2. **K409 PI** for the Aug 30 night needs to be confirmed (paper
-   acknowledgements / observing-program citation).
+2. ~~**K409 PI** for the Aug 30 night needs to be confirmed~~ — **resolved 2026-07-06: Alcorn**
+   (Airtable `Observing Runs`, record linked directly to this target).
 3. **Per-night DIMM seeing** for the K409 Aug 30 night needs to be
    extracted from the observing log (currently using GUIDFWHM = 1.27″
    from the Nov 17 stacking-pass night as a conservative estimate).

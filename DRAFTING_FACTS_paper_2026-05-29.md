@@ -1,6 +1,6 @@
 ---
 title: "AGEL J020613−011417 — Drafting Fact Sheet for the Methods & Results Sections"
-subtitle: "Facts, decisions, and provenance keyed to the paper outline — last revised 2026-06-08 (post-M12)"
+subtitle: "Facts, decisions, and provenance keyed to the paper outline — last revised 2026-06-12 (lens-model summary from Ferrami draft; post-M12)"
 author: "Compiled for R. Córdova Rosado from project notes, memory, METHODS_AND_SYSTEMATICS.md, and TESTS_AND_DIAGNOSTICS.md"
 date: "2026-06-08"
 ---
@@ -16,13 +16,18 @@ The **`<!-- PV:auto:… -->` blocks** (the headline numbers below + the §3.1 bu
 **Three gaps** are flagged up front — they are not in this repo and you must source them
 elsewhere before drafting those paragraphs:
 
-- **G1 — Lens modeling (Ferrami et al.).** No BPL / point-mass / M(<r_break) / joint-posterior /
-  PSF / shear / subhalo content exists in this kinematics+photometry repo. Source from the
-  lens-modeling repo (`~/Documents/AGEL/202509_DESJ0206_modeling/` or
-  `20251112_DESJ0206_Pyauto_PRONTO/`) or the Ferrami draft directly.
-- **G2 — X-ray / "truly quiescent" statement.** No X-ray, Chandra, or explicit quiescence
-  data anywhere in the read files. The galaxy is only ever described as a "passive elliptical."
-  You need an external source if you want the X-ray quiescence claim in §Results.
+- **G1 — Lens modeling (Ferrami et al.) — RESOLVED 2026-06-12 (provisional).** Summarised into
+  **§2.3** (method) and **§3.3** (results) from the **Ferrami et al. June-12 draft**
+  (`~/Documents/AGEL/AGEL_0206_ApJL_Figures/SMBH_in_Einstein_Spiral_DESJ0206_0114_June12/main.md`):
+  `pronto` code, sEPL/cEPL/bEPL halos, point-mass vs SPS/NFW perturber test, 15-model evidence table,
+  best-model parameters, M•–σ placement. **All numbers PROVISIONAL** (draft stamps them
+  `PLACEHOLDER UNTIL FINAL RUNS`) and on **Planck-2015 cosmology** (≠ our H₀=70) — see §2.3 flags.
+  Lens-modeling repos remain `~/Documents/AGEL/202509_DESJ0206_modeling/`,
+  `20251112_DESJ0206_Pyauto_PRONTO/` for the underlying runs.
+- **G2 — X-ray / "truly quiescent" statement — PARTLY RESOLVED 2026-06-12.** The Ferrami draft §Data
+  supplies the quiescence argument (Chandra DR2 X-ray flux limit 1.8×10⁻¹⁵ erg s⁻¹ cm⁻² → L_X<10⁴³ ≈
+  10⁻⁴ L_Edd; LOFAR DR3 radio-quiet; no AGN lines in KCWI) — captured in **§3.3.6**. Still verify the
+  Chandra/LOFAR source values directly before asserting them in *our* paper.
 - **G3 — "We do not account for peculiar velocities."** This sentence is not currently written
   in any methods doc. It is a true statement about our analysis (we use the line-fit systemic z
   directly) — just add it; nothing to reconcile.
@@ -30,18 +35,38 @@ elsewhere before drafting those paragraphs:
 <!-- PV:auto:headline -->
 **Headline numbers** — *generated from `results/PAPER_VALUES.json` by `scripts/paper_values.py --render`; do not hand-edit inside the markers.*
 
-- σ_e(<R_e) = **267.31 ± 12.79 km/s** (asym −12.98 / +12.61); often rounded **267 ± 13 km/s**. Measured at the best-mask R_e=2.097″ aperture; the R_e-source systematic (±5.13, best-mask CoG family) is folded into the budget (§3.1).
-- log(M⋆/M☉) = **11.47 +0.09/−0.14 (stat, 10%)** — aperture-corrected total at the matched 2 R_e = 4.19″ elliptical aperture (empirical aperture + single-Sérsic model wings; GAMA/Taylor+2011 fluxscale). Five estimators: raw **11.18** (empirical) · raw+apcorr **11.35** · filled **11.36** · **total 11.47 (headline)** · Sérsic-total **11.40**. Sérsic-only systematic ±0.19 dex; masking-approach ±0.09 dex. See §2.1.1b / §3.2.
-- R_e = **2.097″ = 14.76 kpc** (best-mask F140W+F200LP CoG; method systematic ±0.10″). **Supersedes 2.305″** (expert mask).
-- z_deflector = **0.67564**; z_source = **1.302**.
+- σ_e(<R_e) = **267.31 ± 11.77 km/s** (asym −11.98 / +11.58); often rounded **267 ± 12 km/s**. Measured at the best-mask R_e=2.097″ aperture; the R_e-source systematic (±5.13, best-mask CoG family) is folded into the budget (§3.1).
+- log(M⋆/M☉) = **11.46 +0.07/−0.06 (stat, 10%)** — aperture-corrected total at the matched 2 R_e = 4.19″ elliptical aperture (empirical aperture + single-Sérsic model wings; GAMA/Taylor+2011 fluxscale). Five estimators: raw **11.27** (empirical) · raw+apcorr **11.33** · filled **11.42** · **total 11.46 (headline)** · Sérsic-total **11.49**. Sérsic-only systematic ±0.19 dex; masking-approach ±0.09 dex. See §2.1.1b / §3.2.
+- R_e = **2.097″ = 15.26 kpc** (best-mask F140W+F200LP CoG; method systematic ±0.10″). **Supersedes 2.305″** (expert mask).
+- z_deflector = **0.67564**; z_source = **1.303**.
 <!-- /PV:auto:headline -->
 
-**Cosmology:** FlatLambdaCDM, H₀ = 70 km/s/Mpc, Ω_m = 0.3; 1″ ≈ 7.04 kpc (7043.5 pc/arcsec),
-D_A = 1452 Mpc at z = 0.67564. [reference_hst_jwst_data_properties.md]
+**Cosmology (Planck 2015 — adopted 2026-06-12 to match the companion lens-modeling paper, Ferrami
+et al.):** FlatLambdaCDM, **H₀ = 67.7 km/s/Mpc, Ω_m,0 = 0.302**; 1″ ≈ **7.2764 kpc**, **D_A = 1500.9
+Mpc**, D_L = 4214.1 Mpc at z = 0.67564. *(Was H₀=70, Ω_m=0.3 → 7.04 kpc / D_A=1452 Mpc before this
+date.)* [reference_hst_jwst_data_properties.md]
+
+> **Cosmology switch — impact (2026-06-12).** Matching Planck 2015 changes only the **distance-scaled**
+> quantities, and only mildly (D_L and D_A both ×1.0331 at our fixed z_l = 0.67564):
+> - **R_e: 14.76 → 15.26 kpc** (+3.3%). R_e in **arcsec (2.097″) is unchanged**.
+> - **log M⋆: 11.47 → 11.50** (+0.0282 dex). This is an **exact D_L² rescale** of the flux-calibrated
+>   SED mass (the M/L is color-driven, hence cosmology-independent), so it is a uniform additive shift
+>   of *every* estimator — **no Bagpipes re-fit needed**. Well inside the ±0.09 (stat) / ±0.19 (Sérsic
+>   sys) budget → **not a dominant systematic**.
+> - **σ_e = 267.31 ± 11.77 km/s and every angular quantity (θ_E, R_e″, masks, apertures) are
+>   IDENTICAL** — velocities and angles do not depend on cosmology.
+> - **Implementation:** the PV:auto headline + §3.1 budget are re-rendered under Planck 2015
+>   (`scripts/paper_values.py`: KPC=7.2764; `DLOGM_COSMO=+0.0282` applied to all M⋆ estimators).
+>   **TODO:** drop `DLOGM_COSMO` once `results/aperture_matched_photometry.npz` is regenerated under
+>   Planck 2015 upstream, else it double-counts.
+> - **Redshift reconciliation — TODO (sub-dominant).** Ferrami quotes z_l = 0.675 / z_s = 1.303 but
+>   **takes the redshifts FROM us**; our line-fit **z_l = 0.67564, z_s = 1.30263** (notebook 04) are
+>   canonical and should propagate into their final runs. The ~6×10⁻⁴ / 1×10⁻³ differences shift D_A
+>   by <0.1% — not a dominant systematic, left as a to-do.
 
 > **Staleness warning:** older docs (`METHODS_AND_SYSTEMATICS.md` 2026-05-18 body; pre-2026-06-11
 > handoffs) print superseded σ_e numbers (254.85 / 268.98 / 269.62, totals ±18/±13.27). The current
-> headline is **267.31 ± 12.79** (post "best mask throughout", 2026-06-11, R_e=2.097″). Always
+> headline is **267.31 ± 11.77** (post "best mask throughout", 2026-06-11, R_e=2.097″). Always
 > quote the current value (canonical source: `results/PAPER_VALUES.json`).
 
 ---
@@ -56,7 +81,7 @@ pointing target.*
 
 | Facility | Inst. / mode | Band(s) | Program (PI) | UT date | Exp. | Pixel scale |
 |---|---|---|---|---|---|---|
-| Keck II | KCWI — KCRM red (RL) **+** KCB blue (BL), Medium slicer, 2×2 | RL 5625–8941 Å (σ_e); BL λc 4500 Å | **U204 + K409 + U002** (3-night combine) | 2024-12 → 2025-11 | **≈180 min RED + ≈198 min BLUE** (36 × 300 s RED) | 0.300″/spaxel |
+| Keck II | KCWI — KCRM red (RL) **+** KCB blue (BL), Medium slicer, 2×2 | RL 5625–8941 Å (σ_e); BL λc 4500 Å | **U204 (Jones) + K409 (Alcorn) + U002 (Jones)** (3-night combine) | 2024-12 → 2025-11 | **≈180 min RED + ≈198 min BLUE** (36 × 300 s RED) | 0.300″/spaxel |
 | HST | WFC3/UVIS | F200LP | **16773 (Glazebrook)** | 2022-07-14 | 600.0 s (NDRIZIM 4) | 0.050″/pix |
 | HST | WFC3/IR | F140W | **16773 (Glazebrook)** | 2022-07-14 | 597.7 s (NDRIZIM 3) | 0.080″/pix |
 | JWST | NIRCam SW, module B | F150W2 (CLEAR) | **05594 (Mahler)** | 2024-08-27 | 1836.0 s | 0.03075″/pix |
@@ -72,15 +97,22 @@ pointing target.*
 
   | Night (UT) | Program (PI) | RED (RL) | BLUE (BL) |
   |---|---|---|---|
-  | 2024 Dec 29 | U204 | 4 × 300 s | 1 × 1320 s *(excluded by reducer)* |
-  | 2025 Aug 30 | K409 (PI TBD) | 12 × 300 s | 4 × 990 s |
+  | 2024 Dec 29 | U204 (Jones, inferred — see below) | 4 × 300 s | 1 × 1320 s *(excluded by reducer)* |
+  | 2025 Aug 30 | K409 (**Alcorn**) | 12 × 300 s | 4 × 990 s |
   | 2025 Nov 17 | U002 (Jones) | 20 × 300 s | 5 × 1320 s |
 
   → **36 × 300 s ≈ 180 min RED + ≈ 198 min BLUE on-source.** The NEW **`_mtwdo_`** reduction
   (Master-Twilight + Dome hybrid flats, K. R. Gupta), `Nov17_2025_DESJ0206_RL_combined_mtwdo_icubes_wcs.fits`;
   dithered (PA 0°/45°/90°); CR rejection via **astroscrappy** (`fsmode=median`, `psffwhm=2.50`).
   `OBSERVER` = Glazebrook, Gupta, Jones, Kacprzak, Alcorn, Rhoades, Barone, Tran, Chen, Vasa.
-  *(K409 PI + Aug-30 DIMM seeing still TBD for acknowledgements.)*
+  **K409 PI resolved 2026-07-06** via the AGEL Airtable base (`Observing Runs` table, record
+  linked directly to this target, `Proposal_ID = ALCORN_2025B_K409_KCWI`) — PI = **Alcorn**
+  (name is embedded in the Proposal_ID string per the base's `PI_SEMESTER_PROG_INST` convention;
+  the record's own `Principle_Investigator` field is blank, so this is high-confidence but not
+  a directly-populated database field). Dec 29/U204's PI is not directly logged for that specific
+  night in Airtable (only a same-program, different-night Sept-2024 U204 record exists, PI=Jones);
+  Jones is inferred by same-program/same-semester convention. *(Aug-30 DIMM seeing still TBD for
+  acknowledgements.)*
 - **Both KCWI arms recorded simultaneously.** The **red** arm (**KCRM**, RL grating, central λ
   7150 Å `RCWAVE` — the cube below) is the σ_e dataset. The **blue** arm (**KCWI/KCB**, **BL
   (Blue-Low)** grating `BGRATNAM`, central λ **4500 Å** `BCWAVE`, **KBlue** filter `BFILTNAM`, N&S
@@ -372,12 +404,13 @@ reproduce the arc selection), validated + applied to all four bands.
 
 | Night (UT) | Program (PI) | RED | BLUE |
 |---|---|---|---|
-| 2024 Dec 29 | U204 | 4×300 s | 1×1320 s (excluded by reducer) |
-| 2025 Aug 30 | K409 (PI TBD) | 12×300 s | 4×990 s |
+| 2024 Dec 29 | U204 (Jones, inferred) | 4×300 s | 1×1320 s (excluded by reducer) |
+| 2025 Aug 30 | K409 (**Alcorn**) | 12×300 s | 4×990 s |
 | 2025 Nov 17 | U002 (Jones) | 20×300 s | 5×1320 s |
 
   **FLAG:** the cube header (DATE-OBS 2025-11-17, PROGPI Jones) describes only the first input
-  frame — cite the multi-night combine, not the header. K409 PI and Aug-30 DIMM seeing still TBD.
+  frame — cite the multi-night combine, not the header. K409 PI = Alcorn resolved 2026-07-06
+  (Airtable `Observing Runs`, see §1.1). Aug-30 DIMM seeing still TBD.
 - **Spectral resolution / LSF:** FWHM_inst = 2.355 × DISPSCAL(0.2940) × 1.0 Å = **0.692 Å**
   → **R ≈ 10000** at the fit band; **σ_v,inst ≈ 12.6 km/s observed (7.5 km/s rest-frame)** — the
   ~270 km/s dispersion is resolved by ~20×. LSF robustness ≤ 0.83 km/s over DISPSCAL ×0.5–×2.0.
@@ -536,10 +569,61 @@ reproduce the arc selection), validated + applied to all four bands.
     full telluric correction is applied; the M10 OH/sky bands (below) catch sky-emission residuals.
   - **M10 sky-line audit:** bad-pixel catalog `BAD_PIXELS_REST` = 35 entries (26 CR residuals +
     9 OH airglow/sky bands), all verified non-source via the arc spectrum.
-- **Wild bootstrap errors:** hybrid **Rademacher sign-flip × local-residual scaling** (75-pixel
-  rolling-window residual rescale, clipped [0.2,5.0]); **N = 500 production** per (SPS × degree),
-  N = 50 smoke (agree within 1 km/s). Errors = 16/84 percentiles (asymmetric). joblib parallel,
-  **BLAS pinned to 1 thread/worker**.
+- **Wild bootstrap errors (→ paper §3.2.4; full detail in §2.2.3.4 below).** Hybrid **Rademacher
+  sign-flip × local-residual scaling**, N = 500 production per (SPS × degree), errors = 16/84
+  percentiles. See §2.2.3.4 for the exact algorithm and the no-σ-clip note.
+
+### §2.2.3.4 Bootstrap error analysis (paper §3.2.4)
+
+*This is the σ_e **statistical** error. It is computed by a hybrid wild bootstrap on the I-weighted
+R < R_e aperture spectrum, run independently for every (SPS library × additive polynomial degree) and
+then pooled. [`scripts/bootstrap_ppxf.py`: `compute_local_residual_scaling`, `run_bootstrap_single_degree`,
+`run_bootstrap`]*
+
+- **The algorithm, per (SPS × degree):**
+  1. **Residuals** r = galaxy − best-fit, where best-fit is the original (un-resampled) ppxf fit at
+     that degree.
+  2. **Heteroskedastic local rescale (the "local-residual" half).** A 75-pixel rolling window
+     (`uniform_filter1d`, `mode='reflect'`) gives the **local** residual std at each pixel; the scale
+     factor = local_std / global_std, **clipped to [0.2, 5.0]**. scaled_r = r × scale. This preserves
+     the **wavelength-dependent noise structure** (sharp line cores vs smooth continuum) that a flat
+     resample would erase.
+  3. **Rademacher draw (the "wild" half).** Each pixel gets an independent sign s ∈ {−1, +1} with equal
+     probability; the synthetic spectrum is **galaxy_boot = best-fit + scaled_r × s**. The sign-flip
+     keeps the pixel grid, the LOSVD line shape, and the local noise amplitude intact — you cannot
+     resample pixels independently here without destroying the line profile that σ is measured from.
+  4. **Re-fit** ppxf on galaxy_boot with the *same* `goodpixels`, `moments=2`, `degree`, `mdegree=0`;
+     record V, σ, χ², and z = (1+z₀)·exp(V/c) − 1.
+- **N = 500 production** per (SPS × degree); **N = 50 smoke** agrees to within 1 km/s. RNG **seeded**
+  (`np.random.default_rng(seed)`) for reproducibility. Errors = **16th/84th percentiles** (asymmetric).
+- **Pooling = the systematic-marginalisation step.** All three SPS (FSPS+EMILES+XSL) × 15 polynomial
+  degrees (15–29) bootstrap samples are **pooled into one posterior**. The pooled width therefore
+  **already marginalises over the SPS-library and polynomial-degree systematics** — between-SPS spread
+  ±2.04, within-SPS bootstrap ±4.22, quadrature 4.73 ≈ pooled **4.64** → **no separate SPS or degree
+  line is added to the budget (§3.1).**
+- **Headline stat error: ±4.6 km/s** (asymmetric **−5.16 / +4.13**) at the R_e = 2.097″ aperture.
+- **No in-fit σ-clipping — `clean=False`** (the ppxf default; `clean=` is **not** passed,
+  `bootstrap_ppxf.py:434`). Rationale: `clean=True` rejects **0 pixels** here because the KCWI noise
+  array is **over-estimated** relative to the actual residual scatter, so iterative σ-clipping is a
+  no-op. Outliers are instead removed **up front** by the explicit **35-entry `BAD_PIXELS_REST`** mask
+  (26 CR residuals + 9 OH/sky bands, all verified non-source via the arc spectrum), so every bootstrap
+  iteration fits the **same fixed `goodpixels` set** — no per-iteration rejection that could bias σ.
+- **How the bad pixels were flagged (the reportable σ-clip number).** `BAD_PIXELS_REST` was built by a
+  **rolling 75-pixel local-MAD on the canonical ppxf-fit residuals, clipping at |residual|/local-MAD >
+  3σ** (rest 3800–5400 Å) → 52 outlier pixels in 26 contiguous ranges (~46 Å, padded ±0.5 Å to survive
+  log-rebinning); biggest outlier = a 6-pixel cluster at def-rest 5232–5236 Å (obs 8768–8774 Å) at
+  **26σ** in local-MAD units. **Intrinsic to the data** (same pixels in both `_mtwdo_` and original
+  reductions). The **M10 sky-line audit** then added **9 OH/airglow bands** by a separate threshold —
+  **> 2.5× the median sky std** — all arc-verified non-source. [`scripts/run_window_sweep.py:112–155`]
+  *Report as:* "cosmic-ray residuals flagged at **3σ** in a 75-pixel rolling local-MAD; sky/OH bands
+  added above **2.5× the median sky noise** (35-entry catalog) — distinct from the in-fit `clean=False`."
+- **Performance:** `joblib` parallel, **BLAS pinned to 1 thread/worker** (avoids oversubscription);
+  ~12 min per SPS library at N=500. **Outputs:** `results/ppxf_bootstrap_errors_{sps}[_suffix].npz`,
+  arrays shape (n_degree, 500) for V/σ/χ²/z plus p16/p50/p84 summaries and asymmetric errors.
+- **Citation TODO (honest):** the repo cites **no** wild-bootstrap reference. The standard statistics
+  precedents for the Rademacher-weight wild bootstrap are **Wu (1986), Mammen (1993), Davidson &
+  Flachaire (2008)** — *not yet in Zotero; verify + add before drafting, do not assert a specific one
+  as the method source until checked.*
 
 **σ_e definition & wavelength window**
 
@@ -640,7 +724,7 @@ reproduce the arc selection), validated + applied to all four bands.
 
 **A few systematics tests to describe** (full budget in Results §3.1):
 I-shape (10 I-weight-map shapes, ±2.27), F200 mask weight (w∈{0,0.5,1}, ±6.65), fit-window
-(3 windows, ±3.82), frame (vac/air, ±5.0), centering (5-center ±0.4″ sweep, ±4.0), reduction-pass
+(3 windows, ±3.82), centering (5-center ±0.4″ sweep, ±4.0), reduction-pass
 (NEW vs OLD cube, ±3.45). Plus the **M9 "DO NOT MASK" finding**: the +5–7% bump at def-rest
 5193–5204 Å is the Mg b LOSVD wing (signal, not contamination); masking it drops σ_e by 7 km/s.
 
@@ -648,13 +732,89 @@ I-shape (10 I-weight-map shapes, ±2.27), F200 mask weight (w∈{0,0.5,1}, ±6.6
 
 ## §2.3 Lens Modeling
 
-> **GAP G1 — not in this repo.** The companion-paper (Ferrami et al.) lens-modeling content
-> (multiple lens models, PSF construction, joint shear+subhalo constraints, potential-correction
-> triple-checks, BPL vs point-mass differentiating models) is **not present in this kinematics+
-> photometry repo**. Source it from the lens-modeling repo
-> (`~/Documents/AGEL/202509_DESJ0206_modeling/`, `20251112_DESJ0206_Pyauto_PRONTO/`) or the
-> Ferrami draft. The only on-hand pointer: PROJECT_BRIEF.md notes the lens-model enclosed mass
-> combines with (σ, M⋆, z) to give a 4D constraint on the central BH + bulge scaling relations.
+> **G1 — now sourced from the companion-paper draft (2026-06-12).** The lens-modeling content below
+> is summarised from the **Ferrami et al. draft** (G. Ferrami, MPA Garching; lead-author email
+> gferrami@mpa-garching.mpg.de), *"A supermassive black hole in the Einstein spiral DES J0206−0114"*,
+> file `~/Documents/AGEL/AGEL_0206_ApJL_Figures/SMBH_in_Einstein_Spiral_DESJ0206_0114_June12/main.md`.
+> **This is a live draft with explicit `PLACEHOLDER UNTIL FINAL RUNS ARE COMPLETED` flags on the
+> evidence table, the M•–σ figure, and the potential-correction figure — every numeric BH/evidence
+> value here is provisional.** The complementary on-hand pointer: PROJECT_BRIEF.md notes the lens-model
+> enclosed mass combines with (σ, M⋆, z) to give a 4D constraint on the central BH + bulge scaling
+> relations. *This is OUR (kinematics+photometry) paper; the lens model is the companion paper — cite
+> it, do not reproduce its results as ours.*
+
+**⚠ Cross-paper reconciliation flags (resolve before any joint number is quoted):**
+
+- **Cosmology — RESOLVED 2026-06-12: we adopted Planck 2015 to match Ferrami** (Planck Collaboration
+  2016): **H₀ = 67.7 km/s/Mpc, Ω_m,0 = 0.302**. (Previously our paper used H₀=70, Ω_m=0.3.) Impact on
+  our numbers is small and documented in the headline "Cosmology switch — impact" box: R_e 14.76→15.26
+  kpc, log M⋆ 11.47→11.50 (+0.028 dex, exact D_L² rescale), σ_e and all angular quantities unchanged.
+  Now both papers share a cosmology → a Ferrami M_• and our M⋆/σ_e can be co-plotted directly. The
+  Ferrami draft still carries its own standing TODO *"Check all mass values to be corrected for the
+  different deflector redshift"* — that is the redshift (not cosmology) reconciliation below, and our
+  z is the canonical one.
+- **Redshifts differ slightly.** Ferrami quotes **z_l = 0.675, z_s = 1.303**; our systemic values
+  (notebook 04) are **z_l = 0.67564, z_s = 1.30263**. Minor, but the σ_inst/V_sys frame and the M•
+  conversion both use z_l — reconcile to our line-fit values when combining.
+- **System identity (agreed):** **AGEL J020613−011417** = DES J0206−0114, AGEL DR2 (Barone et al.
+  2026); ICRS RA = 31.55611°, Dec = −1.23817°. Discovered in DES via a CNN (Jacobs et al.). HST WFC3
+  **F200LP + F140W**, SNAP program **16773 (PI Glazebrook)**, two 300 s exposures per filter — the same
+  imaging this paper uses for photometry. The lens forms a **radial arc** (three star-forming source
+  galaxies near a fold + a cusp); the shallow, sub-isothermal total slope is what makes the radial
+  image bright.
+
+### §2.3.1 Modelling code — `pronto`
+
+- **`pronto`** (Vegetti & Koopmans 2009; Rybak et al. 2015; Rizzo et al. 2018; Ritondale et al. 2019;
+  Powell et al. 2020; Ndiritu et al. 2025). Simultaneously recovers a **resolved background source**
+  (regularised on a **Delaunay adaptive tessellation**) and the non-linear parameters of the smooth
+  deflector **light + mass** distributions. The smooth potential can additionally be perturbed by
+  **regularised pixellated potential corrections** (a.k.a. *gravitational imaging*). Hierarchical
+  Bayesian framework; **evidence ln Z** computed by exploring the posterior with **MultiNest**
+  (Feroz et al.; importance-nested-sampling variant). [Ferrami draft §Method]
+
+### §2.3.2 Mass density profiles
+
+- **Main lens = main elliptical parametric profile + mass multipoles + 2 secondary SIS deflectors +
+  external shear.** Three trial forms for the main elliptical component:
+  - **sEPL** — singular elliptical power-law (the cEPL limit r_c → 0). *This is the main halo of the
+    best model.*
+  - **cEPL** — cored elliptical power-law: κ(ξ) = κ₀·(4−γ)/(4√q)·(r_c² + ξ²)^((1−γ)/2), ξ = √(x²+y²/q²)
+    the elliptical radius, r_c the core radius, γ the 3D slope, q the axis ratio. Deflection via
+    **`fastell`** (Barkana). Einstein-radius definition for the cEPL from **Enzi et al. (cEPL θ_E)**.
+  - **bEPL** — broken elliptical power-law: piecewise κ with break radius θ_B, break convergence κ_B,
+    inner/outer 2D slopes t₁/t₂ (O'Riordan, BPL derivation).
+- **Two companion galaxies** within ~4″ of the main lens → **singular isothermal spheres (SIS)**
+  (cEPL with q=1, γ=2, r_c=0).
+- **Multipoles of order m = 1, 3, 4**, *circular slope-matched*: κ(θ,φ) = θ^(1−γ)·[a_m sin(mφ) +
+  b_m cos(mφ)]. Choice of circular (not elliptical-isothermal) multipoles justified via Paugnat et al.
+  (2025) eq. B10: at the recovered γ≈1.3, q≈0.7, circular multipoles are the better approximation for
+  θ outside the band (1 ± 0.15)·θ_E — and the science target is the BH perturbation at **θ ≪ θ_E**.
+- **External shear** of strength Γ and PA θ_Γ.
+
+### §2.3.3 Central perturber (the BH test)
+
+- After fixing the smooth-model parameters, the draft tests whether the data **require an extra
+  concentrated central mass** by comparing Bayesian evidence across perturber choices:
+  - **Point mass (PM)** — κ(θ) = (θ_{E,•}²/2)·θ/|θ|², θ_{E,•} the Einstein radius of a point mass M_•
+    at z_l. Run **twice**: (i) **fixed** to the centre of the foreground mass, and (ii) **free** within
+    a **0.5″** radius of the light centre.
+  - **SPL** — spherical power-law (EPL with q=1, r_c=0).
+  - **NFW** — Navarro–Frenk–White with **free concentration c** (κ_s = ρ_s r_s Σ_c).
+  The PM is the SMBH hypothesis; SPL/NFW are the extended-mass (dark-subhalo) alternatives it is tested
+  against. [Ferrami draft §Method → Central black hole]
+
+### §2.3.4 Lens light + source regularisation
+
+- **Lens light = a single Sérsic with m = 1,3,4 multipole perturbations**, fit *simultaneously* with
+  the lens + BH mass in `pronto`. Evidence comparison disfavoured both a 2nd/3rd Sérsic and the
+  no-multipole model. During burn-in, **3 sets of multiple images** are required to focus to a
+  tolerance shrinking to **0.05″**.
+- **Source = Delaunay adaptive tessellation with adaptive, SNR-weighted regularisation**
+  (O'Riordan, Euclid lens): two forms tested — penalising the **gradient** vs the **curvature** of the
+  source surface brightness; per-pixel weight log(λ_i/λ_s) = −w_a·x_i^(−w_b), x_i the log-SNR
+  normalised over all pixels, with w_a, w_b free. **Curvature regularisation wins by Δln Z ≈ 100** over
+  gradient → the paper uses **curvature** throughout. [Ferrami draft §Adaptive source regularisation]
 
 System identity for the summary sentence: **AGEL J020613−011417** (DES J0206−01), AGEL DR2;
 source z = 1.302 (spiral), deflector z = 0.67564.
@@ -725,7 +885,7 @@ Driver for the headline: `scripts/run_wide_sigma_e.py --cube new_clean_hei --n_b
    joblib `loky`, **BLAS pinned to 1 thread/worker**; N=50 smoke before N=500 production.
 8. **Pool + budget.** Concatenate all σ samples (3 SPS × 15 degrees × 500) → 16/50/84 percentiles
    = central + asymmetric stat. The pooled width already marginalises SPS + polynomial degree. Add
-   the §2.4.3 systematic components in quadrature → **σ_e = 267.31 −12.98/+12.61 (sym ±12.79) km/s**
+   the §2.4.3 systematic components in quadrature → **σ_e = 267.31 −11.98/+11.58 (sym ±11.77) km/s**
    (at the best-mask R_e=2.097″ aperture; cache `results/run_wide_sigma_e/resys_best_mean/`).
 
 ### §2.4.2 Photometry / M⋆ pipeline — step by step
@@ -784,7 +944,7 @@ quoting **peak-to-peak/2** (or half-Δ for two-point axes), all on the headline 
   ±4.58, which overlaps this; larger-of-two is kept, not added.)*
 - **Fit-window (±3.82):** 3 windows (wR3800_5400 / wR4000_5400 / w6500_7500) × 3 SPS × N=500;
   peak-to-peak/2 (269.66 / 268.58 / 276.22).
-- **Frame (±5.0):** structural — vac/air per-SPS native-frame choice.
+- **Frame (vac/air): DROPPED 2026-06-14** — deterministic per-SPS native-frame correction (<0.5 km/s σ impact, TESTS D4); the former ±5 was the inter-SPS spread already in the pooled stat (double-count).
 - **Centering (±4.0):** 5 perturbed HST-mean centres (±0.4″ sweep; `NOTES_centering_investigation`).
 - **Reduction-pass (±3.45):** half-Δ between the NEW and OLD cleaned cubes (269.62 vs 262.72); 2
   reductions only — refine if a 3rd lands.
@@ -841,7 +1001,7 @@ manuscript Methods section.
   (the line-fit value supersedes AGEL DR2 z = 0.67511). The lensed-**source** redshift is
   **z = 1.30263 ± 0.00003** (red-cube [O II] λλ3726,3729 doublet). [§2.2.2; `scripts/redshift_verify.py`,
   `run_sigma_e_Re_grid.py`]
-- **Headline: σ_e(<R_e) = 267.31 ± 12.79 km/s** (asym −12.98/+12.61), the luminosity-weighted σ_e
+- **Headline: σ_e(<R_e) = 267.31 ± 11.77 km/s** (asym −11.98/+11.58), the luminosity-weighted σ_e
   within R_e (Gültekin et al. 2009 eq. 1 definition) measured by the **Cappellari et al. 2006 (SAURON IV
   §2.3) co-add-then-fit method** — a single pPXF fit to the I(r)-weighted R<R_e aperture spectrum
   (R_e = 2.097″ best-mask CoG) — plus the wild-bootstrap error pool. **Supersedes 269.62 ± 13.27 at R_e=2.305″** — the "best mask throughout"
@@ -862,14 +1022,13 @@ and IFU-only 2.61″; masked CoG removes arc/companion bias.
 |---|---|---|
 | stat (N=500) | 4.51 | asym −5.04/+3.98; pooled 3 SPS × 15 deg (marginalizes SPS + degree) |
 | I-shape | 2.29 | 14-shape peak-to-peak/2 (266.79-271.37): the 10 raw maps + 4 arc-free PSF-matched (Sérsic/filled→1.27" conv); was ±2.27 over 10 |
-| F200 mask | 6.65 | (w00-w100)/2; larger-of-two vs mask-approach 5.85 (no double-count) |
-| frame (vac/air) | 5.00 | carried constant |
+| arc masking | 6.65 | arc masking: (w00-w100)/2 weight sweep; subsumes mask-approach 4.58 (larger-of-two) |
 | centering | 4.00 | carried constant |
 | fit-window | 3.82 | peak-to-peak/2 across 3 fit windows |
 | reduction-pass | 3.45 | half-Δ between NEW and OLD reductions |
 | R_e-source (best-mask grid) | 5.13 | peak-to-peak/2 across best-mask CoG family {F140W 1.91", mean 2.10", F200LP 2.28"} at the 2.097" headline (user 2026-06-11; CaHK+G & full grid are cross-checks, not folded) |
-| **TOTAL (sym)** | **12.79** | quadrature (sys ±11.97 ⊕ stat) |
-| **TOTAL (asym)** | **−12.98 / +12.61** | preserves stat-side skew |
+| **TOTAL (sym)** | **11.77** | quadrature (sys ±10.87 ⊕ stat) |
+| **TOTAL (asym)** | **−11.98 / +11.58** | preserves stat-side skew |
 
 Cross-checks (not added): arc-mask-definition ±4.58 (overlaps F200 mask) · full-grid R_e-source ±9.98 (incl. CaHK+G, conservative ceiling) · CaHK+G(2.90″) deviation +12.38 km/s.
 <!-- /PV:auto:budget -->
@@ -887,7 +1046,7 @@ Cross-checks (not added): arc-mask-definition ±4.58 (overlaps F200 mask) · ful
   rising σ(R), see below), while the light-R_e family alone gives ±2.50.
 
 **Systematics paragraph order** (per outline): first R_e and I(r) (I-shape ±2.27, R_e-source flagged),
-then the spectrum (mask ±6.65, frame ±5.0, window ±3.82, reduction ±3.45, centering ±4.0).
+then the spectrum (mask ±6.65, window ±3.82, reduction ±3.45, centering ±4.0). (The vac/air frame term, formerly ±5.0, is **not carried** — it is a deterministic per-SPS correction with <0.5 km/s σ impact, and its inter-SPS residual is already in the pooled stat; dropped 2026-06-14.)
 
 **Cross-checks** (narrow window, architecturally independent, superseded for headline but valid):
 
@@ -915,27 +1074,118 @@ spaxels at S/N≥5, σ ∈ [144, 251] km/s (median 201), declining with R, no co
 
 ## §3.2 Stellar Mass Estimate
 
-- **HEADLINE: log(M⋆/M☉) = 11.47 +0.09/−0.15** (aperture-corrected total, **matched 2 R_e aperture**,
-  10% flux floor; `scripts/aperture_matched_photometry.py`, `results/aperture_matched_photometry.npz`).
-  Total-light mass: empirical flux in a **matched 2 R_e elliptical aperture** (same physical region all
-  4 bands; single-Sérsic deflector model; color/morph-gated WCS-registered arc mask + companion mask),
-  corrected to total by **adding the Sérsic model's beyond-aperture light** (the GAMA/Taylor+2011
-  `fluxscale` approach; additive variant). Methodologically: **Taylor et al. 2011** (GAMA aperture→total
-  for M⋆), **Sonnenfeld et al. 2013** (SL2S lens-deflector Sérsic photometry, mask arc + interlopers),
-  **Graham & Driver 2005** (Sérsic total formalism).
-- **Report FIVE estimators (empirical → model), M⋆ for each, at 2 R_e:**
-  | estimator | log M⋆ | what it adds |
-  |-----------|--------|--------------|
-  | raw (empirical aperture, masked) | **11.22** | nothing — lower bound |
-  | raw + apcorr (most-empirical total) | **11.35** | model **wings** only (masked interior NOT filled) |
-  | filled (within aperture) | **11.36** | model **fill** of masked pixels |
-  | **total (aperture-corrected) — headline** | **11.47** | fill + wings |
-  | Sérsic-total (pure model) | **11.41** | everything modeled |
-  The **total converges across 1/2/2.5 R_e** (11.45–11.49) → the aperture correction is internally
-  consistent. raw converges 2↔2.5 R_e (11.22).
+**HEADLINE: log(M⋆/M☉) = 11.5 ± 0.1 (stat) ± 0.2 (sys)** (registry 2dp: 11.46 +0.07/−0.06 stat ± 0.17 sys)
+(validated-fit aperture-corrected total, matched 2 R_e, 10% flux floor; Planck 2015).
+
+### Final M⋆ procedure (2026-06-15 audit)
+
+The total-light stellar mass is built in two stages — photometry, then SED fit — each pinned by an audit
+this session that **superseded the earlier 11.50** (the old value was right only by luck: two offsetting errors).
+
+1. **Total-light photometry — validated-fit aperture correction** (`scripts/aperture_correction_validated.py`).
+   Measure the empirical flux in a matched 2 R_e elliptical aperture (same physical region in all 4 bands;
+   color/morph-gated, WCS-registered arc mask + companion mask), then correct to total by (a) filling the
+   masked pixels and (b) adding the beyond-aperture wings, **using a single-Sérsic model whose shape
+   (n, R_e, ellipticity, PA) is fixed to the photutils-validated per-band fit** and whose amplitude+sky are
+   fit to the data. This replaces the earlier auto `fit_sersic`, which railed to r_eff 2.2–2.7″ (vs the
+   validated 1.6–2.0″ and the CoG R_e = 2.097″) with ellipticity → 0, **over-correcting the beyond-aperture
+   light by ~0.15 mag/band** and inflating the old total to 11.50. The fixed correction drops the
+   total-light photometry by ≈0.11 dex. Method refs: Taylor+2011 (GAMA aperture→total), Sonnenfeld+2013
+   (lens-deflector Sérsic photometry), Graham&Driver2005 (Sérsic total formalism).
+2. **Spectrum-consistent SED fit — quiescence-constrained prior** (`scripts/mstar_headline_quiescent.py`).
+   The 4-band SED is **degenerate** (age–dust–M/L): an old+passive and a young+dusty solution fit the
+   colours equally well (**ΔlnZ = −0.18, identical χ²**; `scripts/sed_quiescence_check.py`), and the
+   unconstrained flat-age Bagpipes prior slides onto a spurious young+dusty branch (SFR ~ 57 M☉/yr). The
+   KCWI spectrum — strong Ca H&K / G-band / Mg b / Fe absorption with **no emission lines** — decisively
+   selects the old, passive solution. The headline therefore adopts a **quiescence-constrained SFH prior**
+   (old age, short τ, low dust); the fiducial↔quiescent spread is carried as the SFH-prior systematic. The
+   old population's higher M/L (**+0.10 dex**) nearly cancels the photometry drop (−0.11 dex), so the
+   headline returns to ≈11.46 — close to the old 11.50, but now correct on **both** the photometry and the
+   stellar population.
+
+**How the quiescence-constrained prior is defined (`scripts/mstar_headline_quiescent.py`).**
+Both fits use the **same model family** — a single exponentially-declining ("delayed-free" τ) SFH,
+SFR(t) ∝ exp(−t/τ); Calzetti dust; free metallicity; redshift bracketing the line-fit z — and the **same
+prior shape** (every parameter has a uniform / top-hat prior in Bagpipes, set by a `(lo, hi)` tuple). The
+quiescent prior is **not** a different model or an informative (Gaussian) prior; it is the fiducial prior
+with the bounds of **three** parameters tightened to the region the KCWI absorption-line spectrum
+independently confirms, so the degenerate young+dusty branch is excluded from the prior volume:
+
+| Bagpipes parameter | fiducial (flat) | **quiescent (headline)** | why this enforces quiescence |
+|--------------------|-----------------|--------------------------|------------------------------|
+| `exponential:age` (Gyr) | (0.1, 15) | **(4, 15)** | age of the *onset* of star formation. Lower bound 4 Gyr (vs the ≈7.4 Gyr age of the Universe at z=0.676) forces an old population formed at z ≳ 1.5–2; kills the few-hundred-Myr young solutions |
+| `exponential:tau` (Gyr) | (0.3, 10) | **(0.1, 1.5)** | SFH e-folding time. Short τ ≤ 1.5 Gyr → a fast-declining, early-quenched history; with age ≥ 4 Gyr the present SFR is suppressed by ≳ e^(−4/1.5) ≈ 0.07 of peak → low sSFR. Long-τ (still-forming) histories are excluded |
+| `dust:Av` (mag) | (0, 2.0) | **(0, 0.6)** | breaks the age–dust degeneracy: the spurious young solution needs A_V ≈ 0.75 to redden a young SED into the observed red colours. Capping A_V ≤ 0.6 removes that escape route, leaving age (not dust) to produce the red continuum |
+| `exponential:massformed` (log M☉) | (1, 15) | (1, 15) | unchanged — total stellar mass formed |
+| `exponential:metallicity` (Z☉) | (0, 2.5) | (0, 2.5) | unchanged |
+| `dust:type` | Calzetti | Calzetti | unchanged |
+| `redshift` | (0.674, 0.676) | (0.674, 0.676) | unchanged — brackets the line-fit z=0.67564 |
+
+The three tightened bounds (old age ⊕ short τ ⊕ low dust) are the operational definition of "quiescent."
+They are motivated by an **independent** dataset (the spectrum), not by the broadband photometry being fit,
+so they are not circular: the photometry cannot break the age–dust–M/L degeneracy on its own (ΔlnZ = −0.18,
+identical χ² between branches; `scripts/sed_quiescence_check.py`), and the spectrum says which branch is
+real. The fiducial↔quiescent M⋆ spread (0.08 dex) is propagated as the SFH-prior systematic so the choice's
+impact is carried in the error budget rather than hidden. **Cross-check (drop-F200LP, 2026-06-17,
+`scripts/mstar_drop_f200lp.py`):** refitting without the bluest band under the same quiescent prior gives
+log M⋆ = 11.56 (Planck), within the ±0.17 sys budget of the 11.46 headline — M⋆ is robust to removing the
+near-UV lever arm. Under the *fiducial* prior the 3-band fit collapses even harder onto the young+dusty
+branch (SFR ≈ 56 M☉/yr), reconfirming that the spectrum-motivated prior, not any single photometric point,
+is what selects the physical solution.
+
+**Five estimators (empirical → model), validated photometry + quiescent SED prior, at 2 R_e:**
+
+| estimator | log M⋆ | what it adds |
+|-----------|--------|--------------|
+| raw (empirical aperture, masked) | **11.28** | nothing — lower bound |
+| raw + apcorr (most-empirical total) | **11.34** | validated-model wings only |
+| filled (within aperture) | **11.42** | validated-model fill of masked pixels |
+| **total (aperture-corrected) — headline** | **11.46** | fill + wings |
+| Sérsic-total (pure model) | **11.49** | everything modeled |
+
+The ladder is now **monotonic** and total agrees with the pure-Sérsic total to 0.02 dex. (The old auto
+pipeline had total = 11.50 sitting *above* the Sérsic-total 11.43 — the inversion that flagged the
+over-correction.)
+
+**Passive stellar population (quiescence-constrained fit):** mass-weighted age 3.8 Gyr, SFR 8 M☉/yr,
+sSFR −10.5 (quiescent), Z 1.25 Z☉, A_V 0.21 mag. The unconstrained flat-age fit's SFR ~ 57 / sSFR −9.6 is a
+degeneracy artifact ruled out by the spectrum — see §3.3.6.
+
+<!-- PV:auto:mstar_budget -->
+**M⋆ error budget** — *generated by `scripts/paper_values.py --render`; do not hand-edit inside the markers.* The headline error is a single named-component quadrature (like σ_e): the Bagpipes statistical posterior combined with the masking, aperture-correction-model, and SFH-prior systematics. The Sérsic-only quadrature is retained below as an independent model-path cross-check.
+
+**(1) Headline — log(M⋆/M☉) = 11.46 = 11.5 (validated photometry + quiescent, spectrum-consistent SED prior; matched 2 R_e, 10% floor):**
+
+| Component | ± dex | Note |
+|---|---|---|
+| stat (Bagpipes posterior) | +0.069 / −0.057 | quiescent prior — tight; the age–dust–M/L young-solution tail is removed by the spectrum-motivated prior |
+| masking-approach | 0.086 | under-arc (raw↔filled) 0.057 ⊕ mask-def (per-band↔global) 0.028 |
+| aperture-correction model | 0.118 | auto-fit vs validated-fit Sérsic shape (the over-correction this audit removed) |
+| SFH prior | 0.083 | fiducial flat-age vs quiescent SED prior (the age–dust–M/L degeneracy the 4-band SED cannot break) |
+| **sys (quadrature)** | **0.168** | masking ⊕ apcorr-model ⊕ SFH-prior |
+| **REPORTED** | **+0.07 / −0.06 (stat) ± 0.17 (sys)** | one-decimal: 11.5 ± 0.1 (stat) ± 0.2 (sys) |
+| _CoG cross-check_ | _11.69_ | empirical curve-of-growth total-light (cD envelope); lands +0.04 dex beyond +1σ → total-light ambiguity already captured by the apcorr-model + sys budget, NOT added separately |
+
+**(2) Sérsic-only estimator (log(M⋆/M☉) = 11.49) — independent model-path systematic envelope (cross-check):**
+
+| Component | ± dex | Note |
+|---|---|---|
+| stat | 0.121 | Bagpipes posterior width |
+| mask | 0.125 | arc-mask choice (expert↔global Sérsic-total) — dominant |
+| model-form | 0.057 | single-Sérsic vs alternative model form |
+| flux-floor | 0.034 | 10%↔20% flux floor |
+| fit-param | 0.029 | Sérsic-n / fit-parameter spread |
+| apcorr-recon | 0.026 | apcorr ↔ pure-model reconstruction |
+| **TOTAL** | **0.19** | stat ±0.12 ⊕ sys ±0.15 (mask-dominated) |
+
+Five M⋆ estimators (empirical→model, validated photometry + quiescent SED prior, matched 2 R_e, Planck 2015): raw **11.27** (empirical lower bound) · raw+apcorr **11.33** · filled **11.42** · **total 11.46 (headline)** · Sérsic-total **11.49**.
+<!-- /PV:auto:mstar_budget -->
+
+*(Per-component provenance — which cache + sweep produced each ± — is in the bullets below and in §2.1.1b / §2.4.3. The σ_e budget is in §3.1.)*
+
 - **Sérsic-only (full-model) systematic budget = ±0.19 dex** (`scripts/sersic_total_systematic.py`;
-  elliptical multi-start fit, 2026-06-11): stat ±0.12 ⊕ sys ±0.15, with **arc-mask choice ±0.125
-  dominant**, model-form ±0.057, Sérsic-fit-n ±0.027, flux-floor ±0.023, apcorr↔pure-model ±0.010.
+  elliptical multi-start fit, 2026-06-11): stat ±0.121 ⊕ sys ±0.147, with **arc-mask choice ±0.125
+  dominant**, model-form ±0.057, flux-floor ±0.034, Sérsic-fit-n ±0.029, apcorr↔pure-model ±0.026.
   (Was ±0.17 with the circular fit; the mask term grew because the elliptical model widens the
   expert↔global Sérsic-total gap.)
 - **Apcorr chain validated vs established codes (2026-06-11, `scripts/validate_apcorr_established.py`;
@@ -955,12 +1205,15 @@ spaxels at S/N≥5, σ ∈ [144, 251] km/s (median 201), declining with R, no co
   astropy's peer-reviewed `Sersic2D` (`scripts/validate_sersic_fitter_synthetic.py`): clean recovery for
   the deflector regime (n≈1.2–1.6, b/a≤0.85), with a realistic **b/a uncertainty ~±0.06** (the formal
   bootstrap is too tight). GALFIT/imfit/petrofit/statmorph are not installed (conda-env policy).
-- **The M⋆ posterior has a longer LOW tail** (e.g. total 11.47 +0.10/−0.13). This is **NOT** the
-  total-Sérsic estimator — it is present in all five estimators including the purely empirical `raw`.
-  It is the **age–dust–M/L "outshining" degeneracy** in the 4-band Bagpipes fit: the low-M⋆ tail
-  correlates with young age (r=+0.90), high dust (r=−0.58), and high sSFR (r=−0.83) — young+dusty
-  low-M/L solutions reproduce the same broadband points. We keep the exponential-SFH prior and report
-  the asymmetric posterior as-is (the tail is real model uncertainty, not an estimator artifact).
+- **The flat-age M⋆ posterior had a long LOW tail — now broken by the spectrum (2026-06-15).** Under the
+  unconstrained flat-age prior the posterior was asymmetric (old fiducial total 11.39 +0.09/−0.15), present
+  in all five estimators including the purely empirical `raw`. It is the **age–dust–M/L "outshining"
+  degeneracy** in the 4-band fit: the low-M⋆ tail correlates with young age (r=+0.90), high dust (r=−0.58),
+  and high sSFR (r=−0.83) — young+dusty low-M/L solutions reproduce the same broadband points (formally:
+  ΔlnZ = −0.18 vs an old+passive fit, identical χ²; `scripts/sed_quiescence_check.py`). The KCWI
+  absorption-line spectrum (no emission) **rules out the young+dusty branch**, so the headline adopts the
+  quiescence-constrained prior, which removes the tail (stat collapses to +0.07/−0.06) and the
+  fiducial↔quiescent spread (0.08 dex) is carried as the SFH-prior systematic. See §3.2 and §3.3.6.
 - **Per-band single-Sérsic parameters (appendix table; `scripts/sersic_parameter_table.py`):**
 
 | Band | $\lambda_{\rm piv}$ (Å) | $r_e$ (″) | $r_e$ (kpc) | $n$ | $b/a$ | PA (°) | $\mu_e$ (mag/″²) | $m_{\rm AB}^{\rm tot}$ |
@@ -983,10 +1236,10 @@ spaxels at S/N≥5, σ ∈ [144, 251] km/s (median 201), declining with R, no co
   0.05%, F140W 0.4%, F200LP 1.6%) — 6–362× below the adopted **10% floor**. The 10% is a deliberate
   **systematic floor** (zeropoint, aperture, drizzle correlated noise ~1.3–2×, SED-model mismatch), not
   the measurement error — report the true errors and state the floor (~5% is better-motivated; precedent
-  in GAMA/Taylor+2011, whose error budgets are calibration-dominated, not photon-noise). **Floor sensitivity (`results/aperture_floor5_check.npz`):** 5%↔10% shifts every estimator's central by ≤+0.04 dex (headline total 11.47→11.50) with tighter stat at 5% — well within the ±0.12 systematic, so the headline is robust to the floor; 10% kept for the headline.
+  in GAMA/Taylor+2011, whose error budgets are calibration-dominated, not photon-noise). **Floor sensitivity (`results/aperture_floor5_check.npz`):** 5%↔10% shifts every estimator's central by ≤+0.02 dex (headline total 10%=11.50, 5%=11.52, Planck 2015) with tighter stat at 5% — well within the ±0.12 systematic, so the headline is robust to the floor; 10% kept for the headline.
 - **Superseded values (cross-checks):** mismatched-aperture 11.36 (F200LP-biased high); 2-component-mask
   11.16 +0.31 (over-masked → biased low); expert-aperture 11.33.
-- **"Typical elliptical at z~0.7":** M⋆ ≈ 2.3 × 10¹¹ M☉ (raw headline) to ≈ 3.0 × 10¹¹ (fill-in upper) at z = 0.6756, passive/quiescent SFH
+- **"Typical elliptical at z~0.7":** M⋆ ≈ 1.6 × 10¹¹ M☉ (empirical raw) to ≈ 3.2 × 10¹¹ (aperture-corrected total headline) at z = 0.6756, passive/quiescent SFH
   (mass-weighted age ~5 Gyr, low sSFR). Place on the z≈0.5–1.0 mass-size relation (van der Wel et al.
   2014; Mowla et al. 2019) and the strong-lens-deflector analog sample (Sonnenfeld et al. 2015,
   SL2S V — best z-match). [notebook 10 verified citations]
@@ -995,12 +1248,239 @@ spaxels at S/N≥5, σ ∈ [144, 251] km/s (median 201), declining with R, no co
 
 ## §3.3 Mass Estimates from Lens Modeling
 
-> **GAP G1 — see §2.3.** The range of lens-model results, the joint-posterior mass + uncertainty, the
-> BPL vs point-mass differentiating models, M(<r_break), the pedagogical-figure intuition, the small
-> table reproduced from Ferrami et al., the comparison to local galaxies, and the "shape of the mass
-> profile matters" argument are all **in the lens-modeling repo / Ferrami draft, not here.**
-> The only in-repo pointer is the 4D-constraint sentence in PROJECT_BRIEF.md. Pull these numbers from
-> the companion paper before drafting §3.3.
+> **G1 — sourced from the Ferrami et al. draft (2026-06-12); see §2.3 for method + caveats.**
+> **Every number below is PROVISIONAL** — the draft stamps the evidence table, the M•–σ figure, and
+> the potential-correction figure `PLACEHOLDER UNTIL FINAL RUNS ARE COMPLETED`. The draft is also
+> internally inconsistent on the headline BH mass (several values coexist, see flag) because the final
+> sampling has not landed. **Do not freeze any lens-model number into our draft until Ferrami's final
+> runs complete.** All masses on Ferrami's **Planck-2015 cosmology (H₀=67.7, Ω_m=0.302)** — convert to
+> our (H₀=70, Ω_m=0.3) frame before any joint M•–σ / M•–M⋆ plot (§2.3 reconciliation flags).
+
+### §3.3.1 Headline result
+
+- **Canonical BH mass = free-BH combined posterior; uncertainty = 1σ errors across the selected (free-BH) EPL models:**
+  **M_• = 5.2 ₊₁.₇/₋₁.₄ × 10⁸ M☉** (range **3.8 – 6.9 × 10⁸**; log M_• = **8.72 +0.12/−0.14**).
+  The **central** is the model-averaged **free-BH** posterior (BH position free within 0.5″; the
+  highest-evidence family in Table 1 — cEPL+free ΔlnZ = 0, bEPL+free −0.08, sEPL+free −1.43; per-model
+  cEPL 5.51 ± 1.40, sEPL 5.01 ₋₁.₂₀/+₁.₅₀, bEPL 5.11 ₋₁.₃₀/+₁.₅₀ ×10⁸, agreeing to ~10 %).
+  **The uncertainty is the 1σ model envelope** (min median−σ_lo to max median+σ_hi over the three
+  selected free-BH models) = **3.8–6.9 ×10⁸** (user 2026-06-16). The **fixed-BH** runs (cEPL 1.61, sEPL
+  2.10, bEPL 1.86 ×10⁹; lower evidence, ΔlnZ −3.0 to −3.65) are **NOT in the final selection** (kept only
+  as the lower-evidence alternative; the draft prose's "fixed-BH best model" framing must be reconciled,
+  §3.3.2). Uniform prior **[10⁸, 10¹¹] M☉**.
+  - **Provenance / caveat:** the **central** is the free-BH split-normal mixture of the Ferrami **Table 1**
+    summary medians ± errors (`scripts/bh_mass_combine.py`, seeded; equal-weight 5.22, evidence-weighted
+    5.29 ×10⁸). The **uncertainty** is the free-BH (selected EPL) 1σ model envelope (min median−σ_lo to max
+    median+σ_hi over the 3 free-BH solutions) = 3.8–6.9 ×10⁸. The **rigorous** version stacks
+    Giovanni's actual **MultiNest chains** and resolves free-vs-fixed — flagged TODO; until then the
+    envelope is the honest provisional error.
+- **Detection significance > 4σ:** models with a central **point mass** have higher Bayesian evidence
+  than smooth-only (no-BH) models at **> 4σ** — the radial image *requires* a central point-like mass.
+  (The no-BH and extended-mass SIS/NFW perturbers are all disfavoured by ΔlnZ ≈ −4 to −6; §3.3.3.)
+- **⚠ Supersedes the earlier "~2×10⁹ fixed-BH" framing.** The Ferrami draft *prose* (intro/results +
+  best-model figure caption) is written around the **fixed**-BH solutions (~1.6–2.62×10⁹ M☉), but those
+  have **lower evidence** than the free-BH runs. We adopt the free-BH combined posterior (5.2×10⁸); the
+  fixed-BH values are kept below only as the lower-evidence alternative. **Giovanni's prose still calls
+  sEPL+fixed-PM the "best model" — this must be reconciled** (the data, when the BH is free to move,
+  prefer a ~3–4× lower mass).
+
+### §3.3.2 Best model + why the slope matters
+
+- **Highest-evidence model = a FREE point mass on the cEPL (or bEPL) main halo** — ΔlnZ = 0 (cEPL+free)
+  / −0.08 (bEPL+free) in Table 1, BH free within 0.5″ of the light centre → our canonical M_• =
+  5.2×10⁸ (§3.3.1). **⚠ The draft prose instead designates sEPL + a FIXED point mass as the "best
+  model"** (and the best-model figure caption shows 2.62×10⁹) — a **fixed-vs-free inconsistency**: the
+  fixed runs have *lower* evidence (ΔlnZ ≈ −3.0 to −3.65) yet are what the prose/figure quote. We adopt
+  the free-BH result; the final runs / Giovanni's prose must resolve this. (Evidence is quoted as ΔlnZ;
+  the placeholder table is not renormalised to any single reference.)
+- **The main halo is markedly sub-isothermal: γ ≈ 1.31 ± 0.08** (θ_E ≈ 1.36″). A shallow total slope is
+  *what produces the bright radial arc extending to the deflector centre* — the lens environment (it
+  sits ~100 kpc from the cluster **ACT-CL J0206.2−0114**) flattens the projected mass. This is the
+  "shape of the mass profile matters" argument: the radial image only stays bright down to the centre
+  for a shallow slope, and it is the radial image that the BH perturbs. [Ferrami draft §Data, §Mass
+  model comparison]
+
+### §3.3.3 Model-comparison table (15 models — PLACEHOLDER, Ferrami draft Table 1)
+
+3 smooth main-halo families (sEPL/cEPL/bEPL) × 5 perturbers (free BH / fixed BH / free NFW / free SIS /
+no BH). Δln Z are as printed in the draft (NOT yet renormalised to the sEPL+fixed-PM reference):
+
+| Smooth model | Δln Z | d.o.f. | Perturber posterior |
+|---|---|---|---|
+| **cEPL + free BH** *(highest evidence → canonical family)* | **0** | 37 | **M_• = 5.51 ± 1.40 ×10⁸ M☉** |
+| cEPL + fixed BH | −3.25 | 35 | M_• = 1.61 ± 0.21 ×10⁹ M☉ |
+| cEPL + free NFW | −4.88 | 38 | M_vir = 6.48 ×10⁹, c_vir = 40 |
+| cEPL + free SIS | −5.26 | 38 | θ_E = 0.041″, γ = 2.59 |
+| cEPL (no BH) | −5.06 | 34 | — |
+| **sEPL + free BH** *(canonical family)* | −1.43 | 36 | **M_• = 5.01 ₋₁.₂₀/+₁.₅₀ ×10⁸ M☉** |
+| sEPL + fixed BH *(draft prose "best model" — lower evidence)* | −3.65 | 34 | M_• = 2.10 ⁺⁰·¹⁹₋₀.₃₀ ×10⁹ M☉ |
+| sEPL + free NFW | −4.76 | 37 | M_vir = 2.65 ×10⁹, c = 91 |
+| sEPL + free SIS | −5.80 | 37 | θ_E = 0.027″, γ = 2.47 |
+| sEPL (no BH) | −4.78 | 33 | — |
+| **bEPL + free BH** *(canonical family)* | −0.08 | 38 | **M_• = 5.11 ₋₁.₃₀/+₁.₅₀ ×10⁸ M☉** |
+| bEPL + fixed BH | −3.04 | 36 | M_• = 1.86 ×10⁹ M☉ |
+| bEPL + free NFW | −4.35 | 39 | M_vir = 5.78 ×10⁹, c = 127 |
+| bEPL + free SIS | −4.82 | 39 | θ_E = 0.025″, γ = 2.46 |
+| bEPL (no BH) | −5.14 | 35 | — |
+
+- **Pattern (robust across all 3 halo families):** the **no-BH** and **free-SIS/free-NFW** (extended
+  central mass) models are all disfavoured by ΔlnZ ≈ −4 to −6; a **point mass** is preferred. **The
+  FREE-BH runs carry the HIGHEST evidence** (ΔlnZ 0 / −0.08 / −1.43) and cluster at **~5×10⁸ M☉ → the
+  canonical combined value (§3.3.1)**; the *fixed*-BH runs have **lower** evidence (ΔlnZ −3.0 to −3.65)
+  and land ~3–4× higher (1.6–2.1×10⁹). Earlier drafts of this fact sheet treated the fixed value as
+  headline — **corrected 2026-06-12 to the free-BH combined posterior.**
+
+### §3.3.4 Best-model parameters (Ferrami draft Table 2 — PLACEHOLDER; headed "cEPL", **FIXED-BH run**)
+
+> **Note:** this parameter table is a **fixed-BH** solution (M_• = 1.61×10⁹, the lower-evidence run);
+> the **canonical** BH mass is the **free-BH combined posterior 5.2×10⁸** (§3.3.1). The smooth-halo
+> parameters below (θ_E, γ, shear, light) are essentially common to the free-BH solution — only the
+> point-mass row differs.
+
+| Component | Parameter | Posterior |
+|---|---|---|
+| Main deflector | θ_E | 1.360 ⁺⁰·¹⁰₋₀.₀₈ ″ |
+| | γ (slope) | **1.31 ± 0.08** (sub-isothermal) |
+| | r_c (core) | 0.0012″ |
+| | f (axis ratio) | 0.826 |
+| | φ | 10.8° |
+| Secondary deflector (SIS) | θ_E | 0.194″ |
+| Tertiary deflector (SIS) | θ_E | 0.017″ |
+| External shear | Γ | 0.095 ± 0.003 |
+| | θ_Γ | −14.8° |
+| **Point mass** *(fixed-BH; NOT canonical)* | **M_•** | 1.61 ⁺⁰·²¹₋₀.₂₁ ×10⁹ M☉ → **use free-BH 5.2×10⁸ (§3.3.1)** |
+| Lens light (Sérsic) | R_eff | 0.051″ |
+| | n_s | 1.372 |
+| | f (axis ratio) | 0.834 |
+| Source light (Delaunay) | λ | 46798 |
+| | w_a, w_b | 1.728, 0.451 |
+
+(Circular multipole and lens-light multipole coefficients a_m/b_m, m=1,3,4 are all |a|,|b| ≲ 0.012 with
+Gaussian[0,0.01] priors — see draft Table 2 for the full list.)
+
+### §3.3.5 M•–σ placement and prior radial-arc BH lenses
+
+- The draft places M_• against the **local M•–σ relation of van den Bosch (2016, M_σ FP)**, with the
+  only two prior **radial-arc / radial-image SMBH lens** measurements overplotted: **Nightingale et al.
+  (z = 0.17)** and **Melo-Carneiro et al. (z = 0.45)** — both ~2σ *above* the local relation.
+  **DES J0206−0114 (z = 0.675) is the highest-redshift and most centrally-extended** of the three.
+- **⚠ With the canonical M_• = 5.2×10⁸ (free-BH), the placement SENSE flips vs the old ~2×10⁹.** Rough
+  **KH13 cross-check** (log M• = 8.49 + 4.38·log(σ_e/200), intrinsic scatter 0.29 dex): at σ_e = 267
+  km/s KH13 predicts M• ≈ **1.1×10⁹**, so our 5.2×10⁸ (log M• = 8.72) sits **≈0.3 dex (~1σ) BELOW** the
+  local relation — i.e. *slightly under-massive* for its σ, the **opposite** of the fixed-BH ~2×10⁹
+  (which would sit *above*, like Nightingale/Melo-Carneiro). *(This is a labeled rough calc on KH13, NOT
+  the paper result; the actual placement vs vdB16 is Giovanni's figure — the narrative "above the
+  relation" framing in the draft prose needs reconciling with the free-BH value.)*
+- The M•–σ figure is a **PLACEHOLDER**; the σ comes from **our companion paper** (Córdova Rosado et al.,
+  in prep. — σ_e = **267 ± 13 km/s**, this repo). The adopted M_• uncertainty is the **1σ errors across the
+  selected free-BH EPL models — the 1σ model envelope 3.8–6.9 ×10⁸** (5.2 −1.4/+1.7; §3.3.1). The fixed-BH
+  runs (→2.3×10⁹) are NOT folded in (not in the final selection).
+  **This is exactly the 4D (M•, σ, M⋆, z) joint constraint PROJECT_BRIEF.md flags** — and now that both
+  papers share the Planck-2015 cosmology (§2.3), the join is direct.
+
+#### §3.3.5a Quantitative offset from the Greene+2020 relations (`scripts/relation_offset_significance.py`)
+
+Rigorous version of the rough KH13 calc above, against the **Greene+2020** relations actually drawn in
+our figures (params from the figure code: M•–σ α=8.03, β=4.24, ε_int=0.43 dex, pivot σ=160; M•–M⋆
+α=7.89, β=1.33, ε_int=0.65 dex, pivot M⋆=3×10¹⁰). With log M• = 8.72 (PROVISIONAL), σ_e = 267 km/s,
+log M⋆ = 11.46:
+
+- **Distance to the scatter-free (mean) relation:** ΔlogM• = **−0.26 dex (M•–σ)** and **−0.49 dex
+  (M•–M⋆)** — a *mildly under-massive* BH for its σ and M⋆ (the same sense as the KH13 cross-check, the
+  opposite of the fixed-BH ~2×10⁹). Against the singular mean line, using **our measurement errors only**
+  (σ_M• ⊕ β·σ_x), this is **1.8σ** for both relations — i.e. the point is measurably off the *mean* line,
+  but that is the wrong yardstick for a single object (see next).
+- **Consistency with the relation, the pythagorean way:** a single galaxy is drawn from a population with
+  **intrinsic scatter** ε_int about the mean, so its consistency is N_σ = |Δ| / √(σ_M•² + (β·σ_x)² +
+  ε_int²). This gives **N_σ = 0.57 (M•–σ)** and **0.69 (M•–M⋆)** (0.56 / 0.67 including the
+  relation-parameter errors) — **our point falls fully within the intrinsic scatter of both local
+  relations** (<0.7σ), the scatter term (0.43 / 0.65 dex) dominating the budget.
+- **Framing note (figures).** The shaded Greene+2020 band in Figs 3–4 is the **relation's 1σ locus as we
+  choose to plot it** — it reflects how well the mean relation is determined (zero-point/slope
+  uncertainty), the appropriate band to draw given we cannot know a priori how much of the population
+  scatter applies to any one object. The **intrinsic-scatter** term (0.43 / 0.65 dex) is then carried
+  *separately* in the N_σ above, which is what establishes that AGEL J0206 is consistent with the
+  relations. Both numbers should be quoted: "ΔlogM• = −0.26 / −0.49 dex from the mean relation, i.e.
+  within 0.6 / 0.7σ once the relation's intrinsic scatter is included."
+- *Caveat:* M_BH is PROVISIONAL (Ferrami, free-BH 1σ envelope); these track it. The registry leaf
+  `mbh_sigma_offset` (−0.69) was computed against [mean + ε_int] (scatter added to the mean) and is **not**
+  the mean-relation offset (−0.26) used here — to be reconciled.
+
+### §3.3.6 Quiescence evidence (also fills gap G2 — X-ray / radio)
+
+The Ferrami draft §Data carries the multiwavelength quiescence argument that was gap **G2** in this
+repo (no longer external-only):
+
+- **No AGN emission lines** in the KCWI IFU central spectrum (Córdova Rosado et al., in prep.).
+- **X-ray:** no Chandra source at the galaxy position; **0.5–7 keV flux upper limit 1.8×10⁻¹⁵ erg
+  s⁻¹ cm⁻²** (Chandra DR2; field obs PI Hughes, ID 16229, 30 ks) → **L_X < 10⁴³ erg s⁻¹ ≈ 10⁻⁴ × L_Edd**
+  (the draft uses a 10⁹ M☉ BH; for our canonical **5.2×10⁸** M☉, L_Edd halves → ≈2×10⁻⁴ L_Edd, still
+  order 10⁻⁴ — the quiescence conclusion is unchanged).
+- **Radio-quiet:** below the **LOFAR DR3** detection limit.
+- → The central gravitational perturbation is from a **quiescent (non-accreting) SMBH** — the headline
+  novelty (a dynamical-equivalent mass for a quiescent BH at cosmological distance). **G2 is now
+  partly internal**, but the X-ray flux limit and the Chandra/LOFAR program details should still be
+  cross-checked against the actual Chandra DR2 / LOFAR DR3 sources before we assert them in *our* paper.
+
+---
+
+## §3.4 Structural nature of the deflector: classical elliptical, (un)cored, and the pseudobulge question
+
+Synthesis of the morphology/structural work (notebook 18; `scripts/{sersic_parameter_table,
+psf_star_census,build_psf_models,core_sersic_test}.py`; TESTS A5f/A6/A7; `REPORT_cored_vs_coreless_2026-06-17.md`;
+kinematics `results/radial_sigma_profile.npz`, `nb11_perbin_perspaxel_wide.npz`).
+
+**(a) Overall class — a massive, quiescent early-type galaxy (robust).** Multiple independent lines
+agree: σ_e = **267 km/s**; log(M⋆/M☉) ≈ **11.46**; a pure old-stellar-population **absorption spectrum**
+(strong Ca H&K, G-band, Mg b, Fe; **no emission lines** — the only emission is the z=1.302 lensed source,
+masked); passive SED (mass-weighted age 3.8 Gyr, A_V ≈ 0.2, sSFR ≈ −10.5); smooth single-Sérsic light,
+mildly flattened (**b/a ≈ 0.80–0.86**, PA ≈ 4–11°) with an **extended envelope**; in a BCG-like cluster
+environment (near ACT-CL J0206). **Caveat:** we cannot cleanly separate elliptical (E) from lenticular
+(S0) — the low single-Sérsic n (below) and the lack of a clean λ_R map preclude a formal morphological
+E/S0 split; the giant-elliptical/cD reading is *supported* by σ + the envelope + the environment. For the
+M•–σ / M•–M⋆ comparison this is immaterial: Greene+2020 calibrate on the combined **E+S0** ("early-type")
+sample, which is exactly this object's class.
+
+**(b) Classical bulge / elliptical — NOT a pseudobulge (this matters for M•–σ validity).** The KH13
+scaling relations are calibrated on **classical bulges + ellipticals**; pseudobulges scatter off M•–σ and
+are excluded (Kormendy & Ho 2013). On the standard classical-vs-pseudo discriminants (Kormendy & Ho 2013;
+Fisher & Drory 2008, 2016), our deflector is classical on every axis but one:
+- **Mass:** log M⋆ ≈ 11.46 — far above the (low-mass) pseudobulge regime.
+- **σ:** 267 km/s — pseudobulges are low-σ systems.
+- **Dispersion support:** within R_e the ordered rotation is low — V ≈ 40 km/s vs σ ≈ 267 → **V/σ ≈ 0.15**
+  (`radial_sigma_combined_posterior.npz`), i.e. slow-rotator / dispersion-dominated, *not* the
+  rotation-dominated (V/σ ≳ 1) pseudobulge. *Caveat:* the KCWI resolution + arc contamination make this a
+  marginal rotation measurement (the outer annular V(R) is contaminated and not reliable) — it supports,
+  but does not by itself prove, dispersion support.
+- **Star formation:** passive, no emission, low dust — no disk / ongoing SF / nuclear spiral or bar
+  signatures (pseudobulges are gas-rich, star-forming, disky).
+- **The one ambiguous feature — Sérsic index.** The single-Sérsic n ≈ **1.2–1.6** (A5f) is *below* the
+  n ≈ 2 pseudobulge threshold (Fisher & Drory 2008 — low-n bulges also show higher V/σ and lower σ, the
+  opposite of this object). **But this is a box-limited artifact:** Test A shows n (and the total
+  light) keep rising with fit box and never plateau (F140W n 1.2→2.0 over box 4→10″), i.e. the single
+  Sérsic under-counts the extended high-n / cD envelope. The low n is therefore *not* evidence for a disky
+  pseudobulge — it reflects the fitting box, not the profile.
+- **Verdict:** classical bulge / elliptical, established by mass + σ + dispersion support + passivity; the
+  low single-Sérsic n does not overturn it. ⇒ AGEL J0206 is a **valid, clean probe** of the M•–σ / M•–M⋆
+  relations (not a pseudobulge contaminant).
+
+**(c) Cored vs coreless — expected cored, but observationally UNRESOLVABLE (A7).** By the core/coreless
+dichotomy (Faber et al. 1997; Lauer et al. 2007 [ApJ 664, 226, "bimodal central surface-brightness
+profiles" — NOT the same-year M•–σ selection-bias Lauer+2007]; Kormendy et al. 2009) a σ ≈ 267 km/s
+(M• ~ 5×10⁸ M☉) galaxy is *expected* to
+host a central surface-brightness deficit (depleted core from binary-SMBH scouring). But the expected
+break radius r_b ~ 0.02–0.1 kpc = **≈3–14 mas at z=0.676** — below every PSF we can build (finest
+F150W2 FWHM 0.049″, HWHM 0.024″ = 0.17 kpc; PSF models for all 4 bands, A6). PSF-convolved core-Sérsic vs
+single-Sérsic fits (A7, `core_sersic_test.py`, F150W2 + F140W): a free core-Sérsic is "preferred" by
+ΔBIC = 386/43, **but this is a fitting artifact, not a detection** — the fitted r_b = 2.5–3.6 kpc is
+10–50× too large for a depleted core and the single-Sérsic inner residual does *not* deepen toward r=0;
+the core-Sérsic is absorbing the **global** single-Sérsic / cD-envelope mismatch (same box-limitation as
+in (b)), not a nucleus. **Verdict:** cored vs coreless is **indeterminate** (upper limit **r_b < 0.024″ =
+0.17 kpc**); a genuine depleted core removes <1% of the light → **negligible for M⋆**, and the
+M•–core-scouring cross-check is not feasible with these data. The single-Sérsic remains the pragmatic
+*inner* light model; the structure that *does* matter for M⋆ is the outer envelope (Test A), already
+carried in the M⋆ systematic budget (§3.2). Resolving the core would require ~mas imaging (ELT-class) —
+out of scope, and the science payoff (<1%-light core) does not warrant it.
 
 ---
 
@@ -1087,7 +1567,7 @@ foundational papers simply not yet added to Zotero, flagged so the .bib can be c
 5. No X-ray / quiescent data in repo (G2). 6. No lens-model content in repo (G1).
 7. "We do not account for peculiar velocities" needs to be written in (G3 — true, just add it).
 8. Source-z (1.302) error bar + its cache are a `[TBD]` placeholder.
-9. K409 (Aug-30) PI and per-night DIMM seeing still TBD for acknowledgements.
+9. K409 (Aug-30) PI = Alcorn (resolved 2026-07-06, Airtable); per-night DIMM seeing still TBD for acknowledgements.
 
 ---
 
@@ -1096,7 +1576,7 @@ foundational papers simply not yet added to Zotero, flagged so the .bib can be c
 > **Superseded by "best mask throughout" (2026-06-11).** The numbers in THIS appendix (σ_e=269.62,
 > total ±13.27, R_e-source ±6.13, R_e=2.305″) are the **M12 (2026-06-08) state**. They were the
 > headline until the best-mask cascade adopted R_e=2.097″ (best-mask CoG, photutils-validated),
-> which moved σ_e → **267.31 ± 12.79** and re-derived R_e-source → **±5.13** (best-mask CoG family;
+> which moved σ_e → **267.31 ± 11.77** and re-derived R_e-source → **±5.13** (best-mask CoG family;
 > `run_sigma_e_Re_grid.py`). The current state is §2.1.2 / §2.4.3 / §3.1 above. This trail is kept
 > verbatim as M12 provenance; do not quote its numbers as current.
 
